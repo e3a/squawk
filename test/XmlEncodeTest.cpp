@@ -28,28 +28,24 @@
 TEST( XmlEncodeTest, SimpleText ) {
 
     std::string test("Lorem ipsum dolor sit amet");
-
     EXPECT_EQ( test, commons::string::escape_xml( test ) );
 }
 
 TEST( XmlEncodeTest, EscapeGT ) {
 
     std::string test("<Lorem ipsum dolor sit amet>");
-
     EXPECT_EQ( "&lt;Lorem ipsum dolor sit amet&gt;", commons::string::escape_xml( test ) );
 }
 
 TEST( XmlEncodeTest, EscapeUml ) {
 
     std::string test("Lörem ipsum dölör sit ämet");
-    std::cout << commons::string::escape_xml( test ) << std::endl;
     EXPECT_EQ( "L&#246;rem ipsum d&#246;l&#246;r sit &#228;met", commons::string::escape_xml( test ) );
 }
 
 TEST( XmlEncodeTest, EscapeExtraEuro ) {
 
     std::string test("Lör\u20ACm ipsum dölör sit ämet");
-    std::cout << commons::string::escape_xml( test ) << std::endl;
     EXPECT_EQ( "L&#246;r&#8364;m ipsum d&#246;l&#246;r sit &#228;met", commons::string::escape_xml( test ) );
 }
 
