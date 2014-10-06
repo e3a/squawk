@@ -1,0 +1,260 @@
+/*
+    <one line to give the library's name and an idea of what it does.>
+    Copyright (C) 2013  <copyright holder> <email>
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+*/
+
+#ifndef SQuAWK_UTILS_H
+#define SQuAWK_UTILS_H
+
+#include <ctime>
+#include <cctype>
+
+#include <algorithm> 
+#include <functional> 
+#include <locale>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <fstream>
+#include <iterator>
+#include <iostream>
+
+#include <sys/stat.h>
+#include <sys/utsname.h> 
+
+namespace squawk {
+namespace utils {
+  
+  
+}}
+namespace squawk {
+namespace utils {
+namespace fs {
+  inline bool is_directory(std::string * filename) {
+    struct stat sb;
+    return (stat(filename->c_str(), &sb) == 0 && S_ISDIR(sb.st_mode));
+  };
+/*  inline bool fexists(const char *filename) {
+    std::ifstream ifile(filename);
+    return ifile;
+  }; */
+}}}
+
+namespace squawk {
+namespace utils {
+namespace string {
+  inline bool starts_with(std::string str, std::string prefix) {
+    return( str.compare(0, prefix.size(), prefix) == 0 );
+  };
+  template<typename T>
+  /**
+   * returns a string for the input value.
+   *
+   * <code>
+        string str = to_string< int > (4);
+   * </code>
+   */
+  std::string to_string(T t) {
+    std::stringstream s;
+    s << t;
+    return s.str();
+  };
+  template<typename R>
+  R parse_string(std::string str) {
+    std::stringstream buffer(str);
+    R var;
+    buffer >> var;
+    return var;
+  };
+  inline std::string to_lower(std::string str) {
+    std::ostringstream ss;
+    std::locale loc;
+    for(std::string::size_type i=0; i<str.length(); ++i) {
+      ss << std::tolower(str[i],loc);
+    }
+    return ss.str();
+  };
+  inline std::string to_upper(std::string str) {
+    std::ostringstream ss;
+    std::locale loc;
+    for(std::string::size_type i=0; i<str.length(); ++i) {
+      ss << std::toupper(str[i],loc);
+    }
+    return ss.str();
+  };
+  inline bool ends_with(const std::string & str, const std::string & suffix, bool icase = false) {
+      if( suffix.size() > str.size() ) return false;
+      if ( str.compare(str.size()-suffix.size(), str.size(), suffix) == 0 ) {
+        return true;
+      } else if( icase && to_upper( str ).compare(str.size()-suffix.size(), str.size(), to_upper( suffix )) == 0 ) {
+        return true;
+      } else return false;
+  };
+  // trim from start
+  inline std::string ltrim(std::string s) {
+	  s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+	  return s;
+  }
+
+  // trim from end
+  inline std::string rtrim(std::string s) {
+	  s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+	  return s;
+  }
+  inline std::string trim(std::string s) {
+        return ltrim(rtrim(s));
+  }
+  inline std::string time_to_string(int playtime) {
+    int _seconds = playtime;
+    std::stringstream ss;
+    if(_seconds > 3600) {
+      int hours = _seconds / 3600;
+      if(hours < 10) {
+	ss << "0";
+      }
+      ss << hours << ":";
+      _seconds = _seconds - (hours * 3600);
+    }
+    if(_seconds > 60) {
+      int minutes = _seconds / 60;
+      if(minutes < 10) {
+	ss << "0";
+      }
+      ss << minutes << ":";
+      _seconds = _seconds - (minutes * 60);    
+    } else ss << "00:";
+    if(_seconds < 10) {
+      ss << "0";
+    }
+    ss << _seconds;
+    return ss.str();
+  }
+  inline std::string escape_json(std::string str) {
+    std::ostringstream ss;
+    for (std::string::const_iterator iter = str.begin(); iter != str.end(); iter++) {
+        switch (*iter) {
+            case '\\': ss << "\\\\"; break;
+            case '"': ss << "\\\""; break;
+            case '/': ss << "\\/"; break;
+            case '\b': ss << "\\b"; break;
+            case '\f': ss << "\\f"; break;
+            case '\n': ss << "\\n"; break;
+            case '\r': ss << "\\r"; break;
+            case '\t': ss << "\\t"; break;
+            default: ss << *iter; break;
+        }
+    }
+    return ss.str();
+  };
+  inline std::string escape_xml(std::string str) {
+    std::ostringstream ss;
+    for (std::string::const_iterator iter = str.begin(); iter != str.end(); iter++) {
+        switch (*iter) {
+            case '&': ss << "&amp;"; break;
+            case '"': ss << "&quot;"; break;
+            case '\'': ss << "&apos;"; break;
+            case '<': ss << "&lt;"; break;
+            case '>': ss << "&gt;"; break;
+            default: ss << *iter; break;
+        }
+    }
+    return ss.str();
+  };
+/*  inline std::string track_to_string(int track) {
+    std::stringstream ss;
+    if(track < 10) {
+      ss << "0";
+    }
+    ss << track;
+    return ss.str();
+  } */
+/*  inline std::string replace_string(std::string subject, std::string search, std::string replace) {
+    size_t pos = 0;
+    while((pos = subject.find(search, pos)) != std::string::npos) {
+         subject.replace(pos, search.length(), replace);
+    }
+    return subject;
+  };  */
+}}}
+
+namespace squawk {
+namespace utils {
+namespace system {
+  inline std::string uname() {
+    struct utsname uts;
+    uname(&uts);
+    std::ostringstream system;
+    system << uts.sysname << "/" << uts.version;
+    return system.str();
+  };
+  inline std::string time_string() {
+    time_t rawtime;
+    time (&rawtime);
+    return squawk::utils::string::trim( std::string( std::ctime ( &rawtime ) ) );  
+  }
+}}}
+
+namespace squawk {
+namespace utils {
+namespace http {
+inline std::string create_header(std::string request_line, std::map< std::string, std::string > headers) {
+  std::ostringstream os;
+  os << request_line + std::string("\r\n");
+  
+  for(std::map< std::string, std::string >::iterator iter = headers.begin(); iter != headers.end(); ++iter) {
+    os << iter->first << ": " << iter->second << "\r\n";
+  }
+  os << "\r\n";
+  return os.str();
+};
+ inline std::map<std::string, std::string> parse_header(int bytes_recvd, const char * data) {
+  std::map<std::string, std::string> map;
+  if(bytes_recvd != 0) {
+    std::istringstream is(data);
+    std::string line;
+    getline(is,line);
+    
+    //read the request line
+    std::istringstream buf(line);
+    std::istream_iterator<std::string> beg(buf), end;
+    std::vector<std::string> tokens(beg, end);
+    if(tokens.size() == 3) {
+      map["method"] = tokens.at(0);
+      map["uri"] = tokens.at(1);
+      map["version"] = tokens.at(2);
+    } else {
+      std::cerr << "unknown request line:" << line << std::endl;
+    }
+    while(getline(is,line))  {
+      if(squawk::utils::string::trim(line).size() == 0) {
+	break;
+      } 
+      int pos = line.find(":");
+      if(pos != std::string::npos) {
+	map[squawk::utils::string::to_upper( squawk::utils::string::trim( line.substr(0, pos) ) )] = 
+	  squawk::utils::string::trim(line.substr(pos+1, line.length()));
+      } else {
+	std::cerr << "line does not contain ':' :" << line << std::endl;
+      }
+    }
+  } else {
+    std::cerr << "parse_header->wrong size:" << bytes_recvd << std::endl;
+  }
+  return map;
+};
+}}}
+#endif // SQuAWK_UTILS_H

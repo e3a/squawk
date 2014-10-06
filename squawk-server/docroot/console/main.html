@@ -1,0 +1,26 @@
+<header>// <a href="#/api">API</a></header>
+<p>JSON API</p>
+<table>
+  <tr><th>Method</th><th>URL</a></th><th>Parameter</th><th>Description</th></tr>
+  <tr><td >GET</td><td color="Blue"><a href="#/statistics">/api/statistics</a></td><td></td><td>get the media directory statistics.</td></tr>
+  <tr><td >GET</td><td color="Blue"><a href="#/albums">/api/albums</a></td>
+    <td>
+        index - the start index <br/>
+        count - the result count <br/>
+        attributes [count, id, name, artist, year, genre] - filter attributes <br/>
+        filter - filter the results <br/>
+        order [name, timestamp] - order by name or timestamp
+    </td>
+    <td>get the list of albums.</td></tr>
+  <tr><td >GET</td><td background-color="Blue"><a href="#/album/1">/api/album/{ALBUM_ID}</a></td><td>the album id</td><td>get album details.</td></tr>
+  <tr><td >GET</td><td background-color="Blue"><a href="#/artists">/api/artists</a></td><td></td><td>get the list of artists.</td></tr>
+  <tr><td >GET</td><td background-color="Blue"><a href="#/artist/albums">/api/artist/{ARTIST_ID}/albums</a></td><td>the artist id</td><td>get the list of album by artist id.</td></tr>
+  <tr><td >GET</td><td background-color="Blue"><a href="#/devices">/api/devices</a></td><td></td><td>discovered upnp devices.</td></tr>
+</table>
+<p>Media Files</p>
+<table>
+  <tr><th>Method</th><th>URL</a></th><th>Parameter</th><th>Description</th></tr>
+  <tr><td >GET</td><td color="Blue"><a href="#/cover">/album/{ALBUM_ID}/cover.jpg</a></td><td></td><td>get the album cover.</td></tr>
+  <tr><td >GET</td><td color="Blue"><a href="#/image">/album/cover/${COVER_ID}.jpg</a></td><td></td><td>get an image.</td></tr>
+  <tr><td >GET</td><td color="Blue"><a href="#/song">/album/cover/${SONG_ID}.[mp3|flac].jpg</a></td><td></td><td>get a song.</td></tr>
+</table>

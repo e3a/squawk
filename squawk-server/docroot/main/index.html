@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset=utf-8 />
+        <title>Squawk Media Server</title>
+        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="/lib/photobox/photobox.css">
+        <!-- link rel="stylesheet" href="/js/libs/galleria-1.3.3/themes/classic/galleria.classic.css" -->
+        <script src="/lib/jquery-2.1.0.min.js"></script>
+        <!-- script src='/lib/photobox/photobox.js'></script -->
+        <script>
+            var act_element;
+            var items_per_line = 8;
+            var old_index = 0;
+            var loaded_covers = [];
+            var image_size;
+            var items_per_row;
+            var scroll_position = -1;
+            function get_image_size() {
+              var size = Math.floor( ( window.innerWidth / items_per_line ) - 4);
+              return size;
+            }
+            function show_menu() {
+                $("html, body").animate({scrollLeft:0}, '500');
+                $( "#content-overlay" ).fadeIn( "slow" );
+            }
+            function hide_menu() {
+                $( window ).scrollLeft( 250 );
+                $( "#content-overlay" ).fadeOut( "slow" );
+            }
+
+            function show_albums() {
+                if( act_element ) {
+                    $( act_element ).fadeOut('fast', function(){
+                    console.log(" has act element");
+                        $('#albums').fadeIn('fast');
+                        act_element = $('#albums');
+                        hide_menu();
+                    });
+                } else {
+                    console.log(" no act element");
+                    act_element = $( '#albums' );
+                }
+                $( window ).scroll(function() {
+                    if( $(window).scrollTop() + $(window).height() == $(document).height() ) {
+                        draw_albums();
+                    }
+                });
+                draw_albums();
+            }
+            function hide_albums() {
+            }
+
+
+            function draw_album(id) {
+                console.log("draw album: "+ id);
+                $.getJSON( "/api/album/" + id, function( data ) {
+                    var html = [];
+                    html[html.length] = '<div id="album-images">';
+                    for( i=0; i<data.images.length; i++ ) {
+                        html[html.length] = '<a href="/album/image/' + data.images[i] + '.jpg"><img class="cover" src="/album/image/' + data.images[i] + '.jpg"/></a>';
+
+                    }
+                    html[html.length] = '</div><div id="album-description">';
+                    html[html.length] = '<p>Artists: ';
+
+                    for( i=0; i<data.artists.length; i++ ) {
+                        html[html.length] = '<span class="bold">' + data.artists[i].name + '</span>';
+                    }
+                    html[html.length] = '</p>';
+                    html[html.length] = '<p>Album: <span class="bold">' + data.name + '</span></p>';
+                    html[html.length] = '<p>Year: <span class="bold">' + data.year + '</span></p>';
+                    html[html.length] = '<p>Genre: <span class="bold">' + data.genre + '</span></p>';
+                    html[html.length] = '<table border="1">';
+                    for( i=0; i<data.songs.length; i++ ) {
+                    html[html.length] = '<tr><td>' + data.songs[i].mimetype + '</td>';
+                        html[html.length] = '<td>' + data.songs[i].track + '</td>';
+                        html[html.length] = '<td>' + data.songs[i].disc + '</td>';
+                        html[html.length] = '<td>' + data.songs[i].title + '</td>';
+                        html[html.length] = '<td>' + data.songs[i].samplerate + '</td>';
+                        html[html.length] = '<td>' + data.songs[i].bitrate + '</td>';
+                        html[html.length] = '<td>' + data.songs[i].samplefrequency + '</td>';
+                        html[html.length] = '<td>' + data.songs[i].bps + '</td>';
+                        html[html.length] = '<td>' + data.songs[i].channels + '</td>';
+                        html[html.length] = '<td>' + data.songs[i].length + '</td></tr>';
+                    }
+                    html[html.length] = '</table></div>';
+                    document.getElementById( 'album-detail' ).innerHTML = html.join('');
+
+
+                    $( act_element ).fadeOut('fast', function(){
+                        $('#album-detail').fadeIn('fast');
+                        act_element = $('#album-detail');
+                        hide_menu();
+                    });
+
+                });
+            }
+            function draw_albums() {
+
+                $.getJSON( "/api/albums?index=" + old_index + "&limit=" + (items_per_line * items_per_row), function( data ) {
+                    old_index = old_index + ( items_per_line * items_per_row );
+                    var html = [];
+                    var size = image_size;
+
+                    var resultCount = data.albums.length;
+                    var position = 0;
+                    for( i=0; i<resultCount; i++ ) {
+                        var act_item = data.albums[i];
+                        html[position++] = '<div style="top: 0px; left: 0px; width: ' + size + 'px; height: ' + size + 'px;" class="box">';
+                        html[position++] = '<img id="cover' + i + '" src="/album/' + act_item.id + '/cover.jpg" style="width: ' + size + 'px; height: ' + size + 'px;" />';
+
+                        html[position++] = '<span class="caption fade-caption" onclick="draw_album(' + act_item.id + ')">';
+                        html[position++] = act_item.name;
+                        html[position++] = '<br/><br/>';
+
+                        var artistText = "";
+                        var first = true;
+                        for(j=0; j<act_item.artists.length; j++) {
+                            html[position++] = '<a href="';
+                            html[position++] = act_item.artists[j].id;
+                            html[position++] = '">';
+                            html[position++] = act_item.artists[j].name;
+                            html[position++] = '</a><br/>';
+                        }
+                        html[position++] = '<br/>';
+                        html[position++] = act_item.year;
+                        html[position++] = '</span></div>';
+                    }
+                    document.getElementById( 'albums' ).innerHTML += html.join('');
+                    console.log(" finished create document ");
+
+                }) .fail(function() {
+                    console.log( "error" );
+                });
+            }
+            function draw_artists() {
+                var html = [];
+                $.getJSON( "/api/artists", function( data ) {
+                    var old_letter = '';
+                    var length = data.length;
+                    for(i=0; i<length; i++) {
+                        if( data[i].letter != old_letter ) {
+                            old_letter = data[i].letter;
+                            html[html.length] = '<span class="letter">';
+                            html[html.length] = data[i].letter;
+                            html[html.length] = '</span><br/>';
+                        }
+                        html[html.length] = '<a href="#">';
+                        html[html.length] = data[i].name;
+                        html[html.length] = '<a/><br/>';
+                    }
+                    document.getElementById( 'artists' ).innerHTML = html.join('');
+                    if( act_element[0].id != $('#artists')[0].id ) {
+                        $( act_element ).fadeOut('fast', function(){
+                            $('#artists').fadeIn('fast');
+                            act_element = $('#artists');
+                            hide_menu();
+                        });
+                     } else {
+                         hide_menu();
+                     }
+                });
+            }
+
+            $( document ).ready(function() {
+                image_size = get_image_size();
+                items_per_row = Math.ceil( window.innerHeight / image_size );
+                $( '#albums' ).width( window.innerWidth );
+                $( '#artists' ).width( window.innerWidth );
+                $( '#album-detail' ).width( window.innerWidth );
+                $( window ).scrollLeft( 250 );
+
+                $( "#menu-link" ).click(function() {
+                    show_menu();
+                    return false;
+                });
+                $( "#linkAlbums" ).click(function() {
+                    show_albums();
+                    return false;
+                });
+                $( "#linkArtist" ).click(function() {
+                    draw_artists();
+                    return false;
+                });
+                $( "#content-overlay" ).click(function() {
+                    hide_menu();
+                });
+                show_albums();
+            });
+            function showMenu() {
+                body.animate({scrollLeft:0}, '500', 'swing', function() {
+                   alert("Finished animating");
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <a href="#" id="menu-link"><img src="/icons/menu.png"/ width="50px" height="50px"></a>
+        <div id="menu">
+            <a href="#/album" id="linkAlbums"><img class="navigation" src="/icons/files.png"/>Albums</a><br/>
+            <a href="#/artist" id="linkArtist"><img class="navigation" src="/icons/contacts.png"/>Artists</a><br/>
+            <a href="#/images" id="linkImages"><img class="navigation" src="/icons/camera.png"/>Images</a><br/>
+            <a href="#/player" id="linkPlayer"><img class="navigation" src="/icons/music.png"/>Player</a><br/>
+        </div>
+        <div id="albums"></div>
+        <div id="artists" class="artist-body"></div>
+        <div id="album-detail"></div>
+        <div id="content-overlay" style="position:fixed;
+                    z-index: 20; /* above everything else */
+                    top:0; left:250px; bottom:0; right:0;
+                    background:rgba(0,0,0,.5);
+                    display:none;"></div>
+    </body>
+</html>

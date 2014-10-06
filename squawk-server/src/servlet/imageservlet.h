@@ -1,0 +1,37 @@
+/*
+    image servlet header file.
+    Copyright (C) 2013  e.knecht@netwings.ch
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+#ifndef IMAGESERVLET_H
+#define IMAGESERVLET_H
+
+#include "http.h"
+#include "fileservlet.h"
+
+#include "log4cxx/logger.h"
+
+namespace squawk {
+namespace servlet {
+
+class ImageServlet : public ::http::servlet::FileServlet {
+public:
+    explicit ImageServlet( const std::string path, const std::string docroot ) : FileServlet( path, docroot ) {}
+    virtual void do_get( ::http::HttpRequest & request, ::http::HttpResponse & response );
+private:
+    static log4cxx::LoggerPtr logger;
+};
+}}
+#endif // IMAGESERVLET_H

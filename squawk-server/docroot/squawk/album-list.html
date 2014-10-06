@@ -1,0 +1,15 @@
+<header>
+  <a href="#/album" id="linkAlbums"><img class="navigation" src="/icons/files.png"/></a>
+  <a href="#/artist" id="linkArtist"><img class="navigation" src="/icons/contacts.png"/></a>
+  <a href="#/images" id="linkImages"><img class="navigation" src="/icons/camera.png"/></a>
+  <a href="#/player" id="linkPlayer"><img class="navigation" src="/icons/music.png"/></a>
+  
+  Search: <input ng-model="query">
+  <select ng-model="orderProp">
+    <option value="album">Alphabetical</option>
+    <option value="artist">Artist</option>
+    <option value="year">Year</option>
+  </select>
+</header>
+<pager page="pageSize" pages="pageCount"/>
+<albums ngModel="" query="${query}" orderProp="${order}" size="imageSize" count="albumCount" page="pageSize" pages="pageCount" itemsPerLine="8"/>
