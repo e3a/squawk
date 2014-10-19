@@ -20,6 +20,7 @@
 #include "squawkserver.h"
 
 #include <squawk.h>
+#include <upnp.h>
 
 #include <string>
 #include <iostream>
@@ -60,7 +61,7 @@ void SquawkServer::start() {
     parser = new squawk::media::FileParser(database, squawk_config);
 
     //Setup and start the DLNA server
-    ContentDirectoryModule * musicDirectory = new squawk::servlet::UpnpMusicDirectoryModule(squawk_config, database);
+    commons::upnp::ContentDirectoryModule * musicDirectory = new squawk::servlet::UpnpMusicDirectoryModule(squawk_config, database);
     squawk::servlet::UpnpContentDirectory * content_directory = new squawk::servlet::UpnpContentDirectory("/ctl/ContentDir");
     content_directory->registerContentDirectoryModule(musicDirectory);
 

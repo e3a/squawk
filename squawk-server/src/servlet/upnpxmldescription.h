@@ -6,8 +6,6 @@
 #include "http.h"
 #include "../squawkconfig.h"
 
-#include "tinyxml.h"
-
 #include "log4cxx/logger.h"
 
 namespace squawk {
@@ -20,9 +18,6 @@ public:
 private:
     static log4cxx::LoggerPtr logger;
     SquawkConfig * config;
-    std::string cds();
-    std::string device();
-    TiXmlElement * create_element(TiXmlElement * parent, std::string name, std::string value);
 };
 }}
 

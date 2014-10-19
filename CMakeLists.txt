@@ -14,9 +14,11 @@ endif()
 set(CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG} -O0)
 
 find_package(GoogleTest REQUIRED)
+find_package(LibXml2 REQUIRED)
+set(LIBS ${LIBS} ${LIBXML2_LIBRARIES})
 
 SET( SQUAWK_INCLUDES ${CMAKE_SOURCE_DIR}/commons ${CMAKE_SOURCE_DIR}/httpcpp/includes ${CMAKE_SOURCE_DIR}/ssdpcpp/includes
-     /home/e3a/asio-1.10.2/include/ )
+     /home/e3a/asio-1.10.2/include/ ${LIBXML2_INCLUDE_DIR})
 
 #add_subdirectory (commons)
 add_subdirectory (httpcpp)
@@ -25,8 +27,8 @@ add_subdirectory (squawk-server)
 
 if (build_tests)
     enable_testing()
-    include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS} includes)
-    add_executable(testmain test/XmlEncodeTest.cpp )
+    include_directories(${ROOT} ${SQUAWK_INCLUDES} ${Boost_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS} includes)
+    add_executable(testmain test/XmlEncodeTest.cpp test/XmlParseTest.cpp test/XmlWriterTest.cpp test/UpnpTest.cpp )
     target_link_libraries(testmain pthread)
     target_link_libraries(testmain
         ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})

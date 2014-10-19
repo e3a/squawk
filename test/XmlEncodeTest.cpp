@@ -49,10 +49,8 @@ TEST( XmlEncodeTest, EscapeExtraEuro ) {
     EXPECT_EQ( "L&#246;r&#8364;m ipsum d&#246;l&#246;r sit &#228;met", commons::string::escape_xml( test ) );
 }
 
-/* TODO
 TEST( XmlEncodeTest, EscapeExtraViolin ) {
 
-    std::string test("Lor\u1D11E m ipsum dölör sit ämet");
-    std::cout << commons::string::escape_xml( test ) << std::endl;
-    EXPECT_EQ( "L&#246;r&#119070;m ipsum d&#246;l&#246;r sit &#228;met", commons::string::escape_xml( test ) );
-} */
+    std::string test("Lor𝄞 m ipsum dölör sit ämet");
+    EXPECT_EQ( "Lor&#119070; m ipsum d&#246;l&#246;r sit &#228;met", commons::string::escape_xml( test ) );
+}

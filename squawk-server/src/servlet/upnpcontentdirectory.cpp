@@ -19,7 +19,6 @@
 
 #include "upnpcontentdirectory.h"
 
-// #include "squawk-utils.h"
 #include "commons.h"
 #include "http.h"
 
@@ -42,166 +41,93 @@
       "<UpdateID>2</UpdateID></u:BrowseResponse>")
 
 #define UPNP_CDS_OBJECT_ID "ObjectID"
-#define UPNP_CDS_BROWSE_FLAG "BrowseFlag"
-#define UPNP_CDS_BROWSE_FLAG_METADATA "BrowseMetadata"
-#define UPNP_CDS_BROWSE_FLAG_DIRECT_CHILDREN "BrowseDirectChildren"
 
 namespace squawk {
 namespace servlet {
 
 log4cxx::LoggerPtr UpnpContentDirectory::logger(log4cxx::Logger::getLogger("squawk.servlet.UpnpContentDirectory"));
 
-void UpnpContentDirectory::registerContentDirectoryModule(ContentDirectoryModule * module) {
-  modules.insert(modules.end(), module);
+void UpnpContentDirectory::registerContentDirectoryModule( commons::upnp::ContentDirectoryModule * module ) {
+    modules.insert(modules.end(), module);
 }
 
 void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
-  LOG4CXX_DEBUG(logger, "HTTP Request:" << request.request_method << " " << request.uri << "\n" << request.body )
-  std::string result = parseRequest( request.body );
-  if(result.size()>0) {
-    std::string soap_string = XML_HEADER + XML_START_ENVELOPE + XML_START_BODY + result + XML_END_BODY + XML_END_ENVELOPE;
-    response << soap_string.c_str();
+    try {
+        commons::upnp::UpnpContentDirectoryRequest upnp_command =  commons::upnp::parseRequest( request.body );
+        LOG4CXX_DEBUG(logger, upnp_command )
 
-    response.set_mime_type( ::http::mime::XML );
-    response.set_status( ::http::http_status::OK );
+        if( upnp_command.type == commons::upnp::UpnpContentDirectoryRequest::BROWSE ) {
+            response << XML_HEADER << XML_START_ENVELOPE << XML_START_BODY << browse( upnp_command ) << XML_END_BODY << XML_END_ENVELOPE;
+            response.set_mime_type( ::http::mime::XML );
+            response.set_status( ::http::http_status::OK );
+            return;
 
-  } else {
-      throw ::http::http_status::BAD_REQUEST;
-  }
+        } else {
+            LOG4CXX_WARN(logger, "invoke::Unknown Method: " << upnp_command )
+        }
+
+    } catch( commons::upnp::UpnpException & ex ) {
+        LOG4CXX_ERROR(logger, "UPNP parse error: " << ex.code() << ":" << ex.what() )
+    } catch( commons::xml::XmlException & ex ) {
+        LOG4CXX_ERROR(logger, "XML parse error: " << ex.code() << ":" << ex.what() )
+    } catch( ... ) {
+        LOG4CXX_ERROR(logger, "UPNP parse error." )
+    }
+
+    throw ::http::http_status::BAD_REQUEST;
 }
 
-std::string UpnpContentDirectory::parseRequest(std::string r) {
+std::string UpnpContentDirectory::browse( commons::upnp::UpnpContentDirectoryRequest upnp_command ) {
 
-  TiXmlDocument doc;
-  doc.Parse(r.c_str(), 0, TIXML_ENCODING_UTF8);
+    if( upnp_command.contains( UPNP_CDS_BROWSE_FLAG ) && upnp_command.getValue( UPNP_CDS_BROWSE_FLAG ) == UPNP_CDS_BROWSE_FLAG_METADATA ) {
+        return UPNP_CDS_BROWSE_METADATA;
 
-  TiXmlElement * element = doc.RootElement();
-  std::string rootName = element->Value();
+    } else if( upnp_command.contains( UPNP_CDS_BROWSE_FLAG ) && upnp_command.getValue( UPNP_CDS_BROWSE_FLAG ) == UPNP_CDS_BROWSE_FLAG_DIRECT_CHILDREN && upnp_command.getValue( UPNP_CDS_OBJECT_ID ) == "0") {
+        std::stringstream result;
+        result << XML_START_BROWSE_RESPONSE << "<Result>" <<
+                  "&lt;DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" " <<
+                  "xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\"&gt;";
 
-  std::map<std::string, std::string> attributes;
-  std::map<std::string, std::string> namespaces;
+        //search for callback handler
+        int count = 0;
+        for (std::list< commons::upnp::ContentDirectoryModule * >::iterator it = modules.begin(); it != modules.end(); it++) {
+            result << (*it)->getRootNode();
+            count++; //TODO get the right children count
+        }
 
-  readAttributes(element, &namespaces, &attributes);
+        result << "&lt;/DIDL-Lite&gt;</Result>" <<
+                  "<NumberReturned>" << count << "</NumberReturned>" <<
+                  "<TotalMatches>" << count << "</TotalMatches>" <<
+                  "<UpdateID>1</UpdateID></u:BrowseResponse>";
+        return result.str();
 
-  TiXmlElement * element1 = element->FirstChildElement();
-  std::string element_name = std::string(element1->Value());
-  readAttributes(element1, &namespaces, &attributes);
-  if(element_name.find(":", 0) != std::string::npos) {
-    std::string prefix = element_name.substr(0, element_name.find(":", 0));
-    std::string name = element_name.substr(element_name.find(":", 0)+1, element_name.length());
-    if(namespaces.find(prefix) != namespaces.end() && namespaces[prefix] == "http://schemas.xmlsoap.org/soap/envelope/" && name == "Body") {
+    } else if( upnp_command.contains( UPNP_CDS_BROWSE_FLAG ) && upnp_command.getValue( UPNP_CDS_BROWSE_FLAG ) == UPNP_CDS_BROWSE_FLAG_DIRECT_CHILDREN ) {
+        std::stringstream result;
+        result << XML_START_BROWSE_RESPONSE << "<Result>" <<
+                  "&lt;DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" " <<
+                  "xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\" xmlns:pv=\"http://www.pv.com/pvns/\"&gt;";
 
-      element1 = element1->FirstChildElement();
-      readAttributes(element1, &namespaces, &attributes);
+        //search fall callback handler
+        int count = 0;
+        for (std::list< commons::upnp::ContentDirectoryModule *>::iterator it = modules.begin(); it != modules.end(); it++) {
+            commons::upnp::ContentDirectoryModule * myModule = (*it);
+            if(myModule->match( upnp_command )) {
+                result << myModule->parseNode(upnp_command );
+            }
+            count++;//TODO get real counter:
+        }
 
-      std::string element_name = std::string(element1->Value());
-      if(element_name.find(":", 0) != std::string::npos) {
-    prefix = element_name.substr(0, element_name.find(":", 0));
-    name = element_name.substr(element_name.find(":", 0)+1, element_name.length());
-    if(namespaces.find(prefix) != namespaces.end() && namespaces[prefix] == "urn:schemas-upnp-org:service:ContentDirectory:1") {
-      std::map<std::string, std::string> parameters;
-      element1 = element1->FirstChildElement();
-      if(element1) {
-        do {
-          parameters[std::string(element1->Value())] = (element1->GetText() == NULL ? std::string() : std::string(element1->GetText()));
-          element1 = element1->NextSiblingElement();
-        } while(element1);
-        return invoke(name, parameters);
-      }
+        result << "&lt;/DIDL-Lite&gt;</Result>" <<
+                  "<NumberReturned>2</NumberReturned>" <<
+                  "<TotalMatches>2</TotalMatches>" <<
+                  "<UpdateID>1</UpdateID></u:BrowseResponse>";
+
+        return result.str();
+
     } else {
-      std::cout << "not a contentdirectory element:" << namespaces[prefix] << ":" << name << std::endl;
+        LOG4CXX_DEBUG(logger, "Browse unknown command (" << upnp_command.getValue( UPNP_CDS_BROWSE_FLAG ) << ")")
+        return std::string();
     }
-
-      } else {
-    std::cout << "child element without namespace:" << element_name << std::endl;
-      }
-    } else {
-      std::cout << "element body not found: " << name << std::endl;
-    }
-  } else {
-    std::cout << "element without namespace:" << element_name << std::endl;
-  }
-}
-
-void UpnpContentDirectory::readAttributes(TiXmlElement * element, std::map<std::string, std::string> * namespaces, std::map<std::string, std::string> * attributes) {
-  TiXmlAttribute * attr = element->FirstAttribute();
-  if(attr) {
-    do {
-      std::string str_ns = std::string(attr->Name());
-      if( commons::string::starts_with(str_ns, std::string("xmlns:")) ) {
-    std::string prefix = str_ns.substr(str_ns.find(":", 0)+1, str_ns.length());
-    std::string ns = std::string(attr->Value());
-    (*namespaces)[prefix] = ns;
-      } else {
-    (*attributes)[std::string(attr->Name())] = std::string(attr->Value());
-      }
-      attr = attr->Next();
-    } while(attr);
-  }
-}
-
-std::string UpnpContentDirectory::invoke(std::string name, std::map<std::string, std::string> parameters) {
-  LOG4CXX_DEBUG(logger, "invoke with parameters:" << parameters.size())
-    if(name == "Browse") {
-      return browse(parameters);
-    } else {
-      LOG4CXX_WARN(logger, "invoke::Unknown Method: " << name)
-      return std::string();
-    }
-}
-
-std::string UpnpContentDirectory::browse(std::map<std::string, std::string> parameters) {
-  LOG4CXX_DEBUG(logger, "Browse (" << parameters.size() << ") ObjectID:" << parameters[UPNP_CDS_OBJECT_ID])
-
-  if(parameters.find(UPNP_CDS_BROWSE_FLAG) != parameters.end() && parameters[UPNP_CDS_BROWSE_FLAG] == UPNP_CDS_BROWSE_FLAG_METADATA) {
-    return UPNP_CDS_BROWSE_METADATA;
-
-  } else if(parameters.find(UPNP_CDS_BROWSE_FLAG) != parameters.end() && parameters[UPNP_CDS_BROWSE_FLAG] == UPNP_CDS_BROWSE_FLAG_DIRECT_CHILDREN && parameters[UPNP_CDS_OBJECT_ID] == "0") {
-    std::stringstream result;
-    result << XML_START_BROWSE_RESPONSE << "<Result>" <<
-    "&lt;DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" " <<
-    "xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\"&gt;";
-
-      //search for callback handler
-      int count = 0;
-      for (std::list< ContentDirectoryModule * >::iterator it = modules.begin(); it != modules.end(); it++) {
-    result << (*it)->getRootNode();
-    count++; //TODO get the right children count
-      }
-
-      result << "&lt;/DIDL-Lite&gt;</Result>" <<
-      "<NumberReturned>" << count << "</NumberReturned>" <<
-      "<TotalMatches>" << count << "</TotalMatches>" <<
-      "<UpdateID>1</UpdateID></u:BrowseResponse>";
-    return result.str();
-
-  } else if(parameters.find(UPNP_CDS_BROWSE_FLAG) != parameters.end() && parameters[UPNP_CDS_BROWSE_FLAG] == UPNP_CDS_BROWSE_FLAG_DIRECT_CHILDREN) {
-    std::stringstream result;
-    result << XML_START_BROWSE_RESPONSE << "<Result>" <<
-      "&lt;DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" " <<
-      "xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\" xmlns:pv=\"http://www.pv.com/pvns/\"&gt;";
-
-      //search fall callback handler
-      int count = 0;
-      for (std::list<ContentDirectoryModule *>::iterator it = modules.begin(); it != modules.end(); it++) {
-    ContentDirectoryModule * myModule = (*it);
-    if(myModule->match(parameters)) {
-      result << myModule->parseNode(parameters);
-    }
-    count++;//TODO get real counter:
-      }
-
-      result << "&lt;/DIDL-Lite&gt;</Result>" <<
-    "<NumberReturned>2</NumberReturned>" <<
-    "<TotalMatches>2</TotalMatches>" <<
-    "<UpdateID>1</UpdateID></u:BrowseResponse>";
-
-    return result.str();
-
-  } else {
-    LOG4CXX_DEBUG(logger, "Browse unknown command (" << parameters[UPNP_CDS_BROWSE_FLAG] << ")")
-    return std::string();
-  }
 }
 }}

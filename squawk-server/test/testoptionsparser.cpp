@@ -20,7 +20,7 @@
 
 #include <string>
 #include <map>
-#include "squawk-utils.h"
+#include "commons.h"
 #include "../src/squawkconfig.h"
 #include <gtest/gtest.h>
 
@@ -159,7 +159,7 @@ TEST(SquawkParseOptions, TestMergedOptions) {
     squawk::SquawkConfig config;
 
     ASSERT_TRUE(config.parse(4, options));
-    ASSERT_TRUE(config.load("../config/squawk.properties"));
+    ASSERT_TRUE(config.load("../../squawk-server/config/squawk.properties"));
     ASSERT_TRUE(config.validate());
 
     EXPECT_EQ(std::string("127.0.0.1"), config.string_value(CONFIG_HTTP_IP));

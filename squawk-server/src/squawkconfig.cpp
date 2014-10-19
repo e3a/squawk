@@ -26,6 +26,11 @@
 #include <iostream>
 #include <uuid/uuid.h>
 
+
+//TODO remove
+#include <unistd.h>
+
+
 #define HELP_TEXT std::string("Options description: \n" \
 "\t-v [ --version ]         print version string\n" \
 "\t--help                   produce help message\n" \
@@ -105,6 +110,15 @@ bool SquawkConfig::validate() {
 }
 
 bool SquawkConfig::load(std::string filename) {
+
+    size_t size;
+    char *buffer = new char[255];
+    buffer = getcwd( buffer, size);
+    std::cout << "current dir: " << buffer << std::endl;
+
+
+
+
   std::filebuf fb;
   if (fb.open (filename.c_str(), std::ios::in)) {
     std::istream is(&fb);

@@ -21,19 +21,20 @@
 #include "squawk.h"
 #include "../squawkconfig.h"
 #include "../db/sqlite3database.h"
+#include <upnp.h>
 
 #include "log4cxx/logger.h"
 
 namespace squawk {
 namespace servlet {
 
-class UpnpMusicDirectoryModule : public ContentDirectoryModule {
+class UpnpMusicDirectoryModule : public commons::upnp::ContentDirectoryModule {
 public:
     UpnpMusicDirectoryModule(squawk::SquawkConfig * squawk_config, squawk::db::Sqlite3Database * db ) : db(db), squawk_config(squawk_config) {};
 
     virtual std::string getRootNode();
-    virtual bool match(std::map<std::string, std::string> request);
-    virtual std::string parseNode(std::map<std::string, std::string> request);
+    virtual bool match( commons::upnp::UpnpContentDirectoryRequest parseRequest );
+    virtual std::string parseNode( commons::upnp::UpnpContentDirectoryRequest parseRequest );
   private:
     static log4cxx::LoggerPtr logger;
     squawk::SquawkConfig * squawk_config;

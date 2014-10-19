@@ -189,11 +189,10 @@ void HttpResponse::set_mime_type(mime::MIME_TYPE type) {
 
 void HttpResponse::reset() {
     if( body_istream ) {
-        std::cout << "delete body istream" << std::endl;
         delete body_istream;
     }
     body_istream = nullptr;
-    body_stream.str(string(""));
+    body_stream.str( string( "" ) );
     headers.clear();
     size = 0;
 }

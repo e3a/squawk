@@ -180,7 +180,7 @@ namespace squawk {
  
     };
   }
-  
+  /** TODO is this still used? */
   class SquawkService {
     public:
       SquawkService() {};
@@ -225,14 +225,5 @@ namespace media {
 
 
 
-/**
- * Content Directory Module
- */  
-class ContentDirectoryModule {
-  public:
-    virtual std::string getRootNode() = 0;
-    virtual bool match(std::map<std::string, std::string> request) = 0;
-    virtual std::string parseNode(std::map<std::string, std::string> request) = 0;
-};
 
 #endif // SQUAWK_H

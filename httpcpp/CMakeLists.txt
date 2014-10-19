@@ -24,16 +24,16 @@ set(SOURCES ${SOURCES} src/servlet/fileservlet.cpp)
 
 add_library(libhttpcpp ${SOURCES})
 
-# if (build_tests)
-#    enable_testing()
-#    include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS} includes)
-#    add_executable(testmain test/testmain.cpp
-#                   test/mimetypetest.cpp
-#                   test/httpparsertest.cpp
-#                   test/httpservlettest.cpp
-#        ${SOURCES})
-#    target_link_libraries(testmain pthread)
-#    target_link_libraries(testmain
-#        ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
-#    add_test(squawk-tests testmain)
-# endif()
+if (build_tests)
+   enable_testing()
+   include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS} includes)
+   add_executable(testmain_httpcpp test/testmain.cpp
+                  test/mimetypetest.cpp
+                  test/httpparsertest.cpp
+                  test/httpservlettest.cpp
+                  ${SOURCES})
+   target_link_libraries(testmain_httpcpp pthread)
+   target_link_libraries(testmain_httpcpp
+       ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
+   add_test(httpcpp-tests testmain_httpcpp)
+endif()

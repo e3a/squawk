@@ -12,8 +12,13 @@ set(LIBS ${LIBS} ${SQLITE3_LIBRARY})
 # set(LIBS ${LIBS} ${ID3_LIBRARY})
 find_package(Flac++ REQUIRED)
 set(LIBS ${LIBS} ${FLAC++_LIBRARIES})  
-find_package(TinyXML REQUIRED)
-set(LIBS ${LIBS} ${TINYXML_LIBRARIES})  
+
+# find_package(TinyXML REQUIRED)
+# set(LIBS ${LIBS} ${TINYXML_LIBRARIES})
+find_package(LibXml2 REQUIRED)
+set(LIBS ${LIBS} ${LIBXML2_LIBRARIES})
+
+
 find_package(Log4cxx REQUIRED)
 set(LIBS ${LIBS} ${LOG4CXX_LIBRARIES})  
 find_package(Imlib2 REQUIRED)
@@ -31,8 +36,8 @@ set(LIBS ${LIBS} ${CMAKE_BINARY_DIR}/httpcpp/liblibhttpcpp.a)
 set(LIBS ${LIBS} ${CMAKE_BINARY_DIR}/ssdpcpp/liblibssdpcpp.a)
 
 include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIR}
-  ${FLAC++_INCLUDE_DIR} ${TINYXML_INCLUDE_DIR} ${LOG4CXX_INCLUDE_DIR} ${IMLIB2_INCLUDE_DIR} ${PCREPP_INCLUDE_DIR} 
-  ${AVCODEC_INCLUDES} ${SQUAWK_INCLUDES} ${LAME_INCLUDE_DIR} includes)
+  ${FLAC++_INCLUDE_DIR} ${TINYXML_INCLUDE_DIR} ${LIBXML2_INCLUDE_DIR} ${LOG4CXX_INCLUDE_DIR} ${IMLIB2_INCLUDE_DIR}
+  ${PCREPP_INCLUDE_DIR} ${AVCODEC_INCLUDES} ${SQUAWK_INCLUDES} ${LAME_INCLUDE_DIR} includes)
 link_directories(${Boost_LIBRARY_DIR})
 
 set(SQUAWK src/squawkconfig.cpp src/squawkservice.cpp)
@@ -50,23 +55,21 @@ add_executable(squawk src/squawkserver.cpp ${SOURCES})
 target_link_libraries(squawk ${LIBS})
 target_link_libraries(av ${LIBS})
 
-#if (build_tests)
-#    enable_testing()
-#    include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIR} ${ID3_INCLUDE_DIR} ${FLAC++_INCLUDE_DIR} ${GTEST_INCLUDE_DIRS} includes)
-#    add_executable(testmain test/testmain.cpp
-#	test/media/teststringparse.cpp
-#	test/api/testapiartisthandler.cpp
-#	test/testutils.cpp
-#        test/testoptionsparser.cpp
-#        test/upnp/httpparsetest.cpp
-#        test/http/httpparsertest.cpp
-#        test/http/mimetypetest.cpp
-#        test/upnp/contentdirectoryparserequest.cpp
-#        ${SOURCES})
-#    target_link_libraries(testmain
-#        pthread)
-#    target_link_libraries(testmain
-#        ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
-#    add_test(squawk-tests testmain)
-#endif()
+if (build_tests)
+    enable_testing()
+    include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIR} ${ID3_INCLUDE_DIR} ${FLAC++_INCLUDE_DIR} ${GTEST_INCLUDE_DIRS} includes)
+    add_executable(testmain_server test/testmain.cpp
+        test/media/teststringparse.cpp
+        test/api/testapiartisthandler.cpp
+        # TODO move to toplevel test/testutils.cpp
+        test/testoptionsparser.cpp
+        # TODO use from http_cpp test/upnp/httpparsetest.cpp
+        # TODO use from http_cpp test/http/httpparsertest.cpp
+        test/http/mimetypetest.cpp
+        ${SOURCES})
+    target_link_libraries(testmain_server pthread)
+    target_link_libraries(testmain_server
+        ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
+    add_test(squawk-tests testmain_server)
+endif()
 

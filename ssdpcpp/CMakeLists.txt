@@ -20,13 +20,13 @@ add_library(libssdpcpp ${SOURCES})
 #if (build_tests)
 #    enable_testing()
 #    include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS} includes)
-#    add_executable(testmain test/testmain.cpp
-#                   test/mimetypetest.cpp
-#                   test/httpparsertest.cpp
-#                   test/httpservlettest.cpp
+#    add_executable(testmain_ssdpcpp test/testmain.cpp
+ #                  test/mimetypetest.cpp
+ #                  test/httpparsertest.cpp
+ #                  test/httpservlettest.cpp
 #        ${SOURCES})
-#    target_link_libraries(testmain pthread)
-#    target_link_libraries(testmain
+#    target_link_libraries(testmain_ssdpcpp pthread)
+#    target_link_libraries(testmain_ssdpcpp
 #        ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
-#    add_test(squawk-tests testmain)
+#    add_test(squawk-tests testmain_ssdpcpp)
 #endif()

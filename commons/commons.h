@@ -155,10 +155,8 @@ namespace string {
             default:
 
             if( ( *iter & 0b11110000 ) == 0b11110000 ) {
-                /* TODO test does not work
                 utf_buffer[ utf_count++ ] = *iter;
-                utf_chars = 4; */
-                std::cerr << "!!! found utf8 character (0b11110000)" << std::endl;
+                utf_chars = 4;
 
             } else if( ( *iter & 0b11100000 ) == 0b11100000 ) {
                 utf_buffer[ utf_count++ ] = *iter;
@@ -178,16 +176,16 @@ namespace string {
                     } else if( utf_chars == 3 ) {
                         result = (( utf_buffer[0] & 0b00011111 ) << 12 ) | (( utf_buffer[1] & 0b00111111 ) << 6 ) | utf_buffer[2] & 0b00111111;
 
-/* TODO test does not work
                     } else if( utf_chars == 4 ) {
-                        result = (( utf_buffer[0] & 0b00001111 ) << 18 ) | (( utf_buffer[1] & 0b00111111 ) << 12 ) | (( utf_buffer[1] & 0b00111111 ) << 6 )| ( utf_buffer[1] & 0b00111111 );
-                        std::cout << "result:" << result << std::endl;
-*/
+                        result = (( utf_buffer[0] & 0b00001111 ) << 18 ) | (( utf_buffer[1] & 0b00111111 ) << 12 ) | (( utf_buffer[2] & 0b00111111 ) << 6 )| ( utf_buffer[3] & 0b00111111 );
                     }
                     utf_chars = 0; utf_count = 0;
-                    ss << "&#" << result << ";";
+                    if( result <= 9900 ) { // TODO why this is neccessary?
+                        ss << "&#" << result << ";";
+                    } else {
+                        std::cout << "skip value: " << result << std::endl;
+                    }
                 }
-
             } else {
                 ss << *iter;
             }

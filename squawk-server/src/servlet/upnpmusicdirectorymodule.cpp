@@ -22,24 +22,16 @@
 #define CDS_MEDIA_ROOT "music"
 #define CDS_MEDIA_ARTIST "music.artists"
 
-#define XML_CDS_ROOT_NODE "&lt;container id=\"music.albums\" parentID=\"music\" restricted=\"1\" childCount=\"2\"&gt;" \
-      "&lt;dc:title&gt;Albums&lt;/dc:title&gt;" \
-      "&lt;upnp:class&gt;object.container.storageFolder&lt;/upnp:class&gt;" \
-      "&lt;upnp:storageUsed&gt;-1&lt;/upnp:storageUsed&gt;" \
-      "&lt;/container&gt;" \
-      "&lt;container id=\"music.artists\" parentID=\"music\" restricted=\"1\" childCount=\"1\"&gt;" \
-      "&lt;dc:title&gt;Artists&lt;/dc:title&gt;" \
-      "&lt;upnp:class&gt;object.container.storageFolder&lt;/upnp:class&gt;" \
-      "&lt;upnp:storageUsed&gt;-1&lt;/upnp:storageUsed&gt;" \
-      "&lt;/container&gt;"
 #define ROOT_NODE "&lt;container id=\"music\" parentID=\"0\" restricted=\"1\" childCount=\"2\"&gt;" \
       "&lt;dc:title&gt;Music&lt;/dc:title&gt;" \
       "&lt;upnp:class&gt;object.container.storageFolder&lt;/upnp:class&gt;" \
       "&lt;upnp:storageUsed&gt;-1&lt;/upnp:storageUsed&gt;" \
       "&lt;/container&gt;"
-#define OBJECT_ID "ObjectID"
+#define OBJECT_ID "ObjectID" //TODO move to upnp.h
 
 #define QUERY_ARTISTS "select ROWID, name from tbl_cds_artists order by name"
+#define QUERY_ARTISTS_COUNT "select count(*) from tbl_cds_artists"
+#define QUERY_ALBUMS_COUNT "select count(*) from tbl_cds_albums"
 #define QUERY_ARTIST_BY_ALBUM "select artist.ROWID, artist.name from tbl_cds_artists artist " \
                               "JOIN tbl_cds_artists_albums m ON artist.ROWID = m.artist_id " \
                               "where m.album_id=?"
@@ -53,52 +45,81 @@
 namespace squawk {
 namespace servlet {
 
-log4cxx::LoggerPtr UpnpMusicDirectoryModule::logger(log4cxx::Logger::getLogger("squawk.servlet.UpnpMusicDirectoryModule"));
+log4cxx::LoggerPtr UpnpMusicDirectoryModule::logger( log4cxx::Logger::getLogger( "squawk.servlet.UpnpMusicDirectoryModule" ) );
 
-bool UpnpMusicDirectoryModule::match(std::map<std::string, std::string> request) {
-
-    // log the request
-    std::string logBuffer;
-    for( auto iterator = request.begin(); iterator != request.end(); ++iterator ) {
-        logBuffer += "\t" + iterator->first + ": " + iterator->second + "\n";
-    }
-    logBuffer += "\n";
-    LOG4CXX_FATAL(logger, "UPNP Request:\n" << logBuffer );
-
-
-  if(request.find(OBJECT_ID) != request.end() && commons::string::starts_with(request[OBJECT_ID], CDS_MEDIA_ROOT)) {      
+bool UpnpMusicDirectoryModule::match( commons::upnp::UpnpContentDirectoryRequest request ) {
+  if( request.contains( OBJECT_ID) && commons::string::starts_with( request.getValue( OBJECT_ID ), CDS_MEDIA_ROOT ) ) {
     return true;
   } else return false;
 }
 std::string UpnpMusicDirectoryModule::getRootNode() {
-    return std::string(ROOT_NODE);
+    return std::string( ROOT_NODE );
 }
-std::string UpnpMusicDirectoryModule::parseNode(std::map<std::string, std::string> request) {
-  if(request.find(OBJECT_ID) != request.end() && request[OBJECT_ID] == CDS_MEDIA_ROOT) {
-      return std::string(XML_CDS_ROOT_NODE);
+std::string UpnpMusicDirectoryModule::parseNode( commons::upnp::UpnpContentDirectoryRequest request ) {
+  if( request.contains( OBJECT_ID) && request.getValue( OBJECT_ID ) == CDS_MEDIA_ROOT ) {
+      std::stringstream result;
+      squawk::db::Sqlite3Statement * stmt_artists_count = NULL;
+      squawk::db::Sqlite3Statement * stmt_albums_count = NULL;
+      int artist_count = 0;
+      int albums_count = 0;
+      try {
+          stmt_artists_count = db->prepare_statement( QUERY_ARTISTS_COUNT );
+          stmt_albums_count = db->prepare_statement( QUERY_ALBUMS_COUNT );
 
-  } else if(request.find(OBJECT_ID) != request.end() && request[OBJECT_ID] == CDS_MEDIA_ARTIST) {
+          if( stmt_artists_count->step() ) {
+              artist_count = stmt_artists_count->get_int( 0 );
+          }
+          if( stmt_albums_count->step() ) {
+              albums_count = stmt_albums_count->get_int( 0 );
+          }
+      } catch( squawk::db::DaoException & e ) {
+          LOG4CXX_FATAL(logger, "Can not get artist_count, Exception:" << e.code() << "-> " << e.what());
+          if(stmt_artists_count != NULL) db->release_statement( stmt_artists_count );
+          if(stmt_albums_count != NULL) db->release_statement( stmt_albums_count );
+          throw;
+      } catch( ... ) {
+          LOG4CXX_FATAL(logger, "Other Excpeption in get_artist_count.");
+          throw;
+      }
+      result << "&lt;container id=\"music.albums\" parentID=\"music\" childCount=\"" << albums_count << "\"&gt;" <<
+                "&lt;dc:title&gt;Albums&lt;/dc:title&gt;" <<
+                "&lt;upnp:class&gt;object.container.storageFolder&lt;/upnp:class&gt;" <<
+                "&lt;upnp:storageUsed&gt;-1&lt;/upnp:storageUsed&gt;" <<
+                "&lt;/container&gt;" <<
+                "&lt;container id=\"music.artists\" parentID=\"music\" childCount=\"" << artist_count << "\"&gt;" <<
+                "&lt;dc:title&gt;Artists&lt;/dc:title&gt;" <<
+                "&lt;upnp:class&gt;object.container.storageFolder&lt;/upnp:class&gt;" <<
+                "&lt;upnp:storageUsed&gt;-1&lt;/upnp:storageUsed&gt;" <<
+                "&lt;/container&gt;";
+      return std::string( result.str() );
+
+  } else if( request.contains( OBJECT_ID) && request.getValue( OBJECT_ID ) == CDS_MEDIA_ARTIST ) {
     std::stringstream result;
 
     squawk::db::Sqlite3Statement * stmt_artists = NULL;
+    squawk::db::Sqlite3Statement * stmt_artists_count = NULL;
     try {
         stmt_artists = db->prepare_statement( QUERY_ARTISTS );
+        stmt_artists_count = db->prepare_statement( QUERY_ARTISTS_COUNT );
 
+        if( stmt_artists_count->step() ) {
+            while( stmt_artists->step() ) {
 
-        while( stmt_artists->step() ) {
-
-            result << "&lt;container id=\"music.artists:" << std::to_string(stmt_artists->get_int(0)) << "\" parentID=\"music\" restricted=\"1\" childCount=\"1\"&gt;" <<
-                      "&lt;dc:title&gt;" << commons::string::escape_xml( commons::string::escape_xml( stmt_artists->get_string(1) ) ) << "&lt;/dc:title&gt;" <<
-                      "&lt;upnp:class&gt;object.container.storageFolder&lt;/upnp:class&gt;" <<
-                      "&lt;upnp:storageUsed&gt;-1&lt;/upnp:storageUsed&gt;" <<
-                      "&lt;/container&gt;";
+                result << "&lt;container id=\"music.artists:" << std::to_string(stmt_artists->get_int(0)) << "\" parentID=\"music\" childCount=\"" << stmt_artists_count->get_int( 0 ) << "\"&gt;" <<
+                          "&lt;dc:title&gt;" << commons::string::escape_xml( commons::string::escape_xml( stmt_artists->get_string(1) ) ) << "&lt;/dc:title&gt;" <<
+                          "&lt;upnp:class&gt;object.container.storageFolder&lt;/upnp:class&gt;" <<
+                          // "&lt;upnp:storageUsed&gt;-1&lt;/upnp:storageUsed&gt;" <<
+                          "&lt;/container&gt;";
+            }
         }
         stmt_artists->reset();
-        db->release_statement(stmt_artists);
+        db->release_statement( stmt_artists );
+        db->release_statement( stmt_artists_count );
 
-    } catch(squawk::db::DaoException & e) {
+    } catch( squawk::db::DaoException & e ) {
         LOG4CXX_FATAL(logger, "Can not get artists, Exception:" << e.code() << "-> " << e.what());
         if(stmt_artists != NULL) db->release_statement( stmt_artists );
+        if(stmt_artists_count != NULL) db->release_statement( stmt_artists_count );
         throw;
     } catch( ... ) {
         LOG4CXX_FATAL(logger, "Other Excpeption in get_artists.");
@@ -107,8 +128,8 @@ std::string UpnpMusicDirectoryModule::parseNode(std::map<std::string, std::strin
 
     return result.str();
 
-  } else if(request.find(OBJECT_ID) != request.end() && commons::string::starts_with(request[OBJECT_ID], "music.artists:")) {
-    unsigned long id = commons::string::parse_string<unsigned long>(request[OBJECT_ID].substr(request[OBJECT_ID].find(":")+1, request[OBJECT_ID].length()));
+  } else if( request.contains( OBJECT_ID) && commons::string::starts_with( request.getValue( OBJECT_ID ), "music.artists:" ) ) {
+    unsigned long id = commons::string::parse_string<unsigned long>( request.getValue( OBJECT_ID ).substr(request.getValue( OBJECT_ID ).find(":")+1, request.getValue( OBJECT_ID ).length()));
     std::stringstream result;
 
     squawk::db::Sqlite3Statement * stmt_albums = NULL;
@@ -120,7 +141,7 @@ std::string UpnpMusicDirectoryModule::parseNode(std::map<std::string, std::strin
         stmt_albums->bind_int( 1, id );
         while( stmt_albums->step() ) {
 
-            result << "&lt;container id=\"music.albums:" << std::to_string(stmt_albums->get_int(3)) << "\" parentID=\"music:artists:\" restricted=\"1\" childCount=\"1\"&gt;" <<
+            result << "&lt;container id=\"music.albums:" << std::to_string(stmt_albums->get_int(3)) << "\" parentID=\"music:artists\"&gt;" << // restricted=\"1\" childCount=\"1\"
                 "&lt;dc:title&gt;" << commons::string::escape_xml(commons::string::escape_xml( stmt_albums->get_string(0) ) ) << "&lt;/dc:title&gt;" <<
                 "&lt;upnp:class&gt;object.container.storageFolder&lt;/upnp:class&gt;" <<
                 "&lt;upnp:storageUsed&gt;-1&lt;/upnp:storageUsed&gt;";
@@ -155,7 +176,7 @@ std::string UpnpMusicDirectoryModule::parseNode(std::map<std::string, std::strin
 
     return result.str();
 
-  } else if(request.find(OBJECT_ID) != request.end() && request[OBJECT_ID] == "music.albums") {
+  } else if( request.contains( OBJECT_ID) && request.getValue( OBJECT_ID ) == "music.albums" ) {
     std::stringstream result;
 
     squawk::db::Sqlite3Statement * stmt_albums = NULL;
@@ -200,8 +221,8 @@ std::string UpnpMusicDirectoryModule::parseNode(std::map<std::string, std::strin
     }
     return result.str();
 
-  } else if(request.find(OBJECT_ID) != request.end() && commons::string::starts_with(request[OBJECT_ID], "music.albums:")) {
-    unsigned long id = commons::string::parse_string<unsigned long>(request[OBJECT_ID].substr(request[OBJECT_ID].find(":")+1, request[OBJECT_ID].length()));
+  } else if( request.contains( OBJECT_ID) && commons::string::starts_with( request.getValue( OBJECT_ID ), "music.albums:" ) ) {
+    unsigned long id = commons::string::parse_string<unsigned long>( request.getValue( OBJECT_ID ).substr( request.getValue( OBJECT_ID ).find(":")+1, request.getValue( OBJECT_ID ).length()));
     std::stringstream result;
 
     squawk::db::Sqlite3Statement * stmt_songs = NULL;
@@ -225,7 +246,7 @@ std::string UpnpMusicDirectoryModule::parseNode(std::map<std::string, std::strin
         if( stmt_album->step() ) {
             while( stmt_songs->step() ) {
 
-                result << "&lt;item id=\"/music/albums/songs/" << id << "\" parentID=\"" << request[OBJECT_ID] << "\" restricted=\"1\"&gt;" <<
+                result << "&lt;item id=\"/music/albums/songs/" << id << "\" parentID=\"" << request.getValue( OBJECT_ID ) << "\" restricted=\"1\"&gt;" <<
                 "&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;" <<
                 "&lt;dc:title&gt;" << commons::string::escape_xml(commons::string::escape_xml( stmt_songs->get_string( 1 ) ) ) << "&lt;/dc:title&gt;&lt;" <<
                 creator <<
@@ -288,7 +309,8 @@ std::string UpnpMusicDirectoryModule::parseNode(std::map<std::string, std::strin
     } */
     return result.str();
 
-  } else if(request.find(OBJECT_ID) != request.end() && commons::string::starts_with(request[OBJECT_ID], "music.")) {
+  } else if( request.contains( OBJECT_ID) && commons::string::starts_with( request.getValue( OBJECT_ID ), "music." ) ) {
+      std::cout << "requested music: = " << request.getValue( OBJECT_ID ) << std::endl;
       return std::string("");
   }
   return std::string("");

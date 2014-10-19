@@ -19,12 +19,14 @@
 #ifndef UPNPCONTENTDIRECTORY_H
 #define UPNPCONTENTDIRECTORY_H
 
-#include <string>
+#include <list>
 #include <map>
-#include "tinyxml.h"
+#include <string>
+/* #include "tinyxml.h" */
 
 #include "http.h"
-#include "squawk.h"
+// #include "squawk.h"
+#include "upnp.h"
 
 #include "log4cxx/logger.h"
 
@@ -39,15 +41,12 @@ namespace servlet {
 class UpnpContentDirectory : public ::http::HttpServlet {
 public:
     UpnpContentDirectory( const std::string path ) : HttpServlet(path) {};
-    void registerContentDirectoryModule(ContentDirectoryModule * module);
+    void registerContentDirectoryModule( commons::upnp::ContentDirectoryModule * module);
     virtual void do_post(::http::HttpRequest & request, ::http::HttpResponse & response);
-    std::string parseRequest(std::string r);
-  private:
+private:
     static log4cxx::LoggerPtr logger;
-    std::string invoke(std::string method, std::map<std::string, std::string> parameters);
-    std::string browse(std::map<std::string, std::string> parameters);
-    std::list<ContentDirectoryModule *> modules;
-    void readAttributes(TiXmlElement * element, std::map<std::string, std::string> * namespaces, std::map<std::string, std::string> * attributes);
+    std::string browse( commons::upnp::UpnpContentDirectoryRequest upnp_command );
+    std::list< commons::upnp::ContentDirectoryModule *> modules;
 };
 }}
 
