@@ -206,23 +206,23 @@ public:
      * @param name the element name
      * @return new element
      */
-    Node element( std::string ns, std::string name ) {
+    Node element( const std::string & name ) {
         xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST name.c_str() );
         xmlDocSetRootElement(doc, root_node);
         return Node( root_node );
     };
     /**
      * @brief element create the root node.
-     * @param ns the namespace
+     * @param ns the namespace uri
      * @param name the element name
      * @param content the element content
      * @return new element
-     */
-    Node element( std::string ns, std::string name, std::string content ) {
+    Node element( const std::string & ns, std::string name, const std::string & content ) { //TODO unused variables?
         xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST name.c_str() );
         xmlDocSetRootElement(doc, root_node);
         return Node( root_node );
     };
+     */
     /**
      * @brief element create an element
      * @param parent the parent element
@@ -230,7 +230,7 @@ public:
      * @param name the element name
      * @return new element
      */
-    Node element( Node parent, std::string ns, std::string name ) {
+    Node element( const Node & parent, const std::string & ns, const std::string & name ) {
         xmlNodePtr node;
         if( namespaces.find( ns ) != namespaces.end() ) {
             node = xmlNewNode( namespaces[ ns ], BAD_CAST name.c_str() );
@@ -250,7 +250,7 @@ public:
      * @param content the element content
      * @return the new element
      */
-    Node element( Node parent, std::string ns, std::string name, std::string content ) {
+    Node element( const Node & parent, const std::string & ns, const std::string & name, const std::string & content ) {
         xmlNodePtr node;
         if( namespaces.find( ns ) != namespaces.end() ) {
             node = xmlNewNode( namespaces[ ns ], BAD_CAST name.c_str() );
@@ -269,7 +269,7 @@ public:
      * @param name the attribute name
      * @param content the attribute content
      */
-    void attribute( Node parent, std::string name, std::string content ) {
+    void attribute( const Node & parent, const std::string & name, const std::string & content ) {
         xmlNewProp( parent.node, BAD_CAST name.c_str(), BAD_CAST content.c_str() );
     };
     /**
@@ -279,7 +279,7 @@ public:
      * @param name the attribute name
      * @param content the attribute content
      */
-    void attribute( Node parent, std::string ns, std::string name, std::string content ) {
+    void attribute( const Node & parent, const std::string & ns, const std::string & name, const std::string & content ) {
         if( namespaces.find( ns ) != namespaces.end() ) {
             xmlNewNsProp( parent.node, namespaces[ ns ], BAD_CAST name.c_str(), BAD_CAST content.c_str() );
         } else {
@@ -287,14 +287,25 @@ public:
         }
     };
     /**
-     * Create a new namespace. For default namespace create the namespace with an empty prefix ("").
+     * Create a default namespace.
+     * @brief ns new default namepace.
+     * @param parent the parent node
+     * @param href the namespace uri
+     */
+    void ns( const Node & parent, const std::string & href ) {
+        xmlNsPtr ns = xmlNewNs( parent.node, BAD_CAST href.c_str(), NULL );
+        xmlSetNs( parent.node, ns );
+    }
+    /**
+     * Create a new namespace.
      * @brief ns new namepace.
      * @param parent the parent node
      * @param href the namespace uri
      * @param prefix the namespace prefix
      * @param assign assign namespace to parent node (default false)
      */
-    void ns( Node parent, std::string href, std::string prefix, bool assign = false ) {
+    void ns( const Node & parent, const std::string & href, const std::string & prefix, bool assign = false ) {
+        //TODO remove default namespace
         xmlNsPtr ns = xmlNewNs( parent.node, BAD_CAST href.c_str(), ( prefix.size() == 0 ? NULL : BAD_CAST prefix.c_str() ) );
         namespaces[ href ] = ns;
         if( assign ) {

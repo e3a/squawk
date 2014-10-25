@@ -85,7 +85,7 @@
 TEST( XmlWriter, SimpleXML ) {
 
     commons::xml::XMLWriter writer;
-    commons::xml::Node root_node = writer.element( "", "PARTS", "" );
+    commons::xml::Node root_node = writer.element( "PARTS" );
 
     writer.element( root_node, "", "TITLE", "Computer Parts" );
 
@@ -118,7 +118,7 @@ TEST( XmlWriter, SimpleXML ) {
 TEST( XmlWriter, AtributeXML ) {
 
     commons::xml::XMLWriter writer;
-    commons::xml::Node root_node = writer.element( "", "messages", "" );
+    commons::xml::Node root_node = writer.element( "messages" );
 
     commons::xml::Node child_node = writer.element( root_node, "", "note", "" );
     writer.attribute( child_node, "ID", "501" );
@@ -141,7 +141,7 @@ TEST( XmlWriter, AtributeXML ) {
 TEST( XmlWriter, NamespaceXML ) {
 
     commons::xml::XMLWriter writer;
-    commons::xml::Node root_node = writer.element( "", "bestellung", "" );
+    commons::xml::Node root_node = writer.element( "bestellung" );
     writer.ns( root_node, "http://localhost/XML/produkt", "produkt" );
     writer.ns( root_node, "http://localhost/XML/kunde", "kunde" );
 
@@ -158,7 +158,7 @@ TEST( XmlWriter, NamespaceXML ) {
 TEST( XmlWriter, RootNamespaceXML ) {
 
     commons::xml::XMLWriter writer;
-    commons::xml::Node root_node = writer.element( "", "root", "" );
+    commons::xml::Node root_node = writer.element( "root" );
     writer.ns( root_node, "urn:schemas-upnp-org:device-1-0", "" );
 
     commons::xml::Node spec_node = writer.element( root_node, "", "specVersion" );
@@ -173,7 +173,7 @@ TEST( XmlWriter, RootNamespaceXML ) {
 TEST( XmlWriter, SoapEnvelope ) {
 
     commons::xml::XMLWriter xmlWriter;
-    commons::xml::Node envelope_node = xmlWriter.element("", "Envelope", "");
+    commons::xml::Node envelope_node = xmlWriter.element( "Envelope" );
     xmlWriter.ns(envelope_node, "http://schemas.xmlsoap.org/soap/envelope/", "s", true);
     xmlWriter.ns(envelope_node, "http://www.w3.org/2001/XMLSchema-instance", "xsi", false);
     xmlWriter.attribute(envelope_node, "http://schemas.xmlsoap.org/soap/envelope/", "encodingStyle", "http://schemas.xmlsoap.org/soap/encoding/");
@@ -190,7 +190,7 @@ TEST( XmlWriter, SoapEnvelope ) {
 TEST( XmlWriter, SoapEnvelopeWithContnet ) {
 
     commons::xml::XMLWriter xmlWriter;
-    commons::xml::Node envelope_node = xmlWriter.element("", "Envelope", "");
+    commons::xml::Node envelope_node = xmlWriter.element( "Envelope" );
     xmlWriter.ns(envelope_node, "http://schemas.xmlsoap.org/soap/envelope/", "s", true);
     xmlWriter.ns(envelope_node, "http://www.w3.org/2001/XMLSchema-instance", "xsi", false);
     xmlWriter.attribute(envelope_node, "http://schemas.xmlsoap.org/soap/envelope/", "encodingStyle", "http://schemas.xmlsoap.org/soap/encoding/");

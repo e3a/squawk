@@ -31,7 +31,7 @@ log4cxx::LoggerPtr UpnpXmlDescription::logger(log4cxx::Logger::getLogger("squawk
 void UpnpXmlDescription::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
     commons::xml::XMLWriter writer;
-    commons::xml::Node root_node = writer.element( "", "root", "" );
+    commons::xml::Node root_node = writer.element( "root" );
     writer.ns( root_node, "urn:schemas-upnp-org:device-1-0", "" );
 
     commons::xml::Node spec_node = writer.element( root_node, "", "specVersion" );

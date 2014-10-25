@@ -63,7 +63,7 @@ void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpRe
 
 void UpnpContentDirectory::browse( commons::xml::XMLWriter * xmlWriter, commons::upnp::UpnpContentDirectoryRequest * upnp_command ) {
 
-    commons::xml::Node envelope_node = xmlWriter->element("", "Envelope", "");
+    commons::xml::Node envelope_node = xmlWriter->element( "Envelope" );
     xmlWriter->ns(envelope_node, commons::upnp::XML_NS_SOAP, "s", true);
     xmlWriter->ns(envelope_node, commons::upnp::XML_NS_SOAPENC, "soapenc", false);
     xmlWriter->ns(envelope_node, commons::upnp::XML_NS_SCHEMA, "xsd", false);
@@ -81,7 +81,7 @@ void UpnpContentDirectory::browse( commons::xml::XMLWriter * xmlWriter, commons:
     if( upnp_command->contains( UPNP_CDS_BROWSE_FLAG ) &&
         upnp_command->getValue( UPNP_CDS_BROWSE_FLAG ) == UPNP_CDS_BROWSE_FLAG_METADATA ) {
 
-        commons::xml::Node didl_element = didlWriter.element("", "DIDL-Lite", "");
+        commons::xml::Node didl_element = didlWriter.element( "DIDL-Lite" );
         didlWriter.ns(didl_element, commons::upnp::XML_NS_DIDL, "", true);
         didlWriter.ns(didl_element, commons::upnp::XML_NS_PURL, "dc");
         didlWriter.ns(didl_element, commons::upnp::XML_NS_DLNA, "dlna");
