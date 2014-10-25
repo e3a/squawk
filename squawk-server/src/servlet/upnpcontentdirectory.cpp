@@ -20,27 +20,6 @@
 #include "upnpcontentdirectory.h"
 
 #include "commons.h"
-#include "http.h"
-
-#define XML_HEADER std::string("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
-#define XML_START_ENVELOPE std::string("<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">")
-#define XML_END_ENVELOPE std::string("</s:Envelope>")
-#define XML_START_BODY std::string("<s:Body>")
-#define XML_END_BODY std::string("</s:Body>")
-#define XML_START_BROWSE_RESPONSE std::string("<u:BrowseResponse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\">")
-
-#define UPNP_CDS_BROWSE_METADATA std::string( \
-      "<u:BrowseResponse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><Result>" \
-      "&lt;DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" " \
-      "xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\"&gt;" \
-      "&lt;container id=\"0\" parentID=\"-1\" restricted=\"1\" childCount=\"4\"&gt;&lt;upnp:searchClass includeDerived=\"1\"&gt;object.item.audioItem&lt;/upnp:searchClass&gt;" \
-      "&lt;upnp:searchClass includeDerived=\"1\"&gt;object.item.imageItem&lt;/upnp:searchClass&gt;&lt;upnp:searchClass includeDerived=\"1\"&gt;" \
-      "object.item.videoItem&lt;/upnp:searchClass&gt;&lt;dc:title&gt;root&lt;/dc:title&gt;&lt;upnp:class&gt;object.container.storageFolder&lt;/upnp:class&gt;&lt;upnp:storageUsed&gt;-1&lt;/upnp:storageUsed&gt;&lt;/container&gt;&lt;/DIDL-Lite&gt;</Result>" \
-      "<NumberReturned>1</NumberReturned>" \
-      "<TotalMatches>1</TotalMatches>" \
-      "<UpdateID>2</UpdateID></u:BrowseResponse>")
-
-#define UPNP_CDS_OBJECT_ID "ObjectID"
 
 namespace squawk {
 namespace servlet {
@@ -48,17 +27,21 @@ namespace servlet {
 log4cxx::LoggerPtr UpnpContentDirectory::logger(log4cxx::Logger::getLogger("squawk.servlet.UpnpContentDirectory"));
 
 void UpnpContentDirectory::registerContentDirectoryModule( commons::upnp::ContentDirectoryModule * module ) {
-    modules.insert(modules.end(), module);
+    modules.insert( modules.end(), module );
 }
 
 void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
     try {
-        commons::upnp::UpnpContentDirectoryRequest upnp_command =  commons::upnp::parseRequest( request.body );
+        commons::upnp::UpnpContentDirectoryRequest upnp_command = commons::upnp::parseRequest( request.body );
         LOG4CXX_DEBUG(logger, upnp_command )
 
         if( upnp_command.type == commons::upnp::UpnpContentDirectoryRequest::BROWSE ) {
-            response << XML_HEADER << XML_START_ENVELOPE << XML_START_BODY << browse( upnp_command ) << XML_END_BODY << XML_END_ENVELOPE;
+
+            commons::xml::XMLWriter xmlWriter;
+            browse( &xmlWriter, &upnp_command );
+            response <<  xmlWriter.str();
+
             response.set_mime_type( ::http::mime::XML );
             response.set_status( ::http::http_status::OK );
             return;
@@ -78,56 +61,84 @@ void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpRe
     throw ::http::http_status::BAD_REQUEST;
 }
 
-std::string UpnpContentDirectory::browse( commons::upnp::UpnpContentDirectoryRequest upnp_command ) {
+void UpnpContentDirectory::browse( commons::xml::XMLWriter * xmlWriter, commons::upnp::UpnpContentDirectoryRequest * upnp_command ) {
 
-    if( upnp_command.contains( UPNP_CDS_BROWSE_FLAG ) && upnp_command.getValue( UPNP_CDS_BROWSE_FLAG ) == UPNP_CDS_BROWSE_FLAG_METADATA ) {
-        return UPNP_CDS_BROWSE_METADATA;
+    commons::xml::Node envelope_node = xmlWriter->element("", "Envelope", "");
+    xmlWriter->ns(envelope_node, commons::upnp::XML_NS_SOAP, "s", true);
+    xmlWriter->ns(envelope_node, commons::upnp::XML_NS_SOAPENC, "soapenc", false);
+    xmlWriter->ns(envelope_node, commons::upnp::XML_NS_SCHEMA, "xsd", false);
+    xmlWriter->ns(envelope_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "xsi", false);
+    xmlWriter->attribute(envelope_node, commons::upnp::XML_NS_SOAP, "encodingStyle", "http://schemas.xmlsoap.org/soap/encoding/");
 
-    } else if( upnp_command.contains( UPNP_CDS_BROWSE_FLAG ) && upnp_command.getValue( UPNP_CDS_BROWSE_FLAG ) == UPNP_CDS_BROWSE_FLAG_DIRECT_CHILDREN && upnp_command.getValue( UPNP_CDS_OBJECT_ID ) == "0") {
-        std::stringstream result;
-        result << XML_START_BROWSE_RESPONSE << "<Result>" <<
-                  "&lt;DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" " <<
-                  "xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\"&gt;";
+    commons::xml::Node body_node = xmlWriter->element(envelope_node, commons::upnp::XML_NS_SOAP, "Body");
+    commons::xml::Node response_node = xmlWriter->element(body_node, "", "BrowseResponse", "");
+    xmlWriter->ns(response_node, commons::upnp::XML_NS_UPNP_CDS, "u", true);
+
+    commons::xml::XMLWriter didlWriter;
+    commons::upnp::CdsResult cds_result;
+
+    // browse metadata
+    if( upnp_command->contains( UPNP_CDS_BROWSE_FLAG ) &&
+        upnp_command->getValue( UPNP_CDS_BROWSE_FLAG ) == UPNP_CDS_BROWSE_FLAG_METADATA ) {
+
+        commons::xml::Node didl_element = didlWriter.element("", "DIDL-Lite", "");
+        didlWriter.ns(didl_element, commons::upnp::XML_NS_DIDL, "", true);
+        didlWriter.ns(didl_element, commons::upnp::XML_NS_PURL, "dc");
+        didlWriter.ns(didl_element, commons::upnp::XML_NS_DLNA, "dlna");
+        didlWriter.ns(didl_element, commons::upnp::XML_NS_UPNP, "upnp");
+        didlWriter.ns(didl_element, commons::upnp::XML_NS_PV, "pv");
+
+        commons::xml::Node container_element = didlWriter.element(didl_element, "", "container", "");
+        didlWriter.attribute(container_element, "id", "0");
+        didlWriter.attribute(container_element, "parentID", "-1");
+        didlWriter.attribute(container_element, "restricted", "1");
+        didlWriter.attribute(container_element, "childCount", "2");
+
+        commons::xml::Node audio_element = didlWriter.element(container_element, commons::upnp::XML_NS_UPNP, "searchClass", "object.item.audioItem");
+        didlWriter.attribute(audio_element, "includeDerived", "1");
+        commons::xml::Node image_element = didlWriter.element(container_element, commons::upnp::XML_NS_UPNP, "searchClass", "object.item.imageItem");
+        didlWriter.attribute(image_element, "includeDerived", "1");
+        commons::xml::Node video_element = didlWriter.element(container_element, commons::upnp::XML_NS_UPNP, "searchClass", "object.item.videoItem");
+        didlWriter.attribute(video_element, "includeDerived", "1");
+        didlWriter.element(container_element, commons::upnp::XML_NS_PURL, "title", "root");
+        didlWriter.element(container_element, commons::upnp::XML_NS_UPNP, "class", "object.container.storageFolder");
+        didlWriter.element(container_element, commons::upnp::XML_NS_UPNP, "storageUsed", "-1");
+
+        cds_result.number_returned(1);
+        cds_result.total_matches(1);
+        cds_result.update_id(1); //TODO
+
+    } else if( upnp_command->contains( UPNP_CDS_BROWSE_FLAG ) &&
+               upnp_command->getValue( UPNP_CDS_BROWSE_FLAG ) == UPNP_CDS_BROWSE_FLAG_DIRECT_CHILDREN &&
+               upnp_command->getValue( "ObjectID" ) == "0" ) {
 
         //search for callback handler
-        int count = 0;
         for (std::list< commons::upnp::ContentDirectoryModule * >::iterator it = modules.begin(); it != modules.end(); it++) {
-            result << (*it)->getRootNode();
-            count++; //TODO get the right children count
+            (*it)->getRootNode( &didlWriter, &cds_result );
         }
 
-        result << "&lt;/DIDL-Lite&gt;</Result>" <<
-                  "<NumberReturned>" << count << "</NumberReturned>" <<
-                  "<TotalMatches>" << count << "</TotalMatches>" <<
-                  "<UpdateID>1</UpdateID></u:BrowseResponse>";
-        return result.str();
+    } else if( upnp_command->contains( UPNP_CDS_BROWSE_FLAG ) &&
+               upnp_command->getValue( UPNP_CDS_BROWSE_FLAG ) == UPNP_CDS_BROWSE_FLAG_DIRECT_CHILDREN ) {
 
-    } else if( upnp_command.contains( UPNP_CDS_BROWSE_FLAG ) && upnp_command.getValue( UPNP_CDS_BROWSE_FLAG ) == UPNP_CDS_BROWSE_FLAG_DIRECT_CHILDREN ) {
-        std::stringstream result;
-        result << XML_START_BROWSE_RESPONSE << "<Result>" <<
-                  "&lt;DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" " <<
-                  "xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\" xmlns:pv=\"http://www.pv.com/pvns/\"&gt;";
-
-        //search fall callback handler
-        int count = 0;
+        //search all callback handler
         for (std::list< commons::upnp::ContentDirectoryModule *>::iterator it = modules.begin(); it != modules.end(); it++) {
             commons::upnp::ContentDirectoryModule * myModule = (*it);
-            if(myModule->match( upnp_command )) {
-                result << myModule->parseNode(upnp_command );
+            if( myModule->match( upnp_command ) ) {
+                myModule->parseNode( &didlWriter, &cds_result, upnp_command );
             }
-            count++;//TODO get real counter:
         }
 
-        result << "&lt;/DIDL-Lite&gt;</Result>" <<
-                  "<NumberReturned>2</NumberReturned>" <<
-                  "<TotalMatches>2</TotalMatches>" <<
-                  "<UpdateID>1</UpdateID></u:BrowseResponse>";
-
-        return result.str();
-
     } else {
-        LOG4CXX_DEBUG(logger, "Browse unknown command (" << upnp_command.getValue( UPNP_CDS_BROWSE_FLAG ) << ")")
-        return std::string();
+        LOG4CXX_DEBUG(logger, "Browse unknown command (" << upnp_command->getValue( UPNP_CDS_BROWSE_FLAG ) << ")")
     }
+    commons::xml::Node result_node = xmlWriter->element(response_node, "", "Result", didlWriter.str() );
+    xmlWriter->attribute(result_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "type", "xsd:string");
+
+    commons::xml::Node nr_node = xmlWriter->element(response_node, "", "NumberReturned", commons::string::to_string<int>( cds_result.number_returned() ) );
+    xmlWriter->attribute(nr_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "type", "xsd:int");
+    commons::xml::Node tm_node = xmlWriter->element(response_node, "", "TotalMatches", commons::string::to_string<int>( cds_result.total_matches() ) );
+    xmlWriter->attribute(tm_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "type", "xsd:int");
+    commons::xml::Node uid_node = xmlWriter->element(response_node, "", "UpdateID", commons::string::to_string<int>( cds_result.update_id() ) );
+    xmlWriter->attribute(uid_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "type", "xsd:int");
 }
 }}

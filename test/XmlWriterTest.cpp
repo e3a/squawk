@@ -74,6 +74,14 @@
 "<dlna:X_DLNADOC xmlns:dlna=\"urn:schemas-dlna-org:device-1-0\">DMS-1.50</dlna:X_DLNADOC>" \
 "</root>\n"
 
+#define XML_SOAP_ENVELOPE "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" \
+    "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" \
+    "<s:Body><u:BrowseResponse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><Result xsi:type=\"xsd:string\"/></u:BrowseResponse></s:Body></s:Envelope>\n"
+
+#define XML_SOAP_ENVELOPE_CONTENT "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" \
+    "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" \
+    "<s:Body><u:BrowseResponse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><Result xsi:type=\"xsd:string\">ABC</Result></u:BrowseResponse></s:Body></s:Envelope>\n"
+
 TEST( XmlWriter, SimpleXML ) {
 
     commons::xml::XMLWriter writer;
@@ -160,6 +168,39 @@ TEST( XmlWriter, RootNamespaceXML ) {
     commons::xml::Node dlna_node = writer.element( root_node, "", "X_DLNADOC", "DMS-1.50" );
     writer.ns( dlna_node, "urn:schemas-dlna-org:device-1-0", "dlna", true );
 
-    std::cout << writer.str() << std::endl;
     EXPECT_EQ( XML_ROOT_NS, writer.str() );
+}
+TEST( XmlWriter, SoapEnvelope ) {
+
+    commons::xml::XMLWriter xmlWriter;
+    commons::xml::Node envelope_node = xmlWriter.element("", "Envelope", "");
+    xmlWriter.ns(envelope_node, "http://schemas.xmlsoap.org/soap/envelope/", "s", true);
+    xmlWriter.ns(envelope_node, "http://www.w3.org/2001/XMLSchema-instance", "xsi", false);
+    xmlWriter.attribute(envelope_node, "http://schemas.xmlsoap.org/soap/envelope/", "encodingStyle", "http://schemas.xmlsoap.org/soap/encoding/");
+    commons::xml::Node body_node = xmlWriter.element(envelope_node, "http://schemas.xmlsoap.org/soap/envelope/", "Body");
+
+    commons::xml::Node browse_response_node = xmlWriter.element(body_node, "", "BrowseResponse");
+    xmlWriter.ns(browse_response_node, "urn:schemas-upnp-org:service:ContentDirectory:1", "u", true);
+
+    commons::xml::Node result_node = xmlWriter.element(browse_response_node, "", "Result");
+    xmlWriter.attribute(result_node, "http://www.w3.org/2001/XMLSchema-instance", "type", "xsd:string");
+
+    EXPECT_EQ( XML_SOAP_ENVELOPE, xmlWriter.str( "utf-8" ) );
+}
+TEST( XmlWriter, SoapEnvelopeWithContnet ) {
+
+    commons::xml::XMLWriter xmlWriter;
+    commons::xml::Node envelope_node = xmlWriter.element("", "Envelope", "");
+    xmlWriter.ns(envelope_node, "http://schemas.xmlsoap.org/soap/envelope/", "s", true);
+    xmlWriter.ns(envelope_node, "http://www.w3.org/2001/XMLSchema-instance", "xsi", false);
+    xmlWriter.attribute(envelope_node, "http://schemas.xmlsoap.org/soap/envelope/", "encodingStyle", "http://schemas.xmlsoap.org/soap/encoding/");
+    commons::xml::Node body_node = xmlWriter.element(envelope_node, "http://schemas.xmlsoap.org/soap/envelope/", "Body");
+
+    commons::xml::Node browse_response_node = xmlWriter.element(body_node, "", "BrowseResponse");
+    xmlWriter.ns(browse_response_node, "urn:schemas-upnp-org:service:ContentDirectory:1", "u", true);
+
+    commons::xml::Node result_node = xmlWriter.element(browse_response_node, "", "Result", "ABC");
+    xmlWriter.attribute(result_node, "http://www.w3.org/2001/XMLSchema-instance", "type", "xsd:string");
+
+    EXPECT_EQ( XML_SOAP_ENVELOPE_CONTENT, xmlWriter.str( "utf-8" ) );
 }

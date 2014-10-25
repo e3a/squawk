@@ -204,6 +204,17 @@ public:
      * @brief element create the root node.
      * @param ns the namespace
      * @param name the element name
+     * @return new element
+     */
+    Node element( std::string ns, std::string name ) {
+        xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST name.c_str() );
+        xmlDocSetRootElement(doc, root_node);
+        return Node( root_node );
+    };
+    /**
+     * @brief element create the root node.
+     * @param ns the namespace
+     * @param name the element name
      * @param content the element content
      * @return new element
      */
@@ -220,7 +231,16 @@ public:
      * @return new element
      */
     Node element( Node parent, std::string ns, std::string name ) {
-        return Node( xmlNewChild( parent.node, NULL, BAD_CAST name.c_str(), NULL ) );
+        xmlNodePtr node;
+        if( namespaces.find( ns ) != namespaces.end() ) {
+            node = xmlNewNode( namespaces[ ns ], BAD_CAST name.c_str() );
+        } else {
+            node = xmlNewNode( NULL, BAD_CAST name.c_str() );
+        }
+        node = xmlAddChild( parent.node, node );
+        if( node == NULL )
+            throw XmlException(1, "Unable to add child node.");
+        return Node( node );
     };
     /**
      * @brief element create an element
@@ -231,11 +251,17 @@ public:
      * @return the new element
      */
     Node element( Node parent, std::string ns, std::string name, std::string content ) {
+        xmlNodePtr node;
         if( namespaces.find( ns ) != namespaces.end() ) {
-            return Node( xmlNewChild( parent.node, namespaces[ ns ], BAD_CAST name.c_str(), BAD_CAST content.c_str() ) );
+            node = xmlNewNode( namespaces[ ns ], BAD_CAST name.c_str() );
         } else {
-            return Node( xmlNewChild( parent.node, NULL, BAD_CAST name.c_str(), BAD_CAST content.c_str() ) );
+            node = xmlNewNode( NULL, BAD_CAST name.c_str() );
         }
+        xmlNodeAddContent( node, BAD_CAST content.c_str() );
+        node = xmlAddChild( parent.node, node );
+        if( node == NULL )
+            throw XmlException(1, "Unable to add child node.");
+        return Node( node );
     };
     /**
      * @brief attribute add attribute to an element.
@@ -245,6 +271,20 @@ public:
      */
     void attribute( Node parent, std::string name, std::string content ) {
         xmlNewProp( parent.node, BAD_CAST name.c_str(), BAD_CAST content.c_str() );
+    };
+    /**
+     * @brief attribute add attribute to an element.
+     * @param parent the parent element
+     * @param ns the element namspace
+     * @param name the attribute name
+     * @param content the attribute content
+     */
+    void attribute( Node parent, std::string ns, std::string name, std::string content ) {
+        if( namespaces.find( ns ) != namespaces.end() ) {
+            xmlNewNsProp( parent.node, namespaces[ ns ], BAD_CAST name.c_str(), BAD_CAST content.c_str() );
+        } else {
+            xmlNewProp( parent.node, BAD_CAST name.c_str(), BAD_CAST content.c_str() );
+        }
     };
     /**
      * Create a new namespace. For default namespace create the namespace with an empty prefix ("").
@@ -262,6 +302,28 @@ public:
         }
     }
     /**
+     * Output the XML as string with encoding.
+     * @brief to string
+     * @param encoding the text encoding
+     * @return
+     */
+    std::string str( std::string encoding ) {
+        std::string out;
+        xmlChar *s;
+        int size;
+        xmlDocDumpMemoryEnc( doc, &s, &size, encoding.c_str() );
+        if ( s == NULL )
+            throw std::bad_alloc();
+        try {
+            out =  (char *)s;
+        } catch ( ... ) {
+            xmlFree( s );
+            throw;
+        }
+        xmlFree( s );
+        return out;
+    };
+    /**
      * Output the XML as string.
      * @brief to string
      * @return
@@ -270,13 +332,13 @@ public:
         std::string out;
         xmlChar *s;
         int size;
-        xmlDocDumpMemory(doc, &s, &size);
-        if (s == NULL)
+        xmlDocDumpMemory( doc, &s, &size );
+        if ( s == NULL )
             throw std::bad_alloc();
         try {
-            out = (char *)s;
-        } catch (...) {
-            xmlFree(s);
+            out =  (char *)s;
+        } catch ( ... ) {
+            xmlFree( s );
             throw;
         }
         xmlFree( s );

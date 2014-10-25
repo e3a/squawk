@@ -30,11 +30,13 @@ namespace servlet {
 
 class UpnpMusicDirectoryModule : public commons::upnp::ContentDirectoryModule {
 public:
-    UpnpMusicDirectoryModule(squawk::SquawkConfig * squawk_config, squawk::db::Sqlite3Database * db ) : db(db), squawk_config(squawk_config) {};
 
-    virtual std::string getRootNode();
-    virtual bool match( commons::upnp::UpnpContentDirectoryRequest parseRequest );
-    virtual std::string parseNode( commons::upnp::UpnpContentDirectoryRequest parseRequest );
+    UpnpMusicDirectoryModule(squawk::SquawkConfig * squawk_config, squawk::db::Sqlite3Database * db ) : db(db), squawk_config(squawk_config) {}
+
+    virtual void getRootNode( commons::xml::XMLWriter * xmlWriter, commons::upnp::CdsResult * cds_result );
+    virtual bool match( commons::upnp::UpnpContentDirectoryRequest * parseRequest );
+    virtual void parseNode( commons::xml::XMLWriter * xmlWriter, commons::upnp::CdsResult * cds_result, commons::upnp::UpnpContentDirectoryRequest * parseRequest );
+
   private:
     static log4cxx::LoggerPtr logger;
     squawk::SquawkConfig * squawk_config;

@@ -25,8 +25,10 @@
 /* #include "tinyxml.h" */
 
 #include "http.h"
-// #include "squawk.h"
 #include "upnp.h"
+#include "xml.h"
+
+// #include "squawk.h"
 
 #include "log4cxx/logger.h"
 
@@ -45,7 +47,7 @@ public:
     virtual void do_post(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
     static log4cxx::LoggerPtr logger;
-    std::string browse( commons::upnp::UpnpContentDirectoryRequest upnp_command );
+    void browse( commons::xml::XMLWriter * xmlWriter, commons::upnp::UpnpContentDirectoryRequest * upnp_command );
     std::list< commons::upnp::ContentDirectoryModule *> modules;
 };
 }}
