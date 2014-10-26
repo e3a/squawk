@@ -37,11 +37,12 @@ public:
     virtual bool match( commons::upnp::UpnpContentDirectoryRequest * parseRequest );
     virtual void parseNode( commons::xml::XMLWriter * xmlWriter, commons::upnp::CdsResult * cds_result, commons::upnp::UpnpContentDirectoryRequest * parseRequest );
 
-  private:
+private:
     static log4cxx::LoggerPtr logger;
     squawk::SquawkConfig * squawk_config;
     squawk::db::Sqlite3Database * db;
 };
-}}
+}
+}
 
 #endif // UPNPMUSICDIRECTORYMODULE_H

@@ -70,7 +70,7 @@ void UpnpMusicDirectoryModule::getRootNode( commons::xml::XMLWriter * xmlWriter,
     cds_result->total_matches( cds_result->total_matches()+1 );
 }
 void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, commons::upnp::CdsResult * cds_result,
-                                          commons::upnp::UpnpContentDirectoryRequest * request ) {
+        commons::upnp::UpnpContentDirectoryRequest * request ) {
 
     commons::xml::Node didl_element = xmlWriter->element( "DIDL-Lite" );
     xmlWriter->ns(didl_element, commons::upnp::XML_NS_DIDL, "", true);
@@ -127,7 +127,7 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
         cds_result->number_returned( 2 );
         cds_result->total_matches( 2 );
 
-    /* ----------- Artists ----------- */
+        /* ----------- Artists ----------- */
     } else if( request->contains( OBJECT_ID) && request->getValue( OBJECT_ID ) == CDS_MEDIA_ARTIST ) {
 
         squawk::db::Sqlite3Statement * stmt_artists = NULL;
@@ -170,7 +170,7 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
         /* ----------- Albums by Artist ----------- */
     } else if( request->contains( OBJECT_ID) && commons::string::starts_with( request->getValue( OBJECT_ID ), "music.artists:" ) ) {
         unsigned long id = commons::string::parse_string<unsigned long>(
-            request->getValue( OBJECT_ID ).substr(request->getValue( OBJECT_ID ).find(":")+1, request->getValue( OBJECT_ID ).length()));
+                               request->getValue( OBJECT_ID ).substr(request->getValue( OBJECT_ID ).find(":")+1, request->getValue( OBJECT_ID ).length()));
 
         squawk::db::Sqlite3Statement * stmt_albums = NULL;
         squawk::db::Sqlite3Statement * stmt_artist = NULL;
@@ -199,8 +199,8 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
 
                 xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "date", stmt_albums->get_string(2) + "-01-01" );
                 commons::xml::Node dlna_album_art_node = xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "albumArtURI",
-                    "http://" + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) +
-                    "/album/" + std::to_string(stmt_albums->get_int(3)) + "/cover.jpg" );
+                        "http://" + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) +
+                        "/album/" + std::to_string(stmt_albums->get_int(3)) + "/cover.jpg" );
                 xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
                 xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
             }
@@ -219,7 +219,7 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
             throw;
         }
 
-    /* ----------- Albums ----------- */
+        /* ----------- Albums ----------- */
     } else if( request->contains( OBJECT_ID) && request->getValue( OBJECT_ID ) == "music.albums" ) {
 
         squawk::db::Sqlite3Statement * stmt_albums = NULL;
@@ -247,8 +247,8 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
 
                 xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "date", stmt_albums->get_string(2) + "-01-01" );
                 commons::xml::Node dlna_album_art_node = xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "albumArtURI",
-                    "http://" + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) +
-                    "/album/" + std::to_string(stmt_albums->get_int(3)) + "/cover.jpg" );
+                        "http://" + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) +
+                        "/album/" + std::to_string(stmt_albums->get_int(3)) + "/cover.jpg" );
                 xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
                 xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
             }
@@ -267,10 +267,10 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
             throw;
         }
 
-    /* ----------- Songs ----------- */
+        /* ----------- Songs ----------- */
     } else if( request->contains( OBJECT_ID) && commons::string::starts_with( request->getValue( OBJECT_ID ), "music.albums:" ) ) {
         unsigned long id = commons::string::parse_string<unsigned long>(
-            request->getValue( OBJECT_ID ).substr( request->getValue( OBJECT_ID ).find(":")+1, request->getValue( OBJECT_ID ).length()));
+                               request->getValue( OBJECT_ID ).substr( request->getValue( OBJECT_ID ).find(":")+1, request->getValue( OBJECT_ID ).length()));
 
         squawk::db::Sqlite3Statement * stmt_songs = NULL;
         squawk::db::Sqlite3Statement * stmt_album = NULL;
@@ -334,33 +334,34 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
             throw;
         }
         /*TODO    squawk::model::Album album = dao->get_album(id);
-    std::list< squawk::model::Song > songs = dao->getSongsByAlbum(id);
+        std::list< squawk::model::Song > songs = dao->getSongsByAlbum(id);
 
-    for(std::list< squawk::model::Song >::iterator list_iter = songs.begin(); list_iter != songs.end(); list_iter++) {
+        for(std::list< squawk::model::Song >::iterator list_iter = songs.begin(); list_iter != songs.end(); list_iter++) {
 
-      result << "&lt;item id=\"/music/albums/songs/" << (*list_iter).id << "\" parentID=\"" << request[OBJECT_ID] << "\" restricted=\"1\"&gt;" <<
-      "&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;" <<
-      "&lt;dc:title&gt;" << (*list_iter).title << "&lt;/dc:title&gt;&lt;dc:creator&gt;" << "album.artist" << "&lt;/dc:creator&gt;&lt;upnp:album&gt;" << album.name << "&lt;/upnp:album&gt;" <<
+        result << "&lt;item id=\"/music/albums/songs/" << (*list_iter).id << "\" parentID=\"" << request[OBJECT_ID] << "\" restricted=\"1\"&gt;" <<
+        "&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;" <<
+        "&lt;dc:title&gt;" << (*list_iter).title << "&lt;/dc:title&gt;&lt;dc:creator&gt;" << "album.artist" << "&lt;/dc:creator&gt;&lt;upnp:album&gt;" << album.name << "&lt;/upnp:album&gt;" <<
 
-      "&lt;upnp:artist role=\"artist\"&gt;" << "album.artist" << "&lt;/upnp:artist&gt;&lt;dc:contributor&gt;" << "album.artist" << "&lt;/dc:contributor&gt;" <<
-      "&lt;upnp:originalTrackNumber&gt;" << (*list_iter).track << "&lt;/upnp:originalTrackNumber&gt;&lt;dc:date&gt;" << album.year << "-01-01&lt;/dc:date&gt;" <<
-      "&lt;upnp:genre&gt;" << album.genre << "&lt;/upnp:genre&gt;" <<
+        "&lt;upnp:artist role=\"artist\"&gt;" << "album.artist" << "&lt;/upnp:artist&gt;&lt;dc:contributor&gt;" << "album.artist" << "&lt;/dc:contributor&gt;" <<
+        "&lt;upnp:originalTrackNumber&gt;" << (*list_iter).track << "&lt;/upnp:originalTrackNumber&gt;&lt;dc:date&gt;" << album.year << "-01-01&lt;/dc:date&gt;" <<
+        "&lt;upnp:genre&gt;" << album.genre << "&lt;/upnp:genre&gt;" <<
 
-      "&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\"&gt;" <<
-      "http://" << squawk_config->string_value(CONFIG_HTTP_IP) << ":" << squawk_config->string_value(CONFIG_HTTP_PORT) << "/album/" << id << "/cover.jpg&lt;/upnp:albumArtURI&gt;" <<
-      "&lt;upnp:albumArtURI&gt;http://" << squawk_config->string_value(CONFIG_HTTP_IP) << ":" << squawk_config->string_value(CONFIG_HTTP_PORT) << "/album/image/" << dao->getFrontImage(id).id << ".jpg&lt;/upnp:albumArtURI&gt;" <<
+        "&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\"&gt;" <<
+        "http://" << squawk_config->string_value(CONFIG_HTTP_IP) << ":" << squawk_config->string_value(CONFIG_HTTP_PORT) << "/album/" << id << "/cover.jpg&lt;/upnp:albumArtURI&gt;" <<
+        "&lt;upnp:albumArtURI&gt;http://" << squawk_config->string_value(CONFIG_HTTP_IP) << ":" << squawk_config->string_value(CONFIG_HTTP_PORT) << "/album/image/" << dao->getFrontImage(id).id << ".jpg&lt;/upnp:albumArtURI&gt;" <<
 
-      //TODO DLNA FLAG
-      "&lt;pv:modificationTime&gt;" << (*list_iter).mtime << "&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;" << (*list_iter).mtime << "&lt;/pv:addedTime&gt;" <<
-      "&lt;pv:lastUpdated&gt;" << (*list_iter).mtime << "&lt;/pv:lastUpdated&gt;&lt;res protocolInfo=\"http-get:*:" << (*list_iter).mime_type  << ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=" <<
-      "01700000000000000000000000000000\" size=\"" << (*list_iter).size << "\" duration=\"" << commons::string::time_to_string((*list_iter).playLength) << "\" bitrate=\"" << (*list_iter).bitrate << "\" bitsPerSample=\"" << (*list_iter).samplerate << "\" " <<
-      "sampleFrequency=\"" << (*list_iter).sampleFrequency << "\"&gt;http://" << squawk_config->string_value(CONFIG_HTTP_IP) << ":" << squawk_config->string_value(CONFIG_HTTP_PORT) << "/album/"  << "&lt;/res&gt;" <<
+        //TODO DLNA FLAG
+        "&lt;pv:modificationTime&gt;" << (*list_iter).mtime << "&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;" << (*list_iter).mtime << "&lt;/pv:addedTime&gt;" <<
+        "&lt;pv:lastUpdated&gt;" << (*list_iter).mtime << "&lt;/pv:lastUpdated&gt;&lt;res protocolInfo=\"http-get:*:" << (*list_iter).mime_type  << ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=" <<
+        "01700000000000000000000000000000\" size=\"" << (*list_iter).size << "\" duration=\"" << commons::string::time_to_string((*list_iter).playLength) << "\" bitrate=\"" << (*list_iter).bitrate << "\" bitsPerSample=\"" << (*list_iter).samplerate << "\" " <<
+        "sampleFrequency=\"" << (*list_iter).sampleFrequency << "\"&gt;http://" << squawk_config->string_value(CONFIG_HTTP_IP) << ":" << squawk_config->string_value(CONFIG_HTTP_PORT) << "/album/"  << "&lt;/res&gt;" <<
 
-      "&lt;/item&gt;";
-    } */
+        "&lt;/item&gt;";
+        } */
 
     } else if( request->contains( OBJECT_ID) && commons::string::starts_with( request->getValue( OBJECT_ID ), "music." ) ) {
         std::cout << "requested music: = " << request->getValue( OBJECT_ID ) << std::endl; //TODO logger
     }
 }
-}}
+}
+}

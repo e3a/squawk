@@ -28,8 +28,6 @@
 #include "upnp.h"
 #include "xml.h"
 
-// #include "squawk.h"
-
 #include "log4cxx/logger.h"
 
 namespace squawk {

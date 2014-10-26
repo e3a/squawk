@@ -82,7 +82,7 @@ void UpnpContentDirectory::browse( commons::xml::XMLWriter * xmlWriter, commons:
         upnp_command->getValue( UPNP_CDS_BROWSE_FLAG ) == UPNP_CDS_BROWSE_FLAG_METADATA ) {
 
         commons::xml::Node didl_element = didlWriter.element( "DIDL-Lite" );
-        didlWriter.ns(didl_element, commons::upnp::XML_NS_DIDL, "", true);
+        didlWriter.ns(didl_element, commons::upnp::XML_NS_DIDL );
         didlWriter.ns(didl_element, commons::upnp::XML_NS_PURL, "dc");
         didlWriter.ns(didl_element, commons::upnp::XML_NS_DLNA, "dlna");
         didlWriter.ns(didl_element, commons::upnp::XML_NS_UPNP, "upnp");
