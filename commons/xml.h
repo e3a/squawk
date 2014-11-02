@@ -25,12 +25,14 @@ namespace xml {
  * @brief The XmlException class
  *
  * Error Codes:
- * 1 error: could not parse file.
- * 2 unable to allocate XML buffer memory
- * 3 error creating XML writer
- * 4 error at start XML document
- * 5
- *
+<ol>
+<li>Could not parse file</li>
+<li>unable to allocate XML buffer memory</li>
+<li>error creating XML writer</li>
+<li>error at start XML document</li>
+<li>XML namespace uri or prefix is empty.</li>
+<li>Unable to add child to parent node.</li>
+</ol>
  */
 class XmlException : public std::exception {
 public:
@@ -212,18 +214,6 @@ public:
         return Node( root_node );
     };
     /**
-     * @brief element create the root node.
-     * @param ns the namespace uri
-     * @param name the element name
-     * @param content the element content
-     * @return new element
-    Node element( const std::string & ns, std::string name, const std::string & content ) { //TODO unused variables?
-        xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST name.c_str() );
-        xmlDocSetRootElement(doc, root_node);
-        return Node( root_node );
-    };
-     */
-    /**
      * @brief element create an element
      * @param parent the parent element
      * @param ns the element namspace
@@ -239,7 +229,7 @@ public:
         }
         node = xmlAddChild( parent.node, node );
         if( node == NULL )
-            throw XmlException(1, "Unable to add child node.");
+            throw XmlException(6, "Unable to add child to parent node.");
         return Node( node );
     };
     /**
@@ -260,7 +250,7 @@ public:
         xmlNodeAddContent( node, BAD_CAST content.c_str() );
         node = xmlAddChild( parent.node, node );
         if( node == NULL )
-            throw XmlException(1, "Unable to add child node.");
+            throw XmlException(6, "Unable to add child to parent node.");
         return Node( node );
     };
     /**
@@ -305,6 +295,9 @@ public:
      * @param assign assign namespace to parent node (default false)
      */
     void ns( const Node & parent, const std::string & href, const std::string & prefix, bool assign = false ) {
+        if( href.size() == 0 || prefix.size() == 0 ) {
+            throw XmlException( 5, "XML namespace uri or prefix is empty." );
+        }
         //TODO remove default namespace
         xmlNsPtr ns = xmlNewNs( parent.node, BAD_CAST href.c_str(), ( prefix.size() == 0 ? NULL : BAD_CAST prefix.c_str() ) );
         namespaces[ href ] = ns;

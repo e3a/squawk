@@ -24,9 +24,7 @@
 #include <map>
 
 #include <squawk.h>
-#include "../squawkservice.h"
 #include "../squawkconfig.h"
-#include "../squawkservice.h"
 #include "libavcpp.h"
 #include "flacparser.h"
 #include "mediadao.h"

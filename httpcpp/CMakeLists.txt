@@ -3,26 +3,13 @@ cmake_minimum_required(VERSION 2.8.9)
 
 project(httpcpp)
 
-find_package(GoogleTest REQUIRED)
-find_package(Log4cxx REQUIRED)
-set(LIBS ${LIBS} ${LOG4CXX_LIBRARIES})  
-find_package(PCRE++ REQUIRED)
-set(LIBS ${LIBS} -lpcrecpp)  
+include_directories(${SQUAWK_INCLUDES} ${LOG4CXX_INCLUDE_DIR} ${PCREPP_INCLUDE_DIR} src/asio)
 
-# add_definitions(-DASIO_ENABLE_HANDLER_TRACKING)
+set(SOURCES src/httpparser.cpp src/httpservlet.cpp src/webserver.cpp src/httpresponse.cpp
+            src/asio/asioconnection.cpp src/asio/asioserver.cpp src/asio/httpserverfactory.cpp
+            src/servlet/fileservlet.cpp)
 
-include_directories(
-  ${SQUAWK_INCLUDES}
-  ${LOG4CXX_INCLUDE_DIR}  ${PCREPP_INCLUDE_DIR}
-  src/asio)
-
-set(SOURCES  src/httpparser.cpp src/httpservlet.cpp src/webserver.cpp src/httpresponse.cpp)
-set(SOURCES ${SOURCES} src/asio/asioconnection.cpp
-                       src/asio/asioserver.cpp
-                       src/asio/httpserverfactory.cpp)
-set(SOURCES ${SOURCES} src/servlet/fileservlet.cpp)
-
-add_library(libhttpcpp ${SOURCES})
+add_library(httpcpp ${SOURCES})
 
 if (build_tests)
    enable_testing()
@@ -33,7 +20,6 @@ if (build_tests)
                   test/httpservlettest.cpp
                   ${SOURCES})
    target_link_libraries(testmain_httpcpp pthread)
-   target_link_libraries(testmain_httpcpp
-       ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
+   target_link_libraries(testmain_httpcpp ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
    add_test(httpcpp-tests testmain_httpcpp)
 endif()

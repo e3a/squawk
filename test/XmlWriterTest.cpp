@@ -159,7 +159,7 @@ TEST( XmlWriter, RootNamespaceXML ) {
 
     commons::xml::XMLWriter writer;
     commons::xml::Node root_node = writer.element( "root" );
-    writer.ns( root_node, "urn:schemas-upnp-org:device-1-0", "" );
+    writer.ns( root_node, "urn:schemas-upnp-org:device-1-0" );
 
     commons::xml::Node spec_node = writer.element( root_node, "", "specVersion" );
     writer.element( spec_node, "", "major", "1" );

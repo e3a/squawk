@@ -3,19 +3,11 @@ cmake_minimum_required(VERSION 2.8.9)
 
 project(ssdpcpp)
 
-find_package(GoogleTest REQUIRED)
-find_package(Log4cxx REQUIRED)
-set(LIBS ${LIBS} ${LOG4CXX_LIBRARIES})  
-
-include_directories(
-  ${SQUAWK_INCLUDES}
-  ${LOG4CXX_INCLUDE_DIR}
-  src/asio
-  includes)
+include_directories(${SQUAWK_INCLUDES} ${LOG4CXX_INCLUDE_DIR} src/asio includes)
 
 set(SOURCES src/ssdpserverimpl.cpp ${SOURCES} src/asio/ssdpasioconnection.cpp)
 
-add_library(libssdpcpp ${SOURCES})
+add_library(ssdpcpp ${SOURCES})
 
 #if (build_tests)
 #    enable_testing()

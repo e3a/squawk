@@ -42,6 +42,7 @@
 #include "servlet/upnpxmldescription.h"
 #include "servlet/upnpcontentdirectory.h"
 #include "servlet/upnpmusicdirectorymodule.h"
+#include "servlet/upnpconnectionmanager.h"
 
 // #include "http/api/apiupnpdevicehandler.h"
 
@@ -55,15 +56,15 @@ void SquawkServer::start() {
     database = new squawk::db::Sqlite3Database();
     database->open(squawk_config->string_value(CONFIG_DATABASE_FILE));
 
-    dao = new squawk::db::SquawkDAO(squawk_config);
-    service = new squawk::SquawkServiceImpl(dao, squawk_config);
-
     parser = new squawk::media::FileParser(database, squawk_config);
 
     //Setup and start the DLNA server
     commons::upnp::ContentDirectoryModule * musicDirectory = new squawk::servlet::UpnpMusicDirectoryModule(squawk_config, database);
     squawk::servlet::UpnpContentDirectory * content_directory = new squawk::servlet::UpnpContentDirectory("/ctl/ContentDir");
     content_directory->registerContentDirectoryModule(musicDirectory);
+
+    squawk::servlet::UpnpConnectionManager * connection_manager = new squawk::servlet::UpnpConnectionManager("/ctl/ConnectionMgr");
+
 
     //Setup and start the HTTP server
     web_server = new http::WebServer(
@@ -85,6 +86,7 @@ void SquawkServer::start() {
     http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->string_value(CONFIG_HTTP_DOCROOT));
 
     web_server->register_servlet(content_directory);
+    web_server->register_servlet(connection_manager);
     web_server->register_servlet(xmldescription);
     web_server->register_servlet(album_servlet);
     web_server->register_servlet(albums_servlet);
@@ -156,7 +158,7 @@ void SquawkServer::start() {
     ssdp_server->announce();
 }
 void SquawkServer::stop() {
-    delete dao, service, parser;
+    delete parser;
 //TODO    http_server->stop();
     http_thread.join();
     ssdp_server->stop();

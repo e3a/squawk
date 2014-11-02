@@ -25,9 +25,6 @@
 #include "squawkconfig.h"
 #include "media/fileparser.h"
 #include "ssdp.h"
-#include "squawkservice.h"
-
-#include "ssdp.h"
 
 class SquawkServer {
   public:
@@ -42,8 +39,6 @@ class SquawkServer {
     std::thread ssdp_thread;
     squawk::SquawkConfig * squawk_config = nullptr;
     squawk::db::Sqlite3Database * database = nullptr;
-    squawk::db::SquawkDAO * dao = nullptr;
-    squawk::SquawkService * service = nullptr;
     squawk::media::FileParser * parser = nullptr;
     http::WebServer * web_server = nullptr;
     squawk::ssdp::SSDPServerImpl * ssdp_server = nullptr;

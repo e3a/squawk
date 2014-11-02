@@ -1,6 +1,6 @@
 /*
-    <one line to give the library's name and an idea of what it does.>
-    Copyright (C) 2013  <copyright holder> <email>
+    The UPNP Connection Manager
+    Copyright (C) 2013  <etienne> <etienne@mail.com>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -16,8 +16,9 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#ifndef UPNPCONTENTDIRECTORY_H
-#define UPNPCONTENTDIRECTORY_H
+
+#ifndef UPNPCONNECTIONMANAGER_H
+#define UPNPCONNECTIONMANAGER_H
 
 #include <list>
 #include <map>
@@ -33,20 +34,14 @@ namespace squawk {
 namespace servlet {
 
 /**
- * @brief The UpnpContentDirectory class
- * The UPNP content directory class is the factory for all content directory implementations. the implementations
- * are registerered with the register method.
+ * @brief The UpnpConnectionManager class.
  */
-class UpnpContentDirectory : public ::http::HttpServlet {
+class UpnpConnectionManager : public ::http::HttpServlet {
 public:
-    UpnpContentDirectory( const std::string path ) : HttpServlet(path) {}
-    void registerContentDirectoryModule( commons::upnp::ContentDirectoryModule * module);
+    UpnpConnectionManager( const std::string path ) : HttpServlet(path) {}
     virtual void do_post(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
     static log4cxx::LoggerPtr logger;
-    void browse( commons::xml::XMLWriter * xmlWriter, commons::upnp::UpnpContentDirectoryRequest * upnp_command );
-    std::list< commons::upnp::ContentDirectoryModule *> modules;
 };
 }}
-
-#endif // UPNPCONTENTDIRECTORY_H
+#endif // UPNPCONNECTIONMANAGER_H

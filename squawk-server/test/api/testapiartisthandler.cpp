@@ -16,16 +16,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../src/squawkservice.h"
-
 #include <string>
 #include <vector>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 using ::testing::Return;
-class SquawkServiceMock : public squawk::SquawkService {
-public:
+/* class SquawkServiceMock : public squawk::SquawkService {
+public: */
 /*
   MOCK_CONST_METHOD0(exist_audiofile, std::string(const std::string path));
   MOCK_CONST_METHOD0(exist_imagefile, std::string(const std::string path));
@@ -44,7 +42,7 @@ public:
   unsigned long save_audiofile(std::string filename, long mtime, long size, unsigned long album_id, Audiofile * audiofile) {};
   unsigned long save_imagefile(std::string filename, long mtime, long size, unsigned long album_id, Imagefile * imagefile) {};
   */
-};
+// };
 
 TEST(ApiArtistHandler, SimpleCall) {
 /*    SquawkServiceMock mock;

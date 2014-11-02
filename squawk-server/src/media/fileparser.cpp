@@ -109,8 +109,8 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
                         files[AUDIOFILE].insert(files[AUDIOFILE].end(), file_item(name, type, s.st_mtim.tv_sec, s.st_size));
                     } else if( commons::string::starts_with(type, "image/") ) {
                         files[IMAGEFILE].insert(files[IMAGEFILE].end(), file_item(name, type, s.st_mtim.tv_sec, s.st_size));
-                    } else if( type != std::string("application/pdf") && type != std::string("text/plain") ) {
-                        LOG4CXX_WARN(logger, "unkonwon file type:" << type << ":" << name)
+                    } else {
+                        LOG4CXX_WARN(logger, "unknown file type:" << type << ":" << name)
                     }
 
                 } else if ( s.st_mode & S_IFDIR ) {

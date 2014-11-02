@@ -23,7 +23,6 @@
 
 #include "http.h"
 
-#include "../../squawkservice.h"
 #include "ssdp.h"
 
 namespace squawk {
@@ -32,11 +31,10 @@ namespace api {
   
 class ApiUpnpDeviceHandler : public ::http::HttpServlet {
 public:
-    ApiUpnpDeviceHandler(const std::string path, SquawkService * service, squawk::ssdp::SSDPServerImpl * ssdp_server) :
-                         HttpServlet(path), service(service), ssdp_server(ssdp_server) {}
+    ApiUpnpDeviceHandler(const std::string path, squawk::ssdp::SSDPServerImpl * ssdp_server) :
+                         HttpServlet(path), ssdp_server(ssdp_server) {}
     virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
-  squawk::SquawkService * service;
   squawk::ssdp::SSDPServerImpl * ssdp_server;
 };
 }}}

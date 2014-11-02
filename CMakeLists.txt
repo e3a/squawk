@@ -16,11 +16,16 @@ set(CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG} -O0)
 find_package(GoogleTest REQUIRED)
 find_package(LibXml2 REQUIRED)
 set(LIBS ${LIBS} ${LIBXML2_LIBRARIES})
+find_package(Sqlite3 REQUIRED)
+set(LIBS ${LIBS} ${SQLITE3_LIBRARY})
+find_package(PCRE++ REQUIRED)
+set(LIBS ${LIBS} -lpcrecpp)
+find_package(Log4cxx REQUIRED)
+set(LIBS ${LIBS} ${LOG4CXX_LIBRARIES})
 
 SET( SQUAWK_INCLUDES ${CMAKE_SOURCE_DIR}/commons ${CMAKE_SOURCE_DIR}/httpcpp/includes ${CMAKE_SOURCE_DIR}/ssdpcpp/includes
      /home/e3a/asio-1.10.2/include/ ${LIBXML2_INCLUDE_DIR})
 
-#add_subdirectory (commons)
 add_subdirectory (httpcpp)
 add_subdirectory (ssdpcpp)
 add_subdirectory (squawk-server)

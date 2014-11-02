@@ -27,8 +27,6 @@
 #include <ostream>
 #include <iostream> 
 
-/* #include "squawk-utils.h" */
-
 #define SQUAWK_VERSION 1
 
 namespace squawk {  
@@ -186,22 +184,22 @@ namespace squawk {
       SquawkService() {};
       virtual ~SquawkService() {};
 
-      virtual void start_transaction() = 0;
-      virtual void end_transaction() = 0;
+//      virtual void start_transaction() = 0;
+//      virtual void end_transaction() = 0;
       
-      virtual bool exist_audiofile(std::string path, unsigned long mtime, unsigned long size) = 0;
-      virtual bool exist_imagefile(std::string path, unsigned long mtime, unsigned long size) = 0;
+//      virtual bool exist_audiofile(std::string path, unsigned long mtime, unsigned long size) = 0;
+//      virtual bool exist_imagefile(std::string path, unsigned long mtime, unsigned long size) = 0;
 
-      virtual std::list< squawk::model::Album > get_albums() = 0;
-      virtual std::list< squawk::model::Album > get_albums_by_artist(unsigned long artist_id) = 0;
-      virtual std::list< squawk::model::Artist > get_artists() = 0;
-      virtual squawk::model::Album get_album(unsigned long id, bool recursive = false) = 0;
-      virtual squawk::model::Album get_album(std::string path) = 0;
+      // virtual std::list< squawk::model::Album > get_albums() = 0;
+//      virtual std::list< squawk::model::Album > get_albums_by_artist(unsigned long artist_id) = 0;
+//      virtual std::list< squawk::model::Artist > get_artists() = 0;
+//      virtual squawk::model::Album get_album(unsigned long id, bool recursive = false) = 0;
+//      virtual squawk::model::Album get_album(std::string path) = 0;
       
-      virtual unsigned long save_artist(squawk::model::Artist & artist) = 0;
+/*      virtual unsigned long save_artist(squawk::model::Artist & artist) = 0;
       virtual unsigned long save_album(std::string path, squawk::model::Album * album) = 0;
       virtual unsigned long save_audiofile(std::string filename, long mtime, long size, unsigned long album_id, squawk::model::Song * song) = 0;
-      virtual unsigned long save_imagefile(std::string filename, long mtime, long size, unsigned long album_id, squawk::model::Image * imagefile) = 0;
+      virtual unsigned long save_imagefile(std::string filename, long mtime, long size, unsigned long album_id, squawk::model::Image * imagefile) = 0; */
   };
 
 namespace media {

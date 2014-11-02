@@ -26,11 +26,11 @@
 namespace squawk {
 namespace db {
 
-int Sqlite3Database::exec(std::string query) {
+int Sqlite3Database::exec( std::string query ) {
     return sqlite3_exec(db, query.c_str(), NULL, NULL, NULL);
 }
 
-void Sqlite3Database::open(std::string path) {
+void Sqlite3Database::open( std::string path ) {
     int res = sqlite3_open(path.c_str(), &db);
     if(res != SQLITE_OK) {
         throw new DaoException(res, sqlite3_errmsg(db));

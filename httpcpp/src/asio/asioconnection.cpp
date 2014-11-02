@@ -118,7 +118,7 @@ void connection::handle_read(const asio::error_code& e, std::size_t bytes_transf
 }
 
 void connection::send_response() {
-    std::cout << "callback" << std::endl;
+    std::cout << "send_response callback" << std::endl;
 }
 
 void connection::handle_write( char * buffer, const asio::error_code& e, int bytes_transferred ) {

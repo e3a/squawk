@@ -87,12 +87,14 @@ void MediaDao::start_transaction() {
     }
 }
 void MediaDao::end_transaction() {
+    LOG4CXX_TRACE(logger, "destroy" );
     for (auto & kv : stmtMap ) {
         db->release_statement( kv.second );
     }
     db->exec("END;");
 }
 bool MediaDao::exist_table(std::string table_name) {
+    LOG4CXX_TRACE(logger, "exist Table:" << table_name );
     bool exist = false;
     squawk::db::Sqlite3Statement * statement;
     try {
@@ -115,6 +117,7 @@ bool MediaDao::exist_table(std::string table_name) {
     return exist;
 }
 void MediaDao::create_table(std::string query) {
+    LOG4CXX_TRACE(logger, "creat Table:" << query );
     squawk::db::Sqlite3Statement * stmt_table_create;
     try {
         stmt_table_create = db->prepare_statement(query);
@@ -129,12 +132,15 @@ void MediaDao::create_table(std::string query) {
     db->release_statement(stmt_table_create);
 }
 bool MediaDao::exist_audiofile(std::string filename, long mtime, long size, bool update) {
+    LOG4CXX_TRACE(logger, "exist audiofile:" << filename );
     return exist(SQL_TABEL_NAME_AUDIO, filename, mtime, size, update);
 }
 bool MediaDao::exist_imagefile(std::string filename, long mtime, long size, bool update) {
+    LOG4CXX_TRACE(logger, "exist Imagefile:" << filename );
     return exist(SQL_TABEL_NAME_IMAGES, filename, mtime, size, update);
 }
 bool MediaDao::exist(std::string table, std::string filename, long mtime, long size, bool update) {
+    LOG4CXX_TRACE(logger, "exist file:" << filename );
     bool found = false;
     squawk::db::Sqlite3Statement * stmt = NULL;
     squawk::db::Sqlite3Statement * stmtUpdate = NULL;
@@ -162,6 +168,7 @@ bool MediaDao::exist(std::string table, std::string filename, long mtime, long s
     return found;
 }
 squawk::model::Album MediaDao::get_album(std::string path) {
+    LOG4CXX_TRACE(logger, "get Album:" << path );
     squawk::model::Album album;
     try {
         squawk::db::Sqlite3Statement * stmt = stmtMap[ "GET_ALBUM" ];
@@ -180,6 +187,7 @@ squawk::model::Album MediaDao::get_album(std::string path) {
     return album;
 }
 unsigned long MediaDao::save_album( std::string path, squawk::model::Album * album ) {
+    LOG4CXX_TRACE(logger, "save Album:" << path );
     long album_id = 0;
     try {
 
@@ -220,6 +228,7 @@ unsigned long MediaDao::save_album( std::string path, squawk::model::Album * alb
     return album_id;
 }
 unsigned long MediaDao::save_artist(squawk::model::Artist & artist) {
+    LOG4CXX_TRACE(logger, "save artist:" << artist.name );
     unsigned long artist_id = 0;
     try {
         squawk::db::Sqlite3Statement * stmt_artist_id = stmtMap["GET_ARTIST_ID"];
@@ -245,6 +254,7 @@ unsigned long MediaDao::save_artist(squawk::model::Artist & artist) {
     return artist_id;
 }
 void MediaDao::save_audiofile(std::string filename, long mtime, long size, unsigned long album_id, squawk::model::Song * audiofile) {
+    LOG4CXX_TRACE(logger, "save audiofile:" <<filename );
     try {
         squawk::db::Sqlite3Statement * stmt = stmtMap["INSERT_AUDIOFILE"];
         stmt->bind_text(1, filename);
@@ -270,6 +280,7 @@ void MediaDao::save_audiofile(std::string filename, long mtime, long size, unsig
     }
 }
 unsigned long MediaDao::save_imagefile(std::string filename, long mtime, long size, unsigned long album, squawk::model::Image * imagefile) {
+    LOG4CXX_TRACE(logger, "save imagefile:" << filename );
     try {
         squawk::db::Sqlite3Statement * stmt = stmtMap["INSERT_IMAGE"];
         stmt->bind_int(1, album);
@@ -291,6 +302,7 @@ unsigned long MediaDao::save_imagefile(std::string filename, long mtime, long si
     }
 }
 void MediaDao::sweep( long mtime ) {
+    LOG4CXX_TRACE(logger, "sweep:" );
     try {
         squawk::db::Sqlite3Statement * stmt = stmtMap["SWEEP_AUDIOFILES"];
         squawk::db::Sqlite3Statement * stmt_delete_audiofile = stmtMap["DELETE_AUDIOFILE"];
