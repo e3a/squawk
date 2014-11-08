@@ -66,5 +66,25 @@ namespace mime {
   static std::string mime_type(MIME_TYPE mime_type) {
     return mappings[mime_type].mime_type;
   };
+  /**
+   * get extension by mime type.
+   */
+  static std::string extension( MIME_TYPE mime_type ) {
+    return mappings[mime_type].extension;
+  };
+  /**
+   * get extension by mime type string.
+   */
+  static std::string extension( const std::string & mime_type ) {
+      int position = 0;
+      MIME_TYPE type = TEXT;
+      for (mapping * m = mappings; m->extension; ++m) {
+        if (m->mime_type == mime_type) {
+              type = MIME_TYPE(position);
+        }
+        position++;
+      }
+    return mappings[type].extension;
+  };
 }}
 #endif // MIME_TYPES_H

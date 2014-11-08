@@ -31,9 +31,7 @@ namespace servlet {
  */
 class FileServlet : public http::HttpServlet {
 public:
-    explicit FileServlet(const std::string path, const std::string docroot) : HttpServlet(path), docroot(docroot) {
-        std::cout << "create file servlet: " << docroot << std::endl;
-    }
+    explicit FileServlet(const std::string path, const std::string docroot) : HttpServlet(path), docroot(docroot) {}
     virtual void do_get(HttpRequest & request, HttpResponse & response);
 private:
     std::string docroot;

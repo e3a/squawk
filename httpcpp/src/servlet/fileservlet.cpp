@@ -59,13 +59,15 @@ void FileServlet::do_get(HttpRequest & request, HttpResponse & response) {
         throw http_status::NOT_MODIFIED;
     } */
 
-    // Determine the file extension.
-    // TODO this could be better
+    // Determine the filename and extension.
     std::size_t last_slash_pos = full_path.find_last_of("/");
     std::size_t last_dot_pos = full_path.find_last_of(".");
-    std::string extension;
+    std::string extension, filename;
     if (last_dot_pos != std::string::npos && last_dot_pos > last_slash_pos) {
       extension = full_path.substr(last_dot_pos + 1);
+    }
+    if (last_slash_pos != std::string::npos && last_slash_pos < full_path.size() ) {
+      filename = full_path.substr(last_slash_pos + 1 );
     }
 
     // Open the file to send back.
@@ -77,6 +79,7 @@ void FileServlet::do_get(HttpRequest & request, HttpResponse & response) {
 
     // Fill out the reply to be sent to the client.
     response.add_header( HTTP_HEADER_CONTENT_LENGTH, std::to_string( filestatus.st_size ) );
+    response.add_header( HTTP_HEADER_CONTENT_DISPOSITION, "inline; filename= \"" + filename + "\"" );
     response.set_status( http_status::OK );
     response.set_mime_type( ::http::mime::mime_type(extension) );
     response.set_last_modified( filestatus.st_mtime );

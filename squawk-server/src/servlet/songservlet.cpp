@@ -17,6 +17,7 @@
 */
 
 #include "songservlet.h"
+#include "../db/database.h"
 
 #include <sstream>
 
@@ -37,15 +38,34 @@ void SongServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & 
     bool result = match(request.uri, &song_id);
     if(result && song_id > 0) {
 
-        stmt_song = db->prepare_statement( QUERY_SONG );
-        if( stmt_song->step() ) {
-            std::string filename = stmt_song->get_string(0);
-            if( ! commons::string::starts_with( filename, mediadirectory )) {
-                throw ::http::http_status::BAD_REQUEST;
+        try {
+
+            LOG4CXX_TRACE( logger, "song_id: " << song_id )
+
+            stmt_song = db->prepare_statement( QUERY_SONG );
+            stmt_song->bind_int( 1, song_id );
+            if( stmt_song->step() ) {
+                std::string filename = stmt_song->get_string(0);
+                if( ! commons::string::starts_with( filename, mediadirectory )) {
+                    throw ::http::http_status::BAD_REQUEST;
+                }
+
+                LOG4CXX_TRACE( logger, "song_file: " << filename )
+                request.uri = filename.substr( mediadirectory.length(), filename.length() );
+
+            } else {
+                LOG4CXX_TRACE( logger, "file not found: " << song_id )
             }
-            request.uri = filename.substr( mediadirectory.length(), filename.length() );
+            db->release_statement( stmt_song );
+            FileServlet::do_get(request, response);
+
+        } catch( ::db::DbException * e ) {
+            if( stmt_song != NULL ) {
+                db->release_statement( stmt_song );
+            }
+            LOG4CXX_FATAL( logger, "can not get song path: " << e->code() << ":" << e->what() )
+            throw ::http::http_status::INTERNAL_SERVER_ERROR;
         }
-        FileServlet::do_get(request, response);
 
     } else {
         throw ::http::http_status::BAD_REQUEST;

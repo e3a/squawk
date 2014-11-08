@@ -43,6 +43,7 @@
 #define HTTP_HEADER_IF_MODIFIED_SINCE std::string("If-Modified-Since")	// Allows a 304 Not Modified to be returned if content is unchanged
 #define HTTP_HEADER_CACHE_CONTROL 	std::string("Cache-Control")	// Used to specify directives that MUST be obeyed by all caching mechanisms along the request/response chain
 									// (Cache-Control: no-cache, max-age=0, max-age=n [seconds])
+#define HTTP_HEADER_CONTENT_DISPOSITION 	std::string("Content-Disposition")	// An opportunity to raise a "File Download" dialogue box for a known MIME type with binary format or suggest a filename for dynamic content. Quotes are necessary with special characters.
 #define HTTP_HEADER_CONNECTION      std::string("Connection")       // What type of connection the user-agent would prefer
 
 namespace http {
