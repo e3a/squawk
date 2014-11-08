@@ -30,7 +30,7 @@ namespace squawk {
  * \brief Database utilities.
  */
 namespace db {
-  
+
 /**
  * \brief Database implementation for SQLite.
  */

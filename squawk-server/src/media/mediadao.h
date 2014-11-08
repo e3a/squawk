@@ -21,7 +21,9 @@
 #define MEDIADAO_H
 
 #include "log4cxx/logger.h"
-#include "../db/sqlite3database.h"
+#include "../db/sqlite3database.h" //TODO include generic header
+#include "../db/database.h"
+
 
 namespace squawk {
 namespace media {
@@ -34,11 +36,11 @@ public:
     void end_transaction();
     bool exist_audiofile(std::string filename, long mtime, long size, bool update);
     bool exist_imagefile(std::string filename, long mtime, long size, bool update);
-    squawk::model::Album get_album(std::string path);
-    unsigned long save_album(std::string path, squawk::model::Album * album);
-    unsigned long save_artist(squawk::model::Artist & artist);
-    void save_audiofile(std::string filename, long mtime, long size, unsigned long album_id, squawk::model::Song * song);
-    unsigned long save_imagefile(std::string filename, long mtime, long size, unsigned long album_id, squawk::model::Image * imagefile);
+    squawk::media::Album get_album(std::string path);
+    unsigned long save_album(std::string path, squawk::media::Album * album);
+    unsigned long save_artist(squawk::media::Artist & artist);
+    void save_audiofile(std::string filename, long mtime, long size, unsigned long album_id, squawk::media::Song * song);
+    unsigned long save_imagefile(std::string filename, long mtime, long size, unsigned long album_id, squawk::media::Image * imagefile);
     void sweep( long mtime );
 
 private:

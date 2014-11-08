@@ -161,7 +161,11 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
                 "/album/" + std::to_string( id ) + "/cover.jpg" );
         xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
         xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
+
     });
+        int album_count = albumCount();
+        cds_result->number_returned( album_count );
+        cds_result->total_matches( album_count );
 
 
     /* ----------- Songs ----------- */
@@ -177,7 +181,8 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
             genre_ = genre;
         });
 
-        songs( id, [&] (const int & song_id, const int & track, const std::string & title, const std::string & album ) {
+        songs( id, [&] (const int & song_id, const int & track, const std::string & title, const std::string & album, const std::string & mtime,
+                        const std::string & mime_type, const int & size, const int & playtime, const int & bitrate, const int & samplerate, const int & sampleFrequency) {
 
            commons::xml::Node item_element = xmlWriter->element( didl_element, "", "item", "" );
            xmlWriter->attribute(item_element, "id", "/music/albums/songs/" + commons::string::to_string<int>(song_id) );
@@ -200,73 +205,25 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
            xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
            xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
 
+           xmlWriter->element(item_element, commons::upnp::XML_NS_PV, "modificationTime", mtime );
+/*           "&lt;pv:modificationTime&gt;" << (*list_iter).mtime << "&lt;/pv:modificationTime&gt;
+            &lt;pv:addedTime&gt;" << (*list_iter).mtime << "&lt;/pv:addedTime&gt;" <<
+           "&lt;pv:lastUpdated&gt;" << (*list_iter).mtime << "&lt;/pv:lastUpdated&gt; */
+
+           commons::xml::Node dlna_res_node = xmlWriter->element(item_element, "", "res",
+                "http://" +squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) + "/album/");
+           xmlWriter->attribute(dlna_res_node, "", "protocolInfo",
+                "http-get:*:" + mime_type  + ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000" );
+           xmlWriter->attribute(dlna_res_node, "", "size", commons::string::to_string<int>(size) );
+           xmlWriter->attribute(dlna_res_node, "", "duration", commons::string::to_string<int>(playtime ) );
+           xmlWriter->attribute(dlna_res_node, "", "bitrate", commons::string::to_string<int>(bitrate) );
+           xmlWriter->attribute(dlna_res_node, "", "bitsPerSample", commons::string::to_string<int>(sampleFrequency) );
+           xmlWriter->attribute(dlna_res_node, "", "sampleFrequency", commons::string::to_string<int>(samplerate) );
+
         });
         int song_count = songByAlbumCount( id );
         cds_result->number_returned( song_count );
         cds_result->total_matches( song_count );
-
-
-/*
-        squawk::db::Sqlite3Statement * stmt_songs = NULL;
-        squawk::db::Sqlite3Statement * stmt_album = NULL;
-        squawk::db::Sqlite3Statement * stmt_artists = NULL;
-        try {
-
-            stmt_album = db->prepare_statement( QUERY_ALBUM );
-            stmt_album->bind_int( 1, id );
-            stmt_songs = db->prepare_statement( QUERY_SONGS_BY_ALBUM );
-            stmt_songs->bind_int( 1, id );
-            // TODO stmt_artists = db->prepare_statement( QUERY_ARTIST_BY_ALBUM );
-            stmt_artists->bind_int( 1, id );
-
-            std::string creator;
-            while( stmt_artists->step() ) {
-                creator += "dc:creator&gt;" + commons::string::escape_xml(commons::string::escape_xml( stmt_artists->get_string( 1 ) ) ) + "&lt;/dc:creator&gt;";
-            }
-
-
-            if( stmt_album->step() ) {
-                while( stmt_songs->step() ) {
-
-                }
-            }
-
-            stmt_songs->reset();
-            db->release_statement(stmt_songs);
-
-        } catch( squawk::db::DaoException & e ) {
-            LOG4CXX_FATAL(logger, "Can not get songs, Exception:" << e.code() << "-> " << e.what());
-            if(stmt_songs != NULL) db->release_statement( stmt_songs );
-            throw;
-        } catch( ... ) {
-            LOG4CXX_FATAL(logger, "Other Excpeption in get_songs.");
-            throw;
-        } */
-        /*TODO    squawk::model::Album album = dao->get_album(id);
-        std::list< squawk::model::Song > songs = dao->getSongsByAlbum(id);
-
-        for(std::list< squawk::model::Song >::iterator list_iter = songs.begin(); list_iter != songs.end(); list_iter++) {
-
-        result << "&lt;item id=\"/music/albums/songs/" << (*list_iter).id << "\" parentID=\"" << request[OBJECT_ID] << "\" restricted=\"1\"&gt;" <<
-        "&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;" <<
-        "&lt;dc:title&gt;" << (*list_iter).title << "&lt;/dc:title&gt;&lt;dc:creator&gt;" << "album.artist" << "&lt;/dc:creator&gt;&lt;upnp:album&gt;" << album.name << "&lt;/upnp:album&gt;" <<
-
-        "&lt;upnp:artist role=\"artist\"&gt;" << "album.artist" << "&lt;/upnp:artist&gt;&lt;dc:contributor&gt;" << "album.artist" << "&lt;/dc:contributor&gt;" <<
-        "&lt;upnp:originalTrackNumber&gt;" << (*list_iter).track << "&lt;/upnp:originalTrackNumber&gt;&lt;dc:date&gt;" << album.year << "-01-01&lt;/dc:date&gt;" <<
-        "&lt;upnp:genre&gt;" << album.genre << "&lt;/upnp:genre&gt;" <<
-
-        "&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\"&gt;" <<
-        "http://" << squawk_config->string_value(CONFIG_HTTP_IP) << ":" << squawk_config->string_value(CONFIG_HTTP_PORT) << "/album/" << id << "/cover.jpg&lt;/upnp:albumArtURI&gt;" <<
-        "&lt;upnp:albumArtURI&gt;http://" << squawk_config->string_value(CONFIG_HTTP_IP) << ":" << squawk_config->string_value(CONFIG_HTTP_PORT) << "/album/image/" << dao->getFrontImage(id).id << ".jpg&lt;/upnp:albumArtURI&gt;" <<
-
-        //TODO DLNA FLAG
-        "&lt;pv:modificationTime&gt;" << (*list_iter).mtime << "&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;" << (*list_iter).mtime << "&lt;/pv:addedTime&gt;" <<
-        "&lt;pv:lastUpdated&gt;" << (*list_iter).mtime << "&lt;/pv:lastUpdated&gt;&lt;res protocolInfo=\"http-get:*:" << (*list_iter).mime_type  << ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=" <<
-        "01700000000000000000000000000000\" size=\"" << (*list_iter).size << "\" duration=\"" << commons::string::time_to_string((*list_iter).playLength) << "\" bitrate=\"" << (*list_iter).bitrate << "\" bitsPerSample=\"" << (*list_iter).samplerate << "\" " <<
-        "sampleFrequency=\"" << (*list_iter).sampleFrequency << "\"&gt;http://" << squawk_config->string_value(CONFIG_HTTP_IP) << ":" << squawk_config->string_value(CONFIG_HTTP_PORT) << "/album/"  << "&lt;/res&gt;" <<
-
-        "&lt;/item&gt;";
-        } */
 
     } else {
         LOG4CXX_WARN(logger,"unknown request: " << request->getValue( OBJECT_ID ) );

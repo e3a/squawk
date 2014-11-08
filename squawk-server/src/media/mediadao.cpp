@@ -1,6 +1,7 @@
 #include "mediadao.h"
 
 #include <ctime>
+#include <iostream>
 
 #define SQL_TABEL_NAME_AUDIO "tbl_cds_audiofiles"
 #define SQL_TABEL_NAME_ARTISTS_ALBUMS "tbl_cds_artists"
@@ -23,6 +24,7 @@ const char *SQL_TABLE_CREATE_TABLE_IMAGES = "create table tbl_cds_images(album, 
 const char *SQL_TABLE_CREATE_TABLE_IMAGES_INDEX = "CREATE UNIQUE INDEX IF NOT EXISTS UniqueIndexImagesFilename ON tbl_cds_images (filename)";
 
 
+const char *SQL_GET_AUDIOFILE = "select audiofile.ROWID from tbl_cds_audiofiles audiofile where audiofile.filename = ?";
 const char *SQL_GET_ALBUM = "select album.name, album.genre, album.year, album.ROWID from tbl_cds_albums album where album.path = ?";
 const char *SQL_GET_ALBUM_ID = "select ROWID from tbl_cds_albums where path = ?";
 const char *SQL_INSERT_ALBUM = "insert into tbl_cds_albums(path, name, genre, year) values (?,?,?,?)";
@@ -32,6 +34,9 @@ const char *SQL_INSERT_ARTIST = "insert into tbl_cds_artists(name, clean_name, l
 const char *SQL_INSERT_AUDIOFILE = "insert into tbl_cds_audiofiles(" \
                                    "filename, filesize, mtime, timestamp, album_id, title, bitrate, sample_rate, bits_per_sample, " \
                                    "channels, track, mime_type, length, disc) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+const char *SQL_UPDATE_AUDIOFILE = "update tbl_cds_audiofiles SET " \
+                                   "filesize=?, mtime=?, timestamp=?, album_id=?, title=?, bitrate=?, sample_rate=?, bits_per_sample=?, " \
+                                   "channels=?, track=?, mime_type=?, length=?, disc=? where filename = ?";
 const char *SQL_INSERT_IMAGE = "insert into tbl_cds_images(album, filename, mtime, timestamp, filesize, type, mime_type, width, height) " \
                                "values (?,?,?,?,?,?,?,?,?)";
 const char *SQL_SWEEP_AUDIOFILES = "select ROWID, album_id from tbl_cds_audiofiles where timestamp < ?";
@@ -68,6 +73,7 @@ void MediaDao::start_transaction() {
         stmtMap["update_tbl_cds_audiofiles"] = db->prepare_statement("update tbl_cds_audiofiles set timestamp=? where ROWID=?");
         stmtMap[SQL_TABEL_NAME_IMAGES] = db->prepare_statement("select ROWID from tbl_cds_images where filename=? and filesize=? and mtime=?");
         stmtMap["update_tbl_cds_images"] = db->prepare_statement("update tbl_cds_images set timestamp=? where ROWID=?");
+        stmtMap["GET_AUDIOFILE"] = db->prepare_statement( SQL_GET_AUDIOFILE );
         stmtMap["GET_ALBUM"] = db->prepare_statement( SQL_GET_ALBUM );
         stmtMap["GET_ALBUM_ID"] = db->prepare_statement( SQL_GET_ALBUM_ID );
         stmtMap["INSERT_ALBUM"] = db->prepare_statement( SQL_INSERT_ALBUM );
@@ -75,13 +81,14 @@ void MediaDao::start_transaction() {
         stmtMap["INSERT_ARTIST"] = db->prepare_statement( SQL_INSERT_ARTIST );
         stmtMap["INSERT_ALBUM_ARTIST_MAPPING"] = db->prepare_statement( SQL_INSERT_ALBUM_ARTIST_MAPPING );
         stmtMap["INSERT_AUDIOFILE"] = db->prepare_statement( SQL_INSERT_AUDIOFILE );
+        stmtMap["UPDATE_AUDIOFILE"] = db->prepare_statement( SQL_UPDATE_AUDIOFILE );
         stmtMap["INSERT_IMAGE"] = db->prepare_statement( SQL_INSERT_IMAGE );
         stmtMap["SWEEP_AUDIOFILES"] = db->prepare_statement( SQL_SWEEP_AUDIOFILES );
         stmtMap["SWEEP_IMAGES"] = db->prepare_statement( SQL_SWEEP_IMAGES );
         stmtMap["DELETE_AUDIOFILE"] = db->prepare_statement( SQL_DELETE_AUDIOFILE );
         stmtMap["DELETE_ALBUM"] = db->prepare_statement( SQL_DELETE_ALBUM );
         stmtMap["DELETE_IMAGE"] = db->prepare_statement( SQL_DELETE_IMAGE );
-    } catch(squawk::db::DaoException * e) {
+    } catch( ::db::DbException * e ) {
         LOG4CXX_FATAL(logger, "create statements, Exception:" << e->code() << "-> " << e->what());
         throw;
     }
@@ -107,7 +114,7 @@ bool MediaDao::exist_table(std::string table_name) {
                 LOG4CXX_WARN(logger, "found to many rows:" << result)
             }
         }
-    } catch(squawk::db::DaoException * e) {
+    } catch( ::db::DbException * e) {
         LOG4CXX_FATAL(logger, "Can not test table, Exception:" << e->code() << "-> " << e->what());
         if(statement != NULL) db->release_statement(statement);
         throw;
@@ -123,7 +130,7 @@ void MediaDao::create_table(std::string query) {
         stmt_table_create = db->prepare_statement(query);
         stmt_table_create->step();
 
-    } catch(squawk::db::DaoException * e) {
+    } catch( ::db::DbException * e) {
         LOG4CXX_FATAL(logger, "create table, Exception:" << e->code() << "-> " << e->what());
         if(stmt_table_create != NULL) db->release_statement(stmt_table_create);
         throw;
@@ -161,15 +168,15 @@ bool MediaDao::exist(std::string table, std::string filename, long mtime, long s
             }
         }
         stmt->reset();
-    } catch(squawk::db::DaoException * e) {
+    } catch( ::db::DbException * e ) {
         LOG4CXX_FATAL(logger, "Can not save audiofile, Exception:" << e->code() << "-> " << e->what());
         throw;
     }
     return found;
 }
-squawk::model::Album MediaDao::get_album(std::string path) {
+squawk::media::Album MediaDao::get_album(std::string path) {
     LOG4CXX_TRACE(logger, "get Album:" << path );
-    squawk::model::Album album;
+    squawk::media::Album album;
     try {
         squawk::db::Sqlite3Statement * stmt = stmtMap[ "GET_ALBUM" ];
         stmt->bind_text(1, path);
@@ -180,13 +187,13 @@ squawk::model::Album MediaDao::get_album(std::string path) {
             album.id = stmt->get_int(3);
         }
         stmt->reset();
-    } catch( squawk::db::DaoException * e ) {
+    } catch( ::db::DbException * e ) {
         LOG4CXX_FATAL(logger, "Can not get album by path, Exception:" << e->code() << "-> " << e->what());
         throw;
     }
     return album;
 }
-unsigned long MediaDao::save_album( std::string path, squawk::model::Album * album ) {
+unsigned long MediaDao::save_album( std::string path, squawk::media::Album * album ) {
     LOG4CXX_TRACE(logger, "save Album:" << path );
     long album_id = 0;
     try {
@@ -211,28 +218,28 @@ unsigned long MediaDao::save_album( std::string path, squawk::model::Album * alb
             album_id = db->last_insert_rowid();
 
             //and save the artist mappings
-            for(std::list< squawk::model::Artist >::iterator list_iter = album->artists.begin(); list_iter != album->artists.end(); list_iter++) {
-                squawk::model::Artist artist = *list_iter;
+            for(std::list< squawk::media::Artist >::iterator list_iter = album->artists.begin(); list_iter != album->artists.end(); list_iter++) {
+                squawk::media::Artist artist = *list_iter;
 
                 squawk::db::Sqlite3Statement * stmt_insert_album_mapping = stmtMap["INSERT_ALBUM_ARTIST_MAPPING"];
-                stmt_insert_album_mapping->bind_int(1, album_id);
-                stmt_insert_album_mapping->bind_int(2, artist.id);
+                stmt_insert_album_mapping->bind_int( 1, album_id );
+                stmt_insert_album_mapping->bind_int( 2, artist.id() );
                 stmt_insert_album_mapping->insert();
                 stmt_insert_album_mapping->reset();
             }
         }
-    } catch( squawk::db::DaoException * e ) {
+    } catch( ::db::DbException * e ) {
         LOG4CXX_FATAL(logger, "Can not save album, Exception:" << e->code() << "-> " << e->what());
         throw;
     }
     return album_id;
 }
-unsigned long MediaDao::save_artist(squawk::model::Artist & artist) {
-    LOG4CXX_TRACE(logger, "save artist:" << artist.name );
+unsigned long MediaDao::save_artist(squawk::media::Artist & artist) {
+    LOG4CXX_TRACE(logger, "save artist:" << artist.name() );
     unsigned long artist_id = 0;
     try {
         squawk::db::Sqlite3Statement * stmt_artist_id = stmtMap["GET_ARTIST_ID"];
-        stmt_artist_id->bind_text(1, artist.clean_name);
+        stmt_artist_id->bind_text( 1, artist.clean_name() );
         if( stmt_artist_id->step() )
             artist_id = stmt_artist_id->get_int(0);
         stmt_artist_id->reset();
@@ -240,46 +247,72 @@ unsigned long MediaDao::save_artist(squawk::model::Artist & artist) {
         if(artist_id == 0) {
             squawk::db::Sqlite3Statement * stmt_insert_artist = stmtMap["INSERT_ARTIST"];
 
-            stmt_insert_artist->bind_text(1, artist.name);
-            stmt_insert_artist->bind_text(2, artist.clean_name);
-            stmt_insert_artist->bind_text(3, artist.letter);
+            stmt_insert_artist->bind_text(1, artist.name() );
+            stmt_insert_artist->bind_text(2, artist.clean_name() );
+            stmt_insert_artist->bind_text(3, artist.letter() );
             stmt_insert_artist->insert();
             stmt_insert_artist->reset();
             artist_id = db->last_insert_rowid();
         }
-    } catch( squawk::db::DaoException * e ) {
+    } catch( ::db::DbException * e ) {
         LOG4CXX_FATAL(logger, "Can not save artist, Exception:" << e->code() << "-> " << e->what());
         throw;
     }
     return artist_id;
 }
-void MediaDao::save_audiofile(std::string filename, long mtime, long size, unsigned long album_id, squawk::model::Song * audiofile) {
-    LOG4CXX_TRACE(logger, "save audiofile:" <<filename );
+void MediaDao::save_audiofile(std::string filename, long mtime, long size, unsigned long album_id, squawk::media::Song * audiofile) {
+    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "save audiofile:" << filename );
     try {
-        squawk::db::Sqlite3Statement * stmt = stmtMap["INSERT_AUDIOFILE"];
-        stmt->bind_text(1, filename);
-        stmt->bind_int(2, size);
-        stmt->bind_int(3, mtime);
-        stmt->bind_int(4, std::time(0));
-        stmt->bind_int(5, album_id);
-        stmt->bind_text(6, audiofile->title);
-        stmt->bind_int(7, audiofile->bitrate);
-        stmt->bind_int(8, audiofile->samplerate);
-        stmt->bind_int(9, audiofile->bits_per_sample);
-        stmt->bind_int(10, audiofile->channels);
-        stmt->bind_int(11, audiofile->track);
-        stmt->bind_text(12, audiofile->mime_type);
-        stmt->bind_int(13, audiofile->playLength);
-        stmt->bind_int(14, audiofile->disc);
-        stmt->insert();
-        stmt->reset();
+        squawk::db::Sqlite3Statement * stmt_audiofile = stmtMap["GET_AUDIOFILE"];
+        stmt_audiofile->bind_text( 1, filename );
+        if( stmt_audiofile->step() ) {
 
-    } catch( squawk::db::DaoException * e ) {
+            squawk::db::Sqlite3Statement * stmt = stmtMap["UPDATE_AUDIOFILE"];
+            stmt->bind_int(1, size);
+            stmt->bind_int(2, mtime);
+            stmt->bind_int(3, std::time(0));
+            stmt->bind_int(4, album_id);
+            stmt->bind_text(5, audiofile->title);
+            stmt->bind_int(6, audiofile->bitrate);
+            stmt->bind_int(7, audiofile->samplerate);
+            stmt->bind_int(8, audiofile->bits_per_sample);
+            stmt->bind_int(9, audiofile->channels);
+            stmt->bind_int(10, audiofile->track);
+            stmt->bind_text(11, audiofile->mime_type);
+            stmt->bind_int(12, audiofile->playLength);
+            stmt->bind_int(13, audiofile->disc);
+            stmt->bind_text(14, filename);
+            stmt->insert();
+            stmt->reset();
+
+        } else {
+
+            squawk::db::Sqlite3Statement * stmt = stmtMap["INSERT_AUDIOFILE"];
+            stmt->bind_text(1, filename);
+            stmt->bind_int(2, size);
+            stmt->bind_int(3, mtime);
+            stmt->bind_int(4, std::time(0));
+            stmt->bind_int(5, album_id);
+            stmt->bind_text(6, audiofile->title);
+            stmt->bind_int(7, audiofile->bitrate);
+            stmt->bind_int(8, audiofile->samplerate);
+            stmt->bind_int(9, audiofile->bits_per_sample);
+            stmt->bind_int(10, audiofile->channels);
+            stmt->bind_int(11, audiofile->track);
+            stmt->bind_text(12, audiofile->mime_type);
+            stmt->bind_int(13, audiofile->playLength);
+            stmt->bind_int(14, audiofile->disc);
+            stmt->insert();
+            stmt->reset();
+        }
+        stmt_audiofile->reset();
+
+    } catch( ::db::DbException * e ) {
         LOG4CXX_FATAL(logger, "Can not save audiofile, Exception:" << e->code() << "-> " << e->what());
         throw;
     }
 }
-unsigned long MediaDao::save_imagefile(std::string filename, long mtime, long size, unsigned long album, squawk::model::Image * imagefile) {
+unsigned long MediaDao::save_imagefile(std::string filename, long mtime, long size, unsigned long album, squawk::media::Image * imagefile) {
     LOG4CXX_TRACE(logger, "save imagefile:" << filename );
     try {
         squawk::db::Sqlite3Statement * stmt = stmtMap["INSERT_IMAGE"];
@@ -296,7 +329,7 @@ unsigned long MediaDao::save_imagefile(std::string filename, long mtime, long si
         stmt->reset();
         return db->last_insert_rowid();
 
-    } catch( squawk::db::DaoException * e ) {
+    } catch( ::db::DbException * e ) {
         LOG4CXX_FATAL(logger, "Can not save imagefile, Exception:" << e->code() << "-> " << e->what());
         throw;
     }
@@ -335,7 +368,7 @@ void MediaDao::sweep( long mtime ) {
 
         //TODO delete empty artist and mapping
 
-    } catch( squawk::db::DaoException * e ) {
+    } catch( ::db::DbException * e ) {
         LOG4CXX_FATAL(logger, "Can not save imagefile, Exception:" << e->code() << "-> " << e->what());
         throw;
     }

@@ -17,6 +17,7 @@
 */
 
 #include "apialbumservlet.h"
+#include "../db/database.h"
 
 #include <sstream>
 
@@ -111,8 +112,8 @@ void ApiAlbumServlet::do_get(::http::HttpRequest & request, ::http::HttpResponse
             db->release_statement(stmt_songs);
             db->release_statement(stmt_images);
 
-        } catch( squawk::db::DaoException & e ) {
-            LOG4CXX_FATAL(logger, "Can not get album by id, Exception:" << e.code() << "-> " << e.what());
+        } catch( ::db::DbException * e ) {
+            LOG4CXX_FATAL(logger, "Can not get album by id, Exception:" << e->code() << "-> " << e->what());
             if(stmt_album != NULL) db->release_statement(stmt_album);
             throw;
         }

@@ -18,6 +18,7 @@
 */
 
 #include "apialbumsservlet.h"
+#include "../db/database.h"
 
 #include "commons.h"
 
@@ -99,8 +100,8 @@ void ApiAlbumsServlet::do_get( http::HttpRequest & request, ::http::HttpResponse
         }
         response << "}";
 
-    } catch( squawk::db::DaoException & e ) {
-        LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e.code() << "-> " << e.what());
+    } catch( ::db::DbException * e ) {
+        LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e->code() << "-> " << e->what());
         if(stmt != NULL) db->release_statement(stmt);
         if(stmt_artist != NULL) db->release_statement(stmt_artist);
         throw;

@@ -123,15 +123,16 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
     }
     closedir(dp);
 
-    squawk::model::Album album;
+    squawk::media::Album album;
     if(files.find( AUDIOFILE ) != files.end()) {
         dir_type = MUSIC;
-        int album_id = 0;
+
         for(std::list< file_item >::iterator list_iter = files[ AUDIOFILE ].begin(); list_iter != files[ AUDIOFILE ].end(); list_iter++) {
+
             if(! mediaDao->exist_audiofile( (*list_iter).name, (*list_iter).mtime, (*list_iter).size, true ) ) {
 
+                //get the metadata from the modules
                 squawk::media::Audiofile audiofile;
-
                 bool metadata_found = false;
                 for( MetadataParser * parser : parsers ) {
                     if( parser->parse(audiofile, (*list_iter).mime_type, (*list_iter).name) ) {
@@ -143,18 +144,18 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
                     LOG4CXX_WARN(logger, "can not parse audiofile::" << (*list_iter).name)
 
                 //collect the artists
-                std::list< squawk::model::Artist > artists;
+                std::list< squawk::media::Artist > artists;
                 for(std::list< std::string >::iterator artist_iter = audiofile.artist.begin(); artist_iter != audiofile.artist.end(); artist_iter++) {
                     bool found = false;
                     std::string clean_name = get_artist_clean_name((*artist_iter));
-                    for(std::list< squawk::model::Artist >::iterator artist_list_iter = artists.begin(); artist_list_iter != artists.end(); artist_list_iter++) {
-                        if((*artist_list_iter).clean_name == clean_name ) {
+                    for(std::list< squawk::media::Artist >::iterator artist_list_iter = artists.begin(); artist_list_iter != artists.end(); artist_list_iter++) {
+                        if((*artist_list_iter).clean_name() == clean_name ) {
                             found = true;
                         }
                     }
                     if(! found  ) {
-                        squawk::model::Artist artist((*artist_iter),  get_artist_letter((*artist_iter)), clean_name);
-                        artist.id = mediaDao->save_artist(artist);
+                        squawk::media::Artist artist((*artist_iter),  get_artist_letter((*artist_iter)), clean_name);
+                        artist.id( mediaDao->save_artist(artist) );
                         artists.insert(artists.end(), artist);
                     }
                 }
@@ -169,7 +170,7 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
 
                     album.id = mediaDao->save_album(cleanPath, &album);
                 }
-                squawk::model::Song song(audiofile.title, (*list_iter).mime_type, (*list_iter).name, (*list_iter).mtime, audiofile.sample_rate, audiofile.bitrate,
+                squawk::media::Song song(audiofile.title, (*list_iter).mime_type, (*list_iter).name, (*list_iter).mtime, audiofile.sample_rate, audiofile.bitrate,
                                          (*list_iter).size, audiofile.sample_frequency, audiofile.length, audiofile.track, audiofile.disc, audiofile.channels,
                                          audiofile.bits_per_sample, artists);
                 mediaDao->save_audiofile((*list_iter).name, (*list_iter).mtime, (*list_iter).size, album.id, &song);
@@ -196,10 +197,10 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
                     Imlib_Image image = imlib_load_image((*list_iter).name.c_str());
                     imlib_context_set_image(image);
                     if (image) {
-                        squawk::model::Image imagefile;
+                        squawk::media::Image imagefile;
                         imagefile.height = imlib_image_get_height();
                         imagefile.width = imlib_image_get_width();
-                        imagefile.type = ((*list_iter).name.find("front") == std::string::npos && (*list_iter).name.find("cover") == std::string::npos ? squawk::model::Image::OTHER : squawk::model::Image::COVER);
+                        imagefile.type = ((*list_iter).name.find("front") == std::string::npos && (*list_iter).name.find("cover") == std::string::npos ? squawk::media::Image::OTHER : squawk::media::Image::COVER);
                         imagefile.mime_type = "image/jpeg";
                         int image_id = mediaDao->save_imagefile((*list_iter).name,  (*list_iter).mtime, (*list_iter).size, album.id, &imagefile);
                         imlib_free_image();
@@ -208,7 +209,7 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
                         image_stream << squawk_config->string_value(CONFIG_TMP_DIRECTORY) << "/image-" << image_id << ".jpg";
 
                         resize_image((*list_iter).name, image_stream.str());
-                        if( imagefile.type == squawk::model::Image::COVER ) {
+                        if( imagefile.type == squawk::media::Image::COVER ) {
                             create_image_thumb((*list_iter).name, cover_filename);
                         }
                     } else {
@@ -261,6 +262,7 @@ void FileParser::resize_image(std::string image, std::string thumb) {
     }
 }
 
+// TODO remove
 std::string FileParser::get_artist_clean_name(std::string artist) {
     return commons::string::trim(commons::string::to_lower(artist));
 }
@@ -301,11 +303,14 @@ std::string FileParser::get_mime_type(const std::string & filename) {
         return "image/png";
     } else if( commons::string::ends_with(filename, ".pdf", true) ) {
         return "application/pdf";
+    } else if( commons::string::ends_with(filename, ".mp4", true) ) {
+        return "video/mp4";
+    } else if( commons::string::ends_with(filename, ".mkv", true) ) {
+        return "video/x-matroska";
     } else if( commons::string::ends_with(filename, ".cue", true) ||
                commons::string::ends_with(filename, ".m3u", true) ||
                commons::string::ends_with(filename, ".txt", true) ) {
         return "text/plain";
     } else return std::string("application/octet-stream");
 }
-
 }}

@@ -18,6 +18,7 @@
 */
 
 #include "apistatisticservlet.h"
+#include "../db/database.h"
 
 #define QUERY_ALBUMS_COUNT "select count(*) from tbl_cds_albums"
 #define QUERY_ARTISTS_COUNT "select count(*) from tbl_cds_artists"
@@ -64,8 +65,8 @@ void ApiStatisticServlet::do_get( http::HttpRequest & request, ::http::HttpRespo
         db->release_statement( stmt_audiofiles );
 
         response << "}}";
-    } catch(squawk::db::DaoException & e) {
-        LOG4CXX_FATAL(logger, "Can not get statistic, Exception:" << e.code() << "-> " << e.what());
+    } catch( ::db::DbException * e) {
+        LOG4CXX_FATAL(logger, "Can not get statistic, Exception:" << e->code() << "-> " << e->what());
         if(stmt_albums != NULL) db->release_statement( stmt_albums );
         if(stmt_artists != NULL) db->release_statement( stmt_artists );
         if(stmt_audiofiles != NULL) db->release_statement( stmt_audiofiles );

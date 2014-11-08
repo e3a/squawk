@@ -19,6 +19,7 @@
 
 #include "sqlite3statement.h"
 #include "squawk.h"
+#include "database.h"
 
 #include <string>
 
@@ -30,13 +31,13 @@ namespace db {
 void Sqlite3Statement::bind_int(int index, int value) {
     int res = sqlite3_bind_int(stmt, index, value);
     if (res != SQLITE_OK) {
-      throw new DaoException(res, std::string(sqlite3_errmsg(db)));
+      throw new ::db::DbException(res, std::string(sqlite3_errmsg(db)));
     }
 }
 void Sqlite3Statement::bind_text(int index, std::string text) {
     int res = sqlite3_bind_text(stmt, index, text.c_str(), text.length(), SQLITE_STATIC);
     if (res != SQLITE_OK) {
-      throw new DaoException(res, std::string(sqlite3_errmsg(db)));
+      throw new ::db::DbException(res, std::string(sqlite3_errmsg(db)));
     }
 }
 int Sqlite3Statement::get_int(int position) {
@@ -53,21 +54,21 @@ bool Sqlite3Statement::step() {
   } else if( step == SQLITE_ROW) {
     return true;
   }
-  throw new DaoException(step, std::string(sqlite3_errmsg(db)));
+  throw new ::db::DbException(step, std::string(sqlite3_errmsg(db)));
 }
 int Sqlite3Statement::update() {
   int step = sqlite3_step(stmt);
   if(step == SQLITE_DONE) {
     return step;
   }
-  throw new DaoException(step, std::string(sqlite3_errmsg(db)));
+  throw new ::db::DbException(step, std::string(sqlite3_errmsg(db)));
 }
 int Sqlite3Statement::insert() {
   int step = sqlite3_step(stmt);
   if(step == SQLITE_DONE) {
     return step;
   }
-  throw new DaoException(step, std::string(sqlite3_errmsg(db)));
+  throw new ::db::DbException(step, std::string(sqlite3_errmsg(db)));
 }
 void Sqlite3Statement::reset() {
   sqlite3_reset(stmt);

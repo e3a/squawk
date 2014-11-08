@@ -185,12 +185,12 @@ bool LibAVcpp::parse(struct squawk::media::Audiofile & audiofile, const std::str
                   commons::string::starts_with(std::string(tag->key), "DISCOGS_") &&
                   commons::string::starts_with(std::string(tag->key), "REPLAYGAIN_") &&
                   ! commons::string::starts_with(std::string(tag->key), "Unknown Frame:")) {
-            LOG4CXX_DEBUG(logger, " * " << tag->key << " = " << tag->value)
+            LOG4CXX_TRACE(logger, " * " << tag->key << " = " << tag->value)
         }
     }
 
     avcodec_close(input_codec_context);
     avformat_close_input(&fmt_ctx);
-    return 1;
+    return true;
 }
 }}

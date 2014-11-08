@@ -22,6 +22,7 @@
 
 #include "sqlite3database.h"
 #include "sqlite3statement.h"
+#include "database.h"
 
 namespace squawk {
 namespace db {
@@ -33,7 +34,7 @@ int Sqlite3Database::exec( std::string query ) {
 void Sqlite3Database::open( std::string path ) {
     int res = sqlite3_open(path.c_str(), &db);
     if(res != SQLITE_OK) {
-        throw new DaoException(res, sqlite3_errmsg(db));
+        throw new ::db::DbException(res, sqlite3_errmsg(db));
     }
 }
 int Sqlite3Database::close() {
@@ -43,7 +44,7 @@ Sqlite3Statement * Sqlite3Database::prepare_statement(std::string statement) {
     sqlite3_stmt * sqlite3_statement;
     int res = sqlite3_prepare(db, statement.c_str(), -1, &sqlite3_statement, 0);
     if(SQLITE_OK != res) {
-        throw new DaoException(res, sqlite3_errmsg(db));
+        throw new ::db::DbException(res, sqlite3_errmsg(db));
     }
     Sqlite3Statement * stmt = new Sqlite3Statement(db, sqlite3_statement);
     return stmt;

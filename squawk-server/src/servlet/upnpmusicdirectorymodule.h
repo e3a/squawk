@@ -20,10 +20,12 @@
 
 #include "squawk.h"
 #include "../squawkconfig.h"
-#include "../db/sqlite3database.h"
+#include "../db/sqlite3database.h" //TODO use generic header
+#include "../db/database.h"
 #include <upnp.h>
 
 #include <functional>
+#include <iostream>
 
 #include "log4cxx/logger.h"
 
@@ -55,7 +57,7 @@ private:
             }
             db->release_statement( stmt_artists_count );
 
-        } catch( squawk::db::DaoException * e ) {
+        } catch( ::db::DbException * e ) {
             LOG4CXX_FATAL(logger, "Can not get artist_count, Exception:" << e->code() << "-> " << e->what());
             if( stmt_artists_count != NULL ) db->release_statement( stmt_artists_count );
             throw;
@@ -79,7 +81,7 @@ private:
             }
             db->release_statement( stmt_albums_count );
 
-        } catch( squawk::db::DaoException * e ) {
+        } catch( ::db::DbException * e ) {
             LOG4CXX_FATAL(logger, "Can not get albums_count, Exception:" << e->code() << "-> " << e->what());
             if( stmt_albums_count != NULL ) db->release_statement( stmt_albums_count );
             throw;
@@ -106,7 +108,7 @@ private:
             }
             db->release_statement( stmt_albums_artist_count );
 
-        } catch( squawk::db::DaoException * e ) {
+        } catch( ::db::DbException * e ) {
             LOG4CXX_FATAL(logger, "Can not get albums_artist_count, Exception:" << e->code() << "-> " << e->what());
             if( stmt_albums_artist_count != NULL ) db->release_statement( stmt_albums_artist_count );
             throw;
@@ -132,7 +134,7 @@ private:
             }
             db->release_statement( stmt_song_album_count );
 
-        } catch( squawk::db::DaoException * e ) {
+        } catch( ::db::DbException * e ) {
             LOG4CXX_FATAL(logger, "Can not get song_album_count, Exception:" << e->code() << "-> " << e->what());
             if( stmt_song_album_count != NULL ) db->release_statement( stmt_song_album_count );
             throw;
@@ -156,7 +158,7 @@ private:
             }
             db->release_statement( stmt_artists );
 
-        } catch( squawk::db::DaoException * e ) {
+        } catch( ::db::DbException * e ) {
             LOG4CXX_FATAL(logger, "Can not get artist, Exception:" << e->code() << "-> " << e->what());
             if( stmt_artists != NULL ) db->release_statement( stmt_artists );
             throw;
@@ -181,7 +183,7 @@ private:
             std::cout << "endt stmt:albums" << std::endl;
             db->release_statement( stmt_albums );
 
-        } catch( squawk::db::DaoException * e ) {
+        } catch( ::db::DbException * e ) {
             LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e->code() << "-> " << e->what());
             if( stmt_albums != NULL ) db->release_statement( stmt_albums );
             throw;
@@ -207,7 +209,7 @@ private:
             }
             db->release_statement( stmt_artist_albums );
 
-        } catch( squawk::db::DaoException * e ) {
+        } catch( ::db::DbException * e ) {
             LOG4CXX_FATAL(logger, "Can not get albums by artist, Exception:" << e->code() << "-> " << e->what());
             if( stmt_artist_albums != NULL ) db->release_statement( stmt_artist_albums );
             throw;
@@ -232,7 +234,7 @@ private:
             }
             db->release_statement( stmt_album );
 
-        } catch( squawk::db::DaoException * e ) {
+        } catch( ::db::DbException * e ) {
             LOG4CXX_FATAL(logger, "Can not get album, Exception:" << e->code() << "-> " << e->what());
             if( stmt_album != NULL ) db->release_statement( stmt_album );
             throw;
@@ -256,7 +258,7 @@ private:
             }
             db->release_statement( stmt_album_artist );
 
-        } catch( squawk::db::DaoException * e ) {
+        } catch( ::db::DbException * e ) {
             LOG4CXX_FATAL(logger, "Can not get artists for album, Exception:" << e->code() << "-> " << e->what());
             if( stmt_album_artist != NULL ) db->release_statement( stmt_album_artist );
             throw;
@@ -273,18 +275,22 @@ private:
             "songs.mime_type, songs.disc, songs.mtime, songs.filesize " \
             "from tbl_cds_audiofiles songs, tbl_cds_albums album where album.ROWID = ? and " \
             "album.ROWID = songs.album_id order by songs.track, songs.disc";
-    void songs( const int album_id, std::function<void(const int, const int, const std::string, const std::string)> callback ) {
+    void songs( const int album_id, std::function<void(const int, const int, const std::string, const std::string, const std::string,
+                                                       const std::string, const int, const int, const int, const int, const int)> callback ) {
+
         squawk::db::Sqlite3Statement * stmt_album_song = NULL;
         try {
             stmt_album_song = db->prepare_statement( SQL_ALBUM_SONG );
             stmt_album_song->bind_int( 1, album_id );
             while( stmt_album_song->step() ) {
                 callback( stmt_album_song->get_int(0), stmt_album_song->get_int(2), stmt_album_song->get_string(1),
-                          stmt_album_song->get_string(1) );
+                          stmt_album_song->get_string(1), stmt_album_song->get_string(11), stmt_album_song->get_string(9),
+                          stmt_album_song->get_int(12), stmt_album_song->get_int(4), stmt_album_song->get_int(5),
+                          stmt_album_song->get_int(6), stmt_album_song->get_int(7) );
             }
             db->release_statement( stmt_album_song );
 
-        } catch( squawk::db::DaoException * e ) {
+        } catch( ::db::DbException * e ) {
             LOG4CXX_FATAL(logger, "Can not get songs for album, Exception:" << e->code() << "-> " << e->what());
             if( stmt_album_song != NULL ) db->release_statement( stmt_album_song );
             throw;

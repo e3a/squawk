@@ -45,6 +45,7 @@ if (build_tests)
     include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIR} ${ID3_INCLUDE_DIR} ${FLAC++_INCLUDE_DIR} ${GTEST_INCLUDE_DIRS} includes)
     add_executable(testmain_server test/testmain.cpp
         test/media/teststringparse.cpp
+        test/media/testartist.cpp
         test/api/testapiartisthandler.cpp
         # TODO move to toplevel test/testutils.cpp
         test/testoptionsparser.cpp
