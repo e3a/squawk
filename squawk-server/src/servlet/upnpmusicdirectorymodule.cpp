@@ -143,7 +143,12 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
     /* ----------- Albums ----------- */
     } else if( request->contains( OBJECT_ID) && request->getValue( OBJECT_ID ) == "music.albums" ) {
 
-        albums( [&xmlWriter, &didl_element, this] (const int id, const std::string & name, const std::string & genre, const std::string & year) {
+        int total_matches = albumCount();
+        int albums_returned = 0;
+        int index = 0;
+
+        albums( index, total_matches, [&xmlWriter, &didl_element, &albums_returned, this]
+                (const int id, const std::string & name, const std::string & genre, const std::string & year) {
                 commons::xml::Node artist_element = xmlWriter->element( didl_element, "", "container", "" );
                 xmlWriter->attribute(artist_element, "id", "music.albums:" + std::to_string( id ) );
         xmlWriter->attribute(artist_element, "parentID", "music.artists");
@@ -151,22 +156,23 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
         //TODO xmlWriter->attribute(artist_element, "childCount", std::to_string( songByAlbumCount( id ) ) );
         xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "title", name );
         xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "class", "object.container.storageFolder");
-        xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "storageUsed", "-1");
+        // TODO xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "storageUsed", "-1");
         artist( id, [&xmlWriter, &artist_element] (const int artist_id, const std::string & artist_name ) {
                 // add the artists
                 xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "artits", artist_name );
-    });
-    xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "date", year + "-01-01" );
-    commons::xml::Node dlna_album_art_node = xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "albumArtURI",
-                                                                "http://" + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) +
-                                                                "/album/" + std::to_string( id ) + "/cover.jpg" );
-    xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
-    xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
+                xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "creator", artist_name );
+        });
+        xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "date", year + "-01-01" );
+        commons::xml::Node dlna_album_art_node = xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "albumArtURI",
+                                                                    "http://" + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) +
+                                                                    "/album/" + std::to_string( id ) + "/cover.jpg" );
+        xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
+        xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
 
+        ++albums_returned;
     });
-    int album_count = albumCount();
-    cds_result->number_returned( album_count );
-    cds_result->total_matches( album_count );
+    cds_result->number_returned( albums_returned );
+    cds_result->total_matches( total_matches );
 
 
     /* ----------- Songs ----------- */
@@ -199,6 +205,7 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
     artist( id, [&xmlWriter, &item_element] (const int artist_id, const std::string & artist_name ) {
             // add the artists
             xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "artits", artist_name );
+            xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "creator", artist_name );
     });
     commons::xml::Node dlna_album_art_node = xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "albumArtURI",
                                                                 "http://" + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) +

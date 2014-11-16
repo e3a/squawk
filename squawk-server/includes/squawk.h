@@ -32,46 +32,67 @@ static const bool DEBUG = true; //make macro
 
 namespace media {
 
+inline std::string clean_name( std::string name ) {
+    std::string res =  commons::string::to_lower( commons::string::trim(name, " +-.\"\t\n\r\f\v") );
+    if( res.rfind("the ", 0) == 0)
+        res.erase(0, 4);
+    if( res.rfind("die ", 0) == 0)
+        res.erase(0, 4);
+    if( res.rfind("das ", 0) == 0)
+        res.erase(0, 4);
+    if( res.rfind("der ", 0) == 0)
+        res.erase(0, 4);
+    return res;
+};
+inline std::string get_letter( const std::string & clean_name ) {
+    if(clean_name.length()>0) {
+        return commons::string::to_upper( clean_name.substr(0, 1) );
+    } else {
+        return std::string("");
+    }
+};
+
 /**
  * \brief The artist entity.
  */
 struct Artist {
 public:
-    Artist() : id_(0), name_(""), letter_(""), clean_name_("") {}
-    Artist(std::string name, std::string letter, std::string clean_name) : id_(0), name_(name), letter_(letter), clean_name_(clean_name) {}
+    Artist( const std::string & name ) :
+        name_(name),
+        clean_name_(::squawk::media::clean_name( name_ )),
+        letter_(::squawk::media::get_letter(clean_name_)) {}
 
-    void id( unsigned long id ) { this->id_ = id; }
+
+    void id( unsigned long & id ) { this->id_ = id; }
     unsigned long id() { return id_; }
-    std::string letter() {
-        if(clean_name().length()>0) {
-            return commons::string::to_upper( clean_name().substr(0, 1) );
-        } else {
-            return std::string("");
-        }
+    const std::string letter() {
+        return letter_;
     }
-    std::string name() { return name_; }
-    std::string clean_name() {
-        return commons::string::trim(commons::string::to_lower(name_));
+    const std::string name() { return name_; }
+    const std::string clean_name() {
+        return clean_name_;
     }
 
 private:
-    unsigned long id_;
-    std::string letter_, name_, clean_name_;
+    unsigned long id_ = 0;
+    std::string name_;
+    std::string clean_name_;
+    std::string letter_;
 };
-/** unsigned long id;
+/**
  * \brief The song entity.
  */
 struct Song {
     Song() : id(0), title(""), mime_type(""), filename(""), mtime(0), samplerate(0), bitrate(0), size(0), sampleFrequency(0),
         playLength(0), track(0), disc(0), channels(0), bits_per_sample(0) {}
     Song(std::string title, std::string mime_type, std::string filename, int mtime, int samplerate, int bitrate, int size,
-         int sampleFrequency, int playLength, int track, int disc, int channels, int bits_per_sample, std::list< Artist > artist) :
+         int sampleFrequency, int playLength, int track, int disc, int channels, int bits_per_sample, std::list< Artist *> artist) :
         id(0), title(title), mime_type(mime_type), filename(filename), mtime(mtime), samplerate(samplerate), bitrate(bitrate), size(size),
         sampleFrequency(sampleFrequency), playLength(playLength), track(track), disc(disc), channels(channels), bits_per_sample(bits_per_sample), artist(artist) {}
     unsigned long id;
     std::string title, mime_type, filename, album, genre, comment, year;
     int mtime, samplerate, bitrate, size, sampleFrequency, bits_per_sample, playLength, track, disc, channels;
-    std::list< Artist > artist;
+    std::list< Artist *> artist;
 };
 /**
  * \brief The image entity.
@@ -86,17 +107,48 @@ struct Image {
  * \brief The album entity.
  */
 struct Album {
-    Album() : id(0), name(""), genre(""), year("") {}
+public:
+    Album() : id(0), name_(""), genre_(""), year_("") {}
+    Album(const std::string & name, const std::string & genre, const std::string & year ) :
+        id(0), name_(commons::string::trim(name)), genre_(commons::string::trim(genre)), year_(commons::string::trim(year)) {}
+    ~Album() {
+        for(auto a : artists) delete a;
+    }
+
     unsigned long id;
-    std::string name, genre, year;
-    std::list< Artist > artists;
+    std::list< Artist *> artists;
     std::list< Song> songs;
     std::list< Image > images;
+
+    std::string name() {return name_; }
+    void name(const std::string & name) {name_ = commons::string::trim(name); }
+    std::string genre() {return genre_; }
+    void genre(const std::string & genre) {genre_ = commons::string::trim(genre); }
+    std::string year() {return year_; }
+    void year(const std::string & year) {name_ = commons::string::trim(year); }
+
+    bool add( squawk::media::Artist * artist ) {
+        for( auto _artist : artists ) {
+            if( _artist->clean_name() == artist->clean_name() ) {
+                return false;
+            }
+        }
+        artists.insert(artists.end(), artist);
+        return true;
+    }
+
+    bool equals( const std::string name ) {
+        return name_ == commons::string::trim( name );
+    }
+
+private:
+    std::string name_, genre_, year_;
 };
 /**
   * \brief The audiofile entity.
   */
 struct Audiofile {
+public:
     Audiofile() : track(0), bitrate(0), sample_rate(0), bits_per_sample(0), channels(0), disc(0), sample_frequency(0) {}
     std::string album, title, year, genre, composer, mime_type, comment, performer;
     int track, bitrate, sample_rate, bits_per_sample, channels, length, disc, sample_frequency;

@@ -141,38 +141,23 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
                     }
                 }
                 if( ! metadata_found)
-                    LOG4CXX_WARN(logger, "can not parse audiofile::" << (*list_iter).name)
+                    LOG4CXX_WARN(logger, "no metadata found for file:" << (*list_iter).name)
 
-                //collect the artists
-                std::list< squawk::media::Artist > artists;
-                for(std::list< std::string >::iterator artist_iter = audiofile.artist.begin(); artist_iter != audiofile.artist.end(); artist_iter++) {
-                    bool found = false;
-                    std::string clean_name = get_artist_clean_name((*artist_iter));
-                    for(std::list< squawk::media::Artist >::iterator artist_list_iter = artists.begin(); artist_list_iter != artists.end(); artist_list_iter++) {
-                        if((*artist_list_iter).clean_name() == clean_name ) {
-                            found = true;
+                    if( ! album.equals( audiofile.album )) {
+
+                        album = squawk::media::Album( audiofile.album, audiofile.genre, audiofile.year );
+                        for(auto & str_artist : audiofile.artist ) {
+                            squawk::media::Artist * artist = new Artist( str_artist );
+                            if( album.add( artist ) ) {
+                                unsigned long new_artist_id = mediaDao->save_artist( artist );
+                                artist->id( new_artist_id );
+                            } else delete artist;
                         }
+                        album.id = mediaDao->save_album(get_album_clean_path(path), &album);
                     }
-                    if(! found  ) {
-                        squawk::media::Artist artist((*artist_iter),  get_artist_letter((*artist_iter)), clean_name);
-                        artist.id( mediaDao->save_artist(artist) );
-                        artists.insert(artists.end(), artist);
-                    }
-                }
-
-                if(album.id == 0 || album.name != audiofile.album) {
-                    std::string cleanPath = get_album_clean_path(path);
-
-                    album.artists = artists;
-                    album.genre = audiofile.genre;
-                    album.name = audiofile.album;
-                    album.year = audiofile.year;
-
-                    album.id = mediaDao->save_album(cleanPath, &album);
-                }
                 squawk::media::Song song(audiofile.title, (*list_iter).mime_type, (*list_iter).name, (*list_iter).mtime, audiofile.sample_rate, audiofile.bitrate,
                                          (*list_iter).size, audiofile.sample_frequency, audiofile.length, audiofile.track, audiofile.disc, audiofile.channels,
-                                         audiofile.bits_per_sample, artists);
+                                         audiofile.bits_per_sample, album.artists);
                 mediaDao->save_audiofile((*list_iter).name, (*list_iter).mtime, (*list_iter).size, album.id, &song);
             }
 

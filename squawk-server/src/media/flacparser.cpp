@@ -63,46 +63,49 @@ bool FlacParser::parse(struct squawk::media::Audiofile & audiofile, const std::s
     if(vc != 0) {
 	for(int i=0; i<vc->get_num_comments(); i++) {
             FLAC::Metadata::VorbisComment::Entry entry = vc->get_comment(i);
-            if(strcmp(entry.get_field_name(), "DATE") == 0) {
+            const char * field_name = commons::string::to_upper( entry.get_field_name() ).c_str();
+            if(strcmp(field_name, "DATE") == 0) {
                 audiofile.year = std::string(entry.get_field_value());
-            } else if(strcmp(entry.get_field_name(), "ARTIST") == 0 ||
-	              strcmp(entry.get_field_name(), "COMPOSER") == 0 ||
-	              strcmp(entry.get_field_name(), "PERFORMER") == 0 ||
-	              strcmp(entry.get_field_name(), "ALBUMARTIST") == 0 ||
-	              strcmp(entry.get_field_name(), "ALBUM ARTIST") == 0) {
+            } else if(strcmp(field_name, "ARTIST") == 0 ||
+                  strcmp(field_name, "BAND") == 0 ||
+                  strcmp(field_name, "COMPOSER") == 0 ||
+                  strcmp(field_name, "PERFORMER") == 0 ||
+                  strcmp(field_name, "ALBUMARTIST") == 0 ||
+                  strcmp(field_name, "ENSEMBLE") == 0 ||
+                  strcmp(field_name, "ALBUM ARTIST") == 0) {
 	      
-/*	      squawk::model::Artist artist;
-          artist.name =; */
           audiofile.artist.insert(audiofile.artist.end(), entry.get_field_value());
 	      
-	    } else if(strcmp(entry.get_field_name(), "ALBUM") == 0) {
+        } else if(strcmp(field_name, "ALBUM") == 0) {
                 audiofile.album = std::string(entry.get_field_value());
-            } else if(strcmp(entry.get_field_name(), "GENRE") == 0) {
+            } else if(strcmp(field_name, "GENRE") == 0) {
                 audiofile.genre = std::string(entry.get_field_value());
-            } else if(strcmp(entry.get_field_name(), "TRACKNUMBER") == 0) {
+            } else if(strcmp(field_name, "TRACKNUMBER") == 0) {
                 audiofile.track = atoi(entry.get_field_value());
-            } else if(strcmp(entry.get_field_name(), "TITLE") == 0) {
+            } else if(strcmp(field_name, "TITLE") == 0) {
                 audiofile.title = std::string(entry.get_field_value());
-            } else if(strcmp(entry.get_field_name(), "DISCNUMBER") == 0) {
-        audiofile.disc = atoi(entry.get_field_value());
-            } else if(strcmp(entry.get_field_name(), "COMMENT") == 0) {
+            } else if(strcmp(field_name, "DISCNUMBER") == 0) {
+                audiofile.disc = atoi(entry.get_field_value());
+            } else if(strcmp(field_name, "COMMENT") == 0) {
                 audiofile.comment = std::string(entry.get_field_value());
 		
             } else if(logger->isDebugEnabled() &&
-		      strcmp(entry.get_field_name(), "TRACKTOTAL") != 0 && strcmp(entry.get_field_name(), "TOTALTRACKS") != 0 &&
-         	      strcmp(entry.get_field_name(), "HDTRACKS") != 0 && strcmp(entry.get_field_name(), "DESCRIPTION") != 0 &&
-		      strcmp(entry.get_field_name(), "ENCODER") != 0 && strcmp(entry.get_field_name(), "CHANNELS") != 0 &&
+              strcmp(field_name, "TRACKTOTAL") != 0 && strcmp(field_name, "TOTALTRACKS") != 0 &&
+              strcmp(field_name, "HDTRACKS") != 0 && strcmp(field_name, "DESCRIPTION") != 0 &&
+              strcmp(field_name, "ENCODER") != 0 && strcmp(entry.get_field_name(), "CHANNELS") != 0 &&
 		      strcmp(entry.get_field_name(), "ALBUM DYNAMIC RANGE") != 0 && strcmp(entry.get_field_name(), "DYNAMIC RANGE") != 0 &&
 		      strcmp(entry.get_field_name(), "REPLAYGAIN_ALBUM_PEAK") != 0 && strcmp(entry.get_field_name(), "REPLAYGAIN_ALBUM_GAIN") != 0  &&
 		      strcmp(entry.get_field_name(), "REPLAYGAIN_TRACK_PEAK") != 0 && strcmp(entry.get_field_name(), "REPLAYGAIN_TRACK_GAIN") != 0  &&
 		      strcmp(entry.get_field_name(), "dvda_track") != 0 && strcmp(entry.get_field_name(), "dvda_title") != 0  &&
 		      strcmp(entry.get_field_name(), "dvda_titleset") != 0 && strcmp(entry.get_field_name(), "Encoder") != 0  &&
 		      strcmp(entry.get_field_name(), "Ripping Tool") != 0 && strcmp(entry.get_field_name(), "Release Type") != 0  &&
-		      strcmp(entry.get_field_name(), "ORGANIZATION") != 0 && strcmp(entry.get_field_name(), "Language") != 0  &&
+              strcmp(field_name, "ORGANIZATION") != 0 && strcmp(entry.get_field_name(), "Language") != 0  &&
 		      strcmp(entry.get_field_name(), "Rip Date") != 0 && strcmp(entry.get_field_name(), "Retail Date") != 0  &&
 		      strcmp(entry.get_field_name(), "TOTALDISCS") != 0 && strcmp(entry.get_field_name(), "SERIAL_NO") != 0  &&
-		      strcmp(entry.get_field_name(), "compilation") != 0 && strcmp(entry.get_field_name(), "itunesmediatype") != 0  &&
-		      strcmp(entry.get_field_name(), "CATALOG #") != 0 && strcmp(entry.get_field_name(), "Source") != 0 ) {
+              strcmp(entry.get_field_name(), "compilation") != 0 && strcmp(entry.get_field_name(), "itunesmediatype") != 0  &&
+              strcmp(entry.get_field_name(), "DISCTOTAL") != 0 && strcmp(entry.get_field_name(), "CODINGHISTORY") != 0  &&
+              strcmp(entry.get_field_name(), "URL") != 0 && strcmp(entry.get_field_name(), "Media") != 0  &&
+              strcmp(entry.get_field_name(), "CATALOG #") != 0 && strcmp(field_name, "SOURCE") != 0 ) {
                 LOG4CXX_DEBUG(logger, ":Vorbis Comment: " << entry.get_field_name () << " = " << entry.get_field_value());
 	    }
 	}

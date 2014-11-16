@@ -22,8 +22,8 @@
 
 #include "commons.h"
 
-#define QUERY_ARTISTS "select ROWID, name, letter from tbl_cds_artists order by name"
-#define QUERY_ARTISTS_FILTER "select ROWID, name, letter from tbl_cds_artists where name LIKE ? order by name"
+#define QUERY_ARTISTS "select ROWID, name, letter from tbl_cds_artists order by letter, clean_name"
+#define QUERY_ARTISTS_FILTER "select ROWID, name, letter from tbl_cds_artists where name LIKE ? order by letter, clean_name"
 
 namespace squawk {
 namespace servlet {

@@ -21,11 +21,17 @@
 #include <gtest/gtest.h>
 
 TEST(ParseArtist, CleanArtist) {
-    squawk::media::Artist artist("  Artist Name ", "A", "");
+    squawk::media::Artist artist("  Artist Name " );
     ASSERT_STREQ("artist name", artist.clean_name().c_str() );
 }
+TEST(ParseArtist, CleanArtistRage) {
+    squawk::media::Artist artist("Rage Against The Machine");
+    ASSERT_STREQ("rage against the machine", artist.clean_name().c_str() );
+}
 TEST(ParseArtist, Letter) {
-    squawk::media::Artist artist("  Artist Name ", "B", "");
+    squawk::media::Artist artist("  Artist Name " );
     ASSERT_STREQ("A", artist.letter().c_str() );
 }
+
+
 

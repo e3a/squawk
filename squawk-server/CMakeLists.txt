@@ -44,6 +44,7 @@ if (build_tests)
     enable_testing()
     include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIR} ${ID3_INCLUDE_DIR} ${FLAC++_INCLUDE_DIR} ${GTEST_INCLUDE_DIRS} includes)
     add_executable(testmain_server test/testmain.cpp
+        test/TestTextParse.cpp
         test/media/teststringparse.cpp
         test/media/testartist.cpp
         test/api/testapiartisthandler.cpp

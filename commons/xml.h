@@ -315,7 +315,7 @@ public:
         std::string out;
         xmlChar *s;
         int size;
-        xmlDocDumpMemoryEnc( doc, &s, &size, encoding.c_str() );
+        xmlDocDumpFormatMemoryEnc( doc, &s, &size, encoding.c_str(), 1 ); //TODO use DEBUG variable
         if ( s == NULL )
             throw std::bad_alloc();
         try {
@@ -336,7 +336,7 @@ public:
         std::string out;
         xmlChar *s;
         int size;
-        xmlDocDumpMemory( doc, &s, &size );
+        xmlDocDumpFormatMemory( doc, &s, &size, 1 ); //TODO use DEBUG variable
         if ( s == NULL )
             throw std::bad_alloc();
         try {

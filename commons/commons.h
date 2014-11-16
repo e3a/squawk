@@ -34,16 +34,16 @@
 namespace commons {
 namespace string {
 
-  inline std::string ltrim(std::string s) {
-      s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+  inline std::string ltrim(std::string s, const char* t = " \t\n\r\f\v" ) {
+      s.erase(0, s.find_first_not_of( t ));
       return s;
   }
-  inline std::string rtrim(std::string s) {
-      s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+  inline std::string rtrim(std::string s, const char* t = " \t\n\r\f\v" ) {
+      s.erase(s.find_last_not_of( t ) + 1);
       return s;
   }
-  inline std::string trim(std::string s) {
-        return ltrim(rtrim(s));
+  inline std::string trim(std::string s, const char* t = " \t\n\r\f\v" ) {
+        return ltrim(rtrim(s, t), t);
   }
   inline std::string to_lower(std::string str) {
     std::ostringstream ss;
@@ -232,7 +232,8 @@ inline std::string uname() {
 inline std::string time_string() {
   time_t rawtime;
   time (&rawtime);
-  return commons::string::trim( std::string( std::ctime ( &rawtime ) ) );
+  std::string str_time = std::string( std::ctime ( &rawtime ) );
+  return commons::string::trim( str_time );
 };
 }}
 namespace commons {

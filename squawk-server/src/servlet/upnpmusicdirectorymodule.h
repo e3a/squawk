@@ -170,11 +170,14 @@ private:
     }
 
     /* get albums */
-    static constexpr const char * SQL_ALBUM = "select name, genre, year, ROWID from tbl_cds_albums ORDER BY name";
-    void albums( std::function<void(const int, const std::string, const std::string, const std::string)> callback ) {
+    static constexpr const char * SQL_ALBUM = "select name, genre, year, ROWID from tbl_cds_albums ORDER BY name LIMIT ?, ?";
+    void albums( const int & index, const int result_count,
+                 std::function<void(const int, const std::string, const std::string, const std::string)> callback ) {
         squawk::db::Sqlite3Statement * stmt_albums = NULL;
         try {
             stmt_albums = db->prepare_statement( SQL_ALBUM );
+            stmt_albums->bind_int( 1, index );
+            stmt_albums->bind_int( 2, result_count );
             std::cout << "start stmt:albums" << std::endl;
             while( stmt_albums->step() ) {
                 callback( stmt_albums->get_int( 3 ), stmt_albums->get_string(0),

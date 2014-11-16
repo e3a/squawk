@@ -181,9 +181,9 @@ squawk::media::Album MediaDao::get_album(std::string path) {
         squawk::db::Sqlite3Statement * stmt = stmtMap[ "GET_ALBUM" ];
         stmt->bind_text(1, path);
         while( stmt->step() ) {
-            album.name = stmt->get_string(0);
-            album.genre = stmt->get_string(1);
-            album.year = stmt->get_string(2);
+            album.name( stmt->get_string(0) );
+            album.genre( stmt->get_string(1) );
+            album.year( stmt->get_string(2) );
             album.id = stmt->get_int(3);
         }
         stmt->reset();
@@ -195,6 +195,7 @@ squawk::media::Album MediaDao::get_album(std::string path) {
 }
 unsigned long MediaDao::save_album( std::string path, squawk::media::Album * album ) {
     LOG4CXX_TRACE(logger, "save Album:" << path );
+
     long album_id = 0;
     try {
 
@@ -209,21 +210,22 @@ unsigned long MediaDao::save_album( std::string path, squawk::media::Album * alb
 
             squawk::db::Sqlite3Statement * stmt_insert_album = stmtMap["INSERT_ALBUM"];
             stmt_insert_album->bind_text(1, path);
-            stmt_insert_album->bind_text(2, album->name);
-            stmt_insert_album->bind_text(3, album->genre);
-            stmt_insert_album->bind_text(4, album->year);
+            stmt_insert_album->bind_text(2, album->name());
+            stmt_insert_album->bind_text(3, album->genre());
+            stmt_insert_album->bind_text(4, album->year());
             stmt_insert_album->insert();
             stmt_insert_album->reset();
 
             album_id = db->last_insert_rowid();
 
             //and save the artist mappings
-            for(std::list< squawk::media::Artist >::iterator list_iter = album->artists.begin(); list_iter != album->artists.end(); list_iter++) {
-                squawk::media::Artist artist = *list_iter;
+            for( auto artist : album->artists ) {
+                //squawk::media::Artist artist = *list_iter;
+                LOG4CXX_TRACE(logger, "save artists: album_id:" << album_id << " artist_id:" << artist->id() );
 
                 squawk::db::Sqlite3Statement * stmt_insert_album_mapping = stmtMap["INSERT_ALBUM_ARTIST_MAPPING"];
                 stmt_insert_album_mapping->bind_int( 1, album_id );
-                stmt_insert_album_mapping->bind_int( 2, artist.id() );
+                stmt_insert_album_mapping->bind_int( 2, artist->id() );
                 stmt_insert_album_mapping->insert();
                 stmt_insert_album_mapping->reset();
             }
@@ -234,22 +236,24 @@ unsigned long MediaDao::save_album( std::string path, squawk::media::Album * alb
     }
     return album_id;
 }
-unsigned long MediaDao::save_artist(squawk::media::Artist & artist) {
-    LOG4CXX_TRACE(logger, "save artist:" << artist.name() );
+unsigned long MediaDao::save_artist(squawk::media::Artist * artist) {
+    LOG4CXX_TRACE(logger, "save artist: \"" << artist->name() << "\", clean_name: \"" << artist->clean_name() << "\"" );
     unsigned long artist_id = 0;
     try {
         squawk::db::Sqlite3Statement * stmt_artist_id = stmtMap["GET_ARTIST_ID"];
-        stmt_artist_id->bind_text( 1, artist.clean_name() );
-        if( stmt_artist_id->step() )
+        stmt_artist_id->bind_text( 1, artist->clean_name() );
+        if( stmt_artist_id->step() ) {
             artist_id = stmt_artist_id->get_int(0);
+        }
         stmt_artist_id->reset();
 
+        LOG4CXX_TRACE(logger, "save artist id: \"" << artist_id );
         if(artist_id == 0) {
             squawk::db::Sqlite3Statement * stmt_insert_artist = stmtMap["INSERT_ARTIST"];
 
-            stmt_insert_artist->bind_text(1, artist.name() );
-            stmt_insert_artist->bind_text(2, artist.clean_name() );
-            stmt_insert_artist->bind_text(3, artist.letter() );
+            stmt_insert_artist->bind_text(1, artist->name() );
+            stmt_insert_artist->bind_text(2, artist->clean_name() );
+            stmt_insert_artist->bind_text(3, artist->letter() );
             stmt_insert_artist->insert();
             stmt_insert_artist->reset();
             artist_id = db->last_insert_rowid();

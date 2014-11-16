@@ -38,7 +38,7 @@ public:
     bool exist_imagefile(std::string filename, long mtime, long size, bool update);
     squawk::media::Album get_album(std::string path);
     unsigned long save_album(std::string path, squawk::media::Album * album);
-    unsigned long save_artist(squawk::media::Artist & artist);
+    unsigned long save_artist(squawk::media::Artist * artist);
     void save_audiofile(std::string filename, long mtime, long size, unsigned long album_id, squawk::media::Song * song);
     unsigned long save_imagefile(std::string filename, long mtime, long size, unsigned long album_id, squawk::media::Image * imagefile);
     void sweep( long mtime );
