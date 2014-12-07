@@ -38,3 +38,13 @@ TEST(HttpServlet, ParsePathWithElement) {
     EXPECT_TRUE(servlet.match("/foo/bar/123/file.txt", &result));
     EXPECT_EQ(123, result);
 }
+TEST(HttpServlet, ParsePathWithTwoElement) {
+    HttpServerImpl servlet("/(foo|bar)/(\\d+)/file.txt");
+
+    std::string path;
+    int result = 0; //new char[1024];
+    EXPECT_TRUE(servlet.match("/bar/123/file.txt", &path, &result));
+
+    EXPECT_EQ("bar", path );
+    EXPECT_EQ(123, result );
+}

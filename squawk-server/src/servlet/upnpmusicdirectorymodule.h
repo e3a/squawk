@@ -1,5 +1,5 @@
 /*
-    <one line to give the program's name and a brief idea of what it does.>
+    Upnp music directory module.
     Copyright (C) 2013  <copyright holder> <email>
 
     This program is free software: you can redistribute it and/or modify
@@ -36,7 +36,7 @@ class UpnpMusicDirectoryModule : public commons::upnp::ContentDirectoryModule {
 public:
 
     UpnpMusicDirectoryModule(squawk::SquawkConfig * squawk_config, squawk::db::Sqlite3Database * db ) : db(db), squawk_config(squawk_config) {}
-    virtual void getRootNode( commons::xml::XMLWriter * xmlWriter, commons::upnp::CdsResult * cds_result );
+    virtual void getRootNode( commons::xml::XMLWriter * xmlWriter, commons::xml::Node * element, commons::upnp::CdsResult * cds_result );
     virtual bool match( commons::upnp::UpnpContentDirectoryRequest * parseRequest );
     virtual void parseNode( commons::xml::XMLWriter * xmlWriter, commons::upnp::CdsResult * cds_result, commons::upnp::UpnpContentDirectoryRequest * parseRequest );
 
@@ -298,7 +298,7 @@ private:
             if( stmt_album_song != NULL ) db->release_statement( stmt_album_song );
             throw;
         } catch( ... ) {
-            LOG4CXX_FATAL(logger, "Other Excpeption in songs for album.");
+            LOG4CXX_FATAL(logger, "Other Exception in songs for album.");
             if( stmt_album_song != NULL ) db->release_statement( stmt_album_song );
             throw;
         }

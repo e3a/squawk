@@ -27,7 +27,8 @@ namespace http {
  */
 namespace mime {
 
-  enum MIME_TYPE { GIF=0, HTM=1, HTML=2, JPEG=3, PNG=4, CSS=5, JS=6, MPEG=7, FLAC=8, VORBIS=9, MUSEPACK=10, JSON=11, TEXT=12, XML=13 };
+  enum MIME_TYPE { GIF=0, HTM=1, HTML=2, JPEG=3, PNG=4, CSS=5, JS=6, MPEG=7, FLAC=8, VORBIS=9, MUSEPACK=10, JSON=11, TEXT=12, XML=13, AVI=14,
+                   MP4=15, MKV=16 };
 
   static struct mapping {
     const char* extension;
@@ -47,6 +48,9 @@ namespace mime {
       { "json", "text/json" },
       { "txt", "text/plain" },
       { "xml", "text/xml" },
+      { "avi", "video/avi" },
+      { "mp4", "video/mp4" },
+      { "mkv", "video/x-matroska" },
     { 0, 0 }
   };
 

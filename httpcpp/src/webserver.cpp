@@ -40,7 +40,9 @@ void WebServer::handle_request(HttpRequest & request, HttpResponse & response, s
                     servlet->do_get(request, response);
                 } else if( request.request_method == "POST" ) {
                     servlet->do_post(request, response);
-                }
+                } else if( request.request_method == "HEAD" ) {
+                    servlet->do_head(request, response);
+                 }
                 /* TODO handle all http methods */
 
 

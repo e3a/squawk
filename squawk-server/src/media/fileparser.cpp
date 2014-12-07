@@ -109,6 +109,8 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
                         files[AUDIOFILE].insert(files[AUDIOFILE].end(), file_item(name, type, s.st_mtim.tv_sec, s.st_size));
                     } else if( commons::string::starts_with(type, "image/") ) {
                         files[IMAGEFILE].insert(files[IMAGEFILE].end(), file_item(name, type, s.st_mtim.tv_sec, s.st_size));
+                    } else if( commons::string::starts_with(type, "video/") ) {
+                        files[VIDEOFILE].insert(files[VIDEOFILE].end(), file_item(name, type, s.st_mtim.tv_sec, s.st_size));
                     } else {
                         LOG4CXX_WARN(logger, "unknown file type:" << type << ":" << name)
                     }
@@ -143,18 +145,18 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
                 if( ! metadata_found)
                     LOG4CXX_WARN(logger, "no metadata found for file:" << (*list_iter).name)
 
-                    if( ! album.equals( audiofile.album )) {
+                if( ! album.equals( audiofile.album )) {
 
-                        album = squawk::media::Album( audiofile.album, audiofile.genre, audiofile.year );
-                        for(auto & str_artist : audiofile.artist ) {
-                            squawk::media::Artist * artist = new Artist( str_artist );
-                            if( album.add( artist ) ) {
-                                unsigned long new_artist_id = mediaDao->save_artist( artist );
-                                artist->id( new_artist_id );
-                            } else delete artist;
-                        }
-                        album.id = mediaDao->save_album(get_album_clean_path(path), &album);
+                    album = squawk::media::Album( audiofile.album, audiofile.genre, audiofile.year );
+                    for(auto & str_artist : audiofile.artist ) {
+                        squawk::media::Artist * artist = new Artist( str_artist );
+                        if( album.add( artist ) ) {
+                            unsigned long new_artist_id = mediaDao->save_artist( artist );
+                            artist->id( new_artist_id );
+                        } else delete artist;
                     }
+                    album.id = mediaDao->save_album(get_album_clean_path(path), &album);
+                }
                 squawk::media::Song song(audiofile.title, (*list_iter).mime_type, (*list_iter).name, (*list_iter).mtime, audiofile.sample_rate, audiofile.bitrate,
                                          (*list_iter).size, audiofile.sample_frequency, audiofile.length, audiofile.track, audiofile.disc, audiofile.channels,
                                          audiofile.bits_per_sample, album.artists);
@@ -198,7 +200,7 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
                             create_image_thumb((*list_iter).name, cover_filename);
                         }
                     } else {
-                        LOG4CXX_WARN(logger, "iamge not loaded:" << (*list_iter).name)
+                        LOG4CXX_WARN(logger, "image not loaded:" << (*list_iter).name)
                     }
                 }
             }
@@ -207,6 +209,16 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
         }
         files.erase(IMAGEFILE);
     }
+
+    if(files.find( VIDEOFILE ) != files.end()) {
+        for(auto & video : files[VIDEOFILE] ) {
+            if(! mediaDao->exist_videofile( video.name, video.mtime, video.size, true ) ) {
+                if(squawk::DEBUG) LOG4CXX_DEBUG(logger, "save video" << video.name )
+                mediaDao->save_videofile(video.name, video.mtime, video.size, video.mime_type);
+            }
+        }
+    }
+
     return dir_type;
 }
 
@@ -292,6 +304,8 @@ std::string FileParser::get_mime_type(const std::string & filename) {
         return "video/mp4";
     } else if( commons::string::ends_with(filename, ".mkv", true) ) {
         return "video/x-matroska";
+    } else if( commons::string::ends_with(filename, ".avi", true) ) {
+        return "video/avi";
     } else if( commons::string::ends_with(filename, ".cue", true) ||
                commons::string::ends_with(filename, ".m3u", true) ||
                commons::string::ends_with(filename, ".txt", true) ) {

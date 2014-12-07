@@ -56,7 +56,7 @@ class FileParser {
         for( auto * parser : parsers )
             delete parser;
     }
-    enum FILE_TYPE {MP3, OGG, FLAC, MUSEPACK, MONKEY_AUDIO, IMAGE, AUDIOFILE, IMAGEFILE, UNKNOWN};
+    enum FILE_TYPE {MP3, OGG, FLAC, MUSEPACK, MONKEY_AUDIO, IMAGE, AUDIOFILE, IMAGEFILE, VIDEOFILE, UNKNOWN};
     void parse(std::string path);
 
     enum DIRECTORY_TYPE { MUSIC, IMAGES, MOVIES, NONE };

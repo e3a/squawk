@@ -110,7 +110,9 @@ struct Album {
 public:
     Album() : id(0), name_(""), genre_(""), year_("") {}
     Album(const std::string & name, const std::string & genre, const std::string & year ) :
-        id(0), name_(commons::string::trim(name)), genre_(commons::string::trim(genre)), year_(commons::string::trim(year)) {}
+        id(0), name_(commons::string::trim(name)), genre_(commons::string::trim(genre)), year_(commons::string::trim(year)),
+        clean_name_(::squawk::media::clean_name( name_ )),
+        letter_(::squawk::media::get_letter(clean_name_)) {}
     ~Album() {
         for(auto a : artists) delete a;
     }
@@ -127,6 +129,13 @@ public:
     std::string year() {return year_; }
     void year(const std::string & year) {name_ = commons::string::trim(year); }
 
+    std::string cleanName() {
+        return clean_name_;
+    }
+    std::string letter() {
+        return letter_;
+    }
+
     bool add( squawk::media::Artist * artist ) {
         for( auto _artist : artists ) {
             if( _artist->clean_name() == artist->clean_name() ) {
@@ -142,7 +151,7 @@ public:
     }
 
 private:
-    std::string name_, genre_, year_;
+    std::string name_, genre_, year_, clean_name_, letter_;
 };
 /**
   * \brief The audiofile entity.

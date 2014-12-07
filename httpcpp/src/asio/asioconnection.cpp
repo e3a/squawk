@@ -140,10 +140,8 @@ void connection::handle_write( char * buffer, const asio::error_code& e, int byt
 
       } else {
 
-          std::cout << "handle write: close" << std::endl;
-
-          delete[] buffer;
-          std::cout << "Connection close " << std::endl;
+        std::cout << "handle write: close" << std::endl;
+        delete[] buffer;
         // Initiate graceful connection closure.
         asio::error_code ignored_ec;
         socket_.shutdown(asio::ip::tcp::socket::shutdown_both, ignored_ec);

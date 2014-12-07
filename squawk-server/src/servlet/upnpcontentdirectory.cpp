@@ -20,6 +20,7 @@
 #include "upnpcontentdirectory.h"
 
 #include "commons.h"
+#include "squawk.h"
 
 namespace squawk {
 namespace servlet {
@@ -31,6 +32,8 @@ void UpnpContentDirectory::registerContentDirectoryModule( commons::upnp::Conten
 }
 
 void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpResponse & response) {
+
+    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, request.body )
 
     try {
         commons::upnp::UpnpContentDirectoryRequest upnp_command = commons::upnp::parseRequest( request.body );
@@ -113,8 +116,15 @@ void UpnpContentDirectory::browse( commons::xml::XMLWriter * xmlWriter, commons:
                upnp_command->getValue( "ObjectID" ) == "0" ) {
 
         //search for callback handler
+        commons::xml::Node didl_element = didlWriter.element( "DIDL-Lite" );
+        didlWriter.ns(didl_element, commons::upnp::XML_NS_DIDL );
+        didlWriter.ns(didl_element, commons::upnp::XML_NS_PURL, "dc");
+        didlWriter.ns(didl_element, commons::upnp::XML_NS_DLNA, "dlna");
+        didlWriter.ns(didl_element, commons::upnp::XML_NS_UPNP, "upnp");
+        didlWriter.ns(didl_element, commons::upnp::XML_NS_PV, "pv");
+
         for (std::list< commons::upnp::ContentDirectoryModule * >::iterator it = modules.begin(); it != modules.end(); it++) {
-            (*it)->getRootNode( &didlWriter, &cds_result );
+            (*it)->getRootNode( &didlWriter, &didl_element, &cds_result );
         }
 
     } else if( upnp_command->contains( UPNP_CDS_BROWSE_FLAG ) &&

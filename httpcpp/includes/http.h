@@ -208,11 +208,21 @@ namespace http {
              * @brief Match the path with parameters in the url
              * @param request_path The Http request path
              * @param arg1 Mandatory first parameter
-             * @param arg2 Optional second parameter
-             * @param arg3 Optional third parameter
              * @return
              */
-            bool match(const std::string & request_path, char * arg1, char * arg2 = nullptr, char * arg3 = nullptr);
+            template <class FIRST> bool match( const std::string & request_path, FIRST * arg1 ) {
+                return re->PartialMatch(request_path.c_str(), arg1);
+            }
+            /**
+             * @brief Match the path with parameters in the url
+             * @param request_path The Http request path
+             * @param arg1 Mandatory first parameter
+             * @param arg2 Optional second parameter
+             * @return
+             */
+            template <class FIRST, class SECOND> bool match( const std::string & request_path, FIRST * arg1, SECOND * arg2 ) {
+                return re->PartialMatch(request_path.c_str(), arg1, arg2);
+            }
             /**
              * @brief Match the path with parameters in the url
              * @param request_path The Http request path
@@ -221,7 +231,9 @@ namespace http {
              * @param arg3 Optional third parameter
              * @return
              */
-            bool match(const std::string & request_path, int * arg1, int * arg2 = nullptr, int * arg3 = nullptr);
+            template <class FIRST, class SECOND, class THIRD> bool match( const std::string & request_path, FIRST * arg1, SECOND * arg2, THIRD * arg3 ) {
+                return re->PartialMatch(request_path.c_str(), arg1, arg2, arg3 );
+            }
             /**
 			 * Callback function for the GET method.
              * @param request The HTTP Request object.
@@ -246,6 +258,12 @@ namespace http {
              * @param response The HTTP Response object.
 			 */
             virtual void do_put(HttpRequest & request, HttpResponse & response);
+            /**
+             * Callback function for the HEAD method.
+             * @param request The HTTP Request object.
+             * @param response The HTTP Response object.
+             */
+            virtual void do_head(HttpRequest & request, HttpResponse & response);
 
             void create_stock_reply(http_status status, HttpResponse & response);
             /**

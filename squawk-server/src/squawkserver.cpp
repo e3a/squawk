@@ -42,10 +42,12 @@
 #include "servlet/upnpxmldescription.h"
 #include "servlet/upnpcontentdirectory.h"
 #include "servlet/upnpmusicdirectorymodule.h"
+#include "servlet/upnpvideodirectory.h"
 #include "servlet/upnpconnectionmanager.h"
 
-// #include "http/api/apiupnpdevicehandler.h"
+#include "upnp/upnpmediaservlet.h"
 
+// #include "http/api/apiupnpdevicehandler.h"
 
 #include "log4cxx/logger.h"
 #include "log4cxx/basicconfigurator.h"
@@ -60,8 +62,10 @@ void SquawkServer::start() {
 
     //Setup and start the DLNA server
     commons::upnp::ContentDirectoryModule * musicDirectory = new squawk::servlet::UpnpMusicDirectoryModule(squawk_config, database);
+    commons::upnp::ContentDirectoryModule * videoDirectory = new squawk::servlet::UpnpVideoDirectory(squawk_config, database);
     squawk::servlet::UpnpContentDirectory * content_directory = new squawk::servlet::UpnpContentDirectory("/ctl/ContentDir");
     content_directory->registerContentDirectoryModule(musicDirectory);
+    content_directory->registerContentDirectoryModule(videoDirectory);
 
     squawk::servlet::UpnpConnectionManager * connection_manager = new squawk::servlet::UpnpConnectionManager("/ctl/ConnectionMgr");
 
@@ -83,6 +87,8 @@ void SquawkServer::start() {
     squawk::servlet::ImageServlet * image_servlet = new squawk::servlet::ImageServlet("/album/image/(\\d*).jpg", squawk_config->string_value(CONFIG_TMP_DIRECTORY));
     squawk::servlet::SongServlet * song_servlet = new squawk::servlet::SongServlet("/song/(\\d*).(flac|mp3)", squawk_config->string_value(CONFIG_MEDIA_DIRECTORY), database);
 
+    squawk::upnp::UpnpMediaServlet * upnp_media_servlet = new squawk::upnp::UpnpMediaServlet("/(video|audio|image|cover)/(\\d*).(flac|mp3|avi|mp4|mkv)", squawk_config->string_value(CONFIG_MEDIA_DIRECTORY), database);
+
     http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->string_value(CONFIG_HTTP_DOCROOT));
 
     web_server->register_servlet(content_directory);
@@ -96,6 +102,7 @@ void SquawkServer::start() {
     web_server->register_servlet(image_servlet);
     web_server->register_servlet(song_servlet);
     web_server->register_servlet(statistic_servlet);
+    web_server->register_servlet(upnp_media_servlet);
     web_server->register_servlet(fileServlet);
     web_server->start();
 

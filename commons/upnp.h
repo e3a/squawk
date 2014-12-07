@@ -186,7 +186,7 @@ inline UpnpContentDirectoryRequest parseRequest( std::string request ) {
  */
 class ContentDirectoryModule {
   public:
-    virtual void getRootNode( commons::xml::XMLWriter * xmlWriter, CdsResult * cds_result ) = 0;
+    virtual void getRootNode( commons::xml::XMLWriter * xmlWriter, commons::xml::Node * element, CdsResult * cds_result ) = 0;
     virtual bool match( UpnpContentDirectoryRequest * parseRequest ) = 0;
     virtual void parseNode( commons::xml::XMLWriter * xmlWriter, CdsResult * cds_result, UpnpContentDirectoryRequest * parseRequest ) = 0;
 };

@@ -35,16 +35,9 @@ bool UpnpMusicDirectoryModule::match( commons::upnp::UpnpContentDirectoryRequest
         return true;
     } else return false;
 }
-void UpnpMusicDirectoryModule::getRootNode( commons::xml::XMLWriter * xmlWriter, commons::upnp::CdsResult * cds_result ) {
+void UpnpMusicDirectoryModule::getRootNode( commons::xml::XMLWriter * xmlWriter, commons::xml::Node * element, commons::upnp::CdsResult * cds_result ) {
 
-    commons::xml::Node didl_element = xmlWriter->element( "DIDL-Lite" );
-    xmlWriter->ns(didl_element, commons::upnp::XML_NS_DIDL );
-    xmlWriter->ns(didl_element, commons::upnp::XML_NS_PURL, "dc");
-    xmlWriter->ns(didl_element, commons::upnp::XML_NS_DLNA, "dlna");
-    xmlWriter->ns(didl_element, commons::upnp::XML_NS_UPNP, "upnp");
-    xmlWriter->ns(didl_element, commons::upnp::XML_NS_PV, "pv");
-
-    commons::xml::Node container_element = xmlWriter->element(didl_element, "", "container", "");
+    commons::xml::Node container_element = xmlWriter->element( (*element), "", "container", "" );
     xmlWriter->attribute(container_element, "id", "music");
     xmlWriter->attribute(container_element, "parentID", "0");
     xmlWriter->attribute(container_element, "restricted", "1");
@@ -191,22 +184,22 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
     songs( id, [&] (const int & song_id, const int & track, const std::string & title, const std::string & album, const std::string & mtime,
                     const std::string & mime_type, const int & size, const int & playtime, const int & bitrate, const int & samplerate, const int & sampleFrequency) {
 
-           commons::xml::Node item_element = xmlWriter->element( didl_element, "", "item", "" );
-    xmlWriter->attribute(item_element, "id", "/music/albums/songs/" + commons::string::to_string<int>(song_id) );
-    xmlWriter->attribute(item_element, "parentID", request->getValue( OBJECT_ID ) );
-    xmlWriter->attribute(item_element, "restricted", "1");
+        commons::xml::Node item_element = xmlWriter->element( didl_element, "", "item", "" );
+        xmlWriter->attribute(item_element, "id", "/music/albums/songs/" + commons::string::to_string<int>(song_id) );
+        xmlWriter->attribute(item_element, "parentID", request->getValue( OBJECT_ID ) );
+        xmlWriter->attribute(item_element, "restricted", "1");
 
-    xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "originalTrackNumber", commons::string::to_string<int>( track ) );
-    xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "title", title );
-    xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "album", album_ );
-    xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "class", "object.item.audioItem.musicTrack" );
-    xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "date", year_ + "-01-01" );
-    xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "genre", genre_ );
-    artist( id, [&xmlWriter, &item_element] (const int artist_id, const std::string & artist_name ) {
-            // add the artists
-            xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "artits", artist_name );
-            xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "creator", artist_name );
-    });
+        xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "originalTrackNumber", commons::string::to_string<int>( track ) );
+        xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "title", title );
+        xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "album", album_ );
+        xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "class", "object.item.audioItem.musicTrack" );
+        xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "date", year_ + "-01-01" );
+        xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "genre", genre_ );
+        artist( id, [&xmlWriter, &item_element] (const int artist_id, const std::string & artist_name ) {
+                // add the artists
+                xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "artits", artist_name );
+                xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "creator", artist_name );
+        });
     commons::xml::Node dlna_album_art_node = xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "albumArtURI",
                                                                 "http://" + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) +
                                                                 "/album/" + std::to_string( id ) + "/cover.jpg" );
@@ -220,7 +213,7 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
 
     commons::xml::Node dlna_res_node = xmlWriter->element(item_element, "", "res",
         "http://" +squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) +
-        "/song/" + commons::string::to_string( song_id ) + "." + http::mime::extension( mime_type ) );
+        "/audio/" + commons::string::to_string( song_id ) + "." + http::mime::extension( mime_type ) );
     xmlWriter->attribute(dlna_res_node, "", "protocolInfo",
         "http-get:*:" + mime_type  + ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000" );
     xmlWriter->attribute(dlna_res_node, "", "size", commons::string::to_string<int>(size) );

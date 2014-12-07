@@ -1,6 +1,6 @@
 /*
-    file servlet implementation header
-    Copyright (C) 2014  <e.knecht@netwings.ch>
+    Abstract album RESTful servlet.
+    Copyright (C) 2013  <copyright holder> <email>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -17,25 +17,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef FILESERVLET_H
-#define FILESERVLET_H
+#include "abstractalbumlist.h"
 
-#include "http.h"
-
-namespace http {
-namespace servlet {
-
-/**
- * @brief The FileServlet class
- * The FileServlet returns static files from the disk.
- */
-class FileServlet : public http::HttpServlet {
-public:
-    explicit FileServlet(const std::string path, const std::string docroot) : HttpServlet(path), docroot(docroot) {}
-    virtual void do_get(HttpRequest & request, HttpResponse & response);
-    virtual void do_head(HttpRequest & request, HttpResponse & response);
-private:
-    std::string docroot;
-};
-}}
-#endif // FILESERVLET_H
+AbstractAlbumList::AbstractAlbumList() {
+}

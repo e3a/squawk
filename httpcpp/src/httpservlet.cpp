@@ -86,24 +86,6 @@ HttpServlet::~HttpServlet() {
 bool HttpServlet::match(const std::string & request_path) {
     return re->PartialMatch(request_path.c_str());
 }
-bool HttpServlet::match(const std::string & request_path, char * arg1, char * arg2, char * arg3) {
-    if( arg3 != nullptr && arg2 != nullptr ) {
-        return re->PartialMatch(request_path.c_str(), arg1, arg2, arg3);
-    } else if( arg2 != nullptr ) {
-        return re->PartialMatch(request_path.c_str(), arg1, arg2);
-    } else {
-        return re->PartialMatch(request_path.c_str(), arg1);
-    }
-}
-bool HttpServlet::match(const std::string & request_path, int * arg1, int * arg2, int * arg3 ) {
-    if( arg3 != nullptr && arg2 != nullptr ) {
-        return re->PartialMatch(request_path.c_str(), arg1, arg2, arg3);
-    } else if( arg2 != nullptr ) {
-        return re->PartialMatch(request_path.c_str(), arg1, arg2);
-    } else {
-        return re->PartialMatch(request_path.c_str(), arg1);
-    }
-}
 void HttpServlet::do_get(HttpRequest & request, HttpResponse & response) {
     create_stock_reply(http_status::NOT_IMPLEMENTED, response);
 }
@@ -114,6 +96,9 @@ void HttpServlet::do_delete(HttpRequest & request, HttpResponse & response) {
     create_stock_reply(http_status::NOT_IMPLEMENTED, response);
 }
 void HttpServlet::do_put(HttpRequest & request, HttpResponse & response) {
+    create_stock_reply(http_status::NOT_IMPLEMENTED, response);
+}
+void HttpServlet::do_head(HttpRequest & request, HttpResponse & response) {
     create_stock_reply(http_status::NOT_IMPLEMENTED, response);
 }
 void HttpServlet::create_stock_reply(http_status status, HttpResponse & response) {

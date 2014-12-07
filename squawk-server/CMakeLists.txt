@@ -33,9 +33,12 @@ set(MEDIA src/media/mediadao.cpp src/media/libavcpp.cpp src/media/fileparser.cpp
 set(API src/http/api/apiupnpdevicehandler.cpp)
 set(SERVLET src/servlet/apialbumsbyartist.cpp src/servlet/apiartistservlet.cpp src/servlet/apialbumsservlet.cpp src/servlet/apialbumservlet.cpp
             src/servlet/apistatisticservlet.cpp src/servlet/coverservlet.cpp src/servlet/imageservlet.cpp src/servlet/songservlet.cpp src/servlet/upnpxmldescription.cpp
-            src/servlet/upnpcontentdirectory.cpp src/servlet/upnpmusicdirectorymodule.cpp src/servlet/upnpconnectionmanager.cpp)
+            src/servlet/upnpcontentdirectory.cpp src/servlet/upnpmusicdirectorymodule.cpp src/servlet/upnpvideodirectory.cpp
+            src/servlet/upnpconnectionmanager.cpp )
 
-set(SOURCES ${SQUAWK} ${DATABASE} ${MEDIA} ${HTTP_SERVER} ${API} ${SERVLET})
+set(UPNP src/upnp/upnpmediaservlet.cpp )
+
+set(SOURCES ${SQUAWK} ${DATABASE} ${MEDIA} ${HTTP_SERVER} ${API} ${SERVLET} ${UPNP})
 
 add_executable(squawk src/squawkserver.cpp ${SOURCES})
 target_link_libraries(squawk ${LIBS})
