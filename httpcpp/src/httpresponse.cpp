@@ -21,6 +21,7 @@
 #include "mimetypes.h"
 
 #define RESPONSE_LINE_OK                    std::string("HTTP/1.1 200 OK\r\n")
+#define RESPONSE_LINE_PARTIAL_CONTENT       std::string("HTTP/1.1 206 OK\r\n")
 #define RESPONSE_LINE_CREATED               std::string("HTTP/1.1 201 Created\r\n")
 #define RESPONSE_LINE_ACCEPTED              std::string("HTTP/1.1 202 Accepted\r\n")
 #define RESPONSE_LINE_NO_CONTENT            std::string("HTTP/1.1 204 No Content\r\n")
@@ -91,6 +92,9 @@ std::string HttpResponse::get_message_header() {
     switch (status) {
     case http_status::OK:
         ss << RESPONSE_LINE_OK;
+        break;
+    case http_status::PARTIAL_CONTENT:
+        ss << RESPONSE_LINE_PARTIAL_CONTENT;
         break;
     case http_status::CREATED:
         ss << RESPONSE_LINE_CREATED;

@@ -31,6 +31,7 @@
 #include <functional>
 
 #include "mimetypes.h"
+#include "commons.h"
 
 #include "pcrecpp.h"
 
@@ -56,6 +57,7 @@ namespace http {
         CREATED = 201,
         ACCEPTED = 202,
         NO_CONTENT = 204,
+        PARTIAL_CONTENT = 206,
         MULTIPLE_CHOICES = 300,
         MOVED_PERMANENTLY = 301,
         MOVED_TEMPORARILY = 302,
@@ -69,6 +71,24 @@ namespace http {
         BAD_GATEWAY = 502,
         SERVICE_UNAVAILABLE = 503
   };
+
+    inline std::tuple<int, int> parseRange( const std::string & range ) {
+        std::string clean_range = commons::string::trim( range );
+        if( commons::string::starts_with( clean_range, "bytes=") ) {
+            clean_range = commons::string::trim( clean_range.substr(6) );
+            int start = 0; int end = -1;
+            if( clean_range.find( "-") != std::string::npos ) {
+                std::string from = clean_range.substr( 0, clean_range.find( "-") );
+                start = commons::string::parse_string<int>( from );
+                if( clean_range.find( "-" )+1 != clean_range.size() ) {
+                    std::string to = clean_range.substr( clean_range.find( "-")+1, clean_range.size() );
+                    end = commons::string::parse_string<int>( to );
+                }
+                return std::tuple<int, int>(start, end);
+            }
+        }
+        return std::tuple<int, int>(0, -1);
+    }
 
    /**
     * @brief Http Request class.

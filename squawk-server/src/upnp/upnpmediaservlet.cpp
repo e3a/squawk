@@ -107,6 +107,8 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
                 response.add_header("Accept-Ranges", "bytes");
                 response.add_header("realTimeInfo.dlna.org", "DLNA.ORG_TLAG=*");
                 response.add_header("contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000");
+                response.add_header("Connection", "close");
+                response.add_header("EXT", "");
             }
 
         } catch( ::db::DbException * e ) {

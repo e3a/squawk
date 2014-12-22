@@ -19,12 +19,59 @@
 
 #include "upnpconnectionmanager.h"
 
+#include "commons.h"
+#include "squawk.h"
+
 namespace squawk {
 namespace servlet {
 
 log4cxx::LoggerPtr UpnpConnectionManager::logger(log4cxx::Logger::getLogger("squawk.servlet.UpnpConnectionManager"));
 
 void UpnpConnectionManager::do_post(::http::HttpRequest & request, ::http::HttpResponse & response) {
-    std::cout << "UpnpConnectionManager:" << std::endl << request.body << std::endl;
+
+    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, request.body )
+
+    try {
+        commons::upnp::UpnpContentDirectoryRequest upnp_command = commons::upnp::parseRequest( request.body );
+        LOG4CXX_DEBUG(logger, upnp_command )
+
+        if( upnp_command.type == commons::upnp::UpnpContentDirectoryRequest::PROTOCOL_INFO ) {
+
+            commons::xml::XMLWriter xmlWriter;
+            commons::xml::Node envelope_node = xmlWriter.element( "Envelope" );
+            xmlWriter.ns(envelope_node, commons::upnp::XML_NS_SOAP, "s", true);
+            xmlWriter.ns(envelope_node, commons::upnp::XML_NS_SOAPENC, "soapenc", false);
+            xmlWriter.ns(envelope_node, commons::upnp::XML_NS_SCHEMA, "xsd", false);
+            xmlWriter.ns(envelope_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "xsi", false);
+            xmlWriter.attribute(envelope_node, commons::upnp::XML_NS_SOAP, "encodingStyle", "http://schemas.xmlsoap.org/soap/encoding/");
+
+            commons::xml::Node body_node = xmlWriter.element(envelope_node, commons::upnp::XML_NS_SOAP, "Body");
+            commons::xml::Node response_node = xmlWriter.element(body_node, "", "GetProtocolInfoResponse", "");
+            xmlWriter.ns(response_node, commons::upnp::XML_NS_UPNP_CMS, "u", true);
+
+            commons::xml::Node source_node = xmlWriter.element(body_node, commons::upnp::XML_NS_UPNP_CMS, "Source", SOURCE_TYPES);
+            xmlWriter.attribute(source_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "type", "xsd:string");
+            commons::xml::Node sink_node = xmlWriter.element(body_node, commons::upnp::XML_NS_UPNP_CMS, "Sink", "");
+            xmlWriter.attribute(sink_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "type", "xsd:string");
+
+            response <<  xmlWriter.str();
+
+            response.set_mime_type( ::http::mime::XML );
+            response.set_status( ::http::http_status::OK );
+            return;
+
+        } else {
+            LOG4CXX_WARN(logger, "invoke::Unknown Method: " << upnp_command )
+        }
+
+    } catch( commons::upnp::UpnpException & ex ) {
+        LOG4CXX_ERROR(logger, "UPNP parse error: " << ex.code() << ":" << ex.what() )
+    } catch( commons::xml::XmlException & ex ) {
+        LOG4CXX_ERROR(logger, "XML parse error: " << ex.code() << ":" << ex.what() )
+    } catch( ... ) {
+        LOG4CXX_ERROR(logger, "UPNP parse error." )
+    }
+
+    throw ::http::http_status::BAD_REQUEST;
 }
 }}

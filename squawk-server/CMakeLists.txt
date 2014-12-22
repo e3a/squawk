@@ -30,9 +30,11 @@ link_directories(${Boost_LIBRARY_DIR})
 set(SQUAWK src/squawkconfig.cpp)
 set(DATABASE src/db/sqlite3statement.cpp src/db/sqlite3database.cpp)
 set(MEDIA src/media/mediadao.cpp src/media/libavcpp.cpp src/media/fileparser.cpp src/media/flacparser.cpp)
-set(API src/http/api/apiupnpdevicehandler.cpp)
+set(API src/api/abstractapialbumsservlet.cpp
+        src/http/api/apiupnpdevicehandler.cpp)
 set(SERVLET src/servlet/apialbumsbyartist.cpp src/servlet/apiartistservlet.cpp src/servlet/apialbumsservlet.cpp src/servlet/apialbumservlet.cpp
             src/servlet/apistatisticservlet.cpp src/servlet/coverservlet.cpp src/servlet/imageservlet.cpp src/servlet/songservlet.cpp src/servlet/upnpxmldescription.cpp
+            src/servlet/letterservlet.cpp
             src/servlet/upnpcontentdirectory.cpp src/servlet/upnpmusicdirectorymodule.cpp src/servlet/upnpvideodirectory.cpp
             src/servlet/upnpconnectionmanager.cpp )
 
@@ -56,6 +58,7 @@ if (build_tests)
         # TODO use from http_cpp test/upnp/httpparsetest.cpp
         # TODO use from http_cpp test/http/httpparsertest.cpp
         test/http/mimetypetest.cpp
+        test/upnp/TestParseConnectionManager.cpp
         ${SOURCES})
     target_link_libraries(testmain_server pthread)
     target_link_libraries(testmain_server

@@ -36,6 +36,7 @@
 #include "servlet/apialbumservlet.h"
 #include "servlet/apistatisticservlet.h"
 #include "servlet/apialbumsbyartist.h"
+#include "servlet/letterservlet.h"
 #include "servlet/coverservlet.h"
 #include "servlet/imageservlet.h"
 #include "servlet/songservlet.h"
@@ -82,6 +83,7 @@ void SquawkServer::start() {
     squawk::servlet::ApiAlbumsByArtist * albumsbyartist_servlet = new squawk::servlet::ApiAlbumsByArtist(std::string("/api/artist/(\\d+)/album"), database);
     squawk::servlet::ApiArtistServlet * artists_servlet = new squawk::servlet::ApiArtistServlet(std::string("/api/artist"), database);
     squawk::servlet::ApiAlbumServlet * album_servlet = new squawk::servlet::ApiAlbumServlet(std::string("/api/album/(\\d*)"), database);
+    squawk::servlet::LetterServlet * letter_servlet = new squawk::servlet::LetterServlet(std::string("/api/albums/letter"), database);
 
     squawk::servlet::CoverServlet * cover_servlet = new squawk::servlet::CoverServlet("/album/(\\d*)/cover.jpg", squawk_config->string_value(CONFIG_TMP_DIRECTORY));
     squawk::servlet::ImageServlet * image_servlet = new squawk::servlet::ImageServlet("/album/image/(\\d*).jpg", squawk_config->string_value(CONFIG_TMP_DIRECTORY));
@@ -95,6 +97,7 @@ void SquawkServer::start() {
     web_server->register_servlet(connection_manager);
     web_server->register_servlet(xmldescription);
     web_server->register_servlet(album_servlet);
+    web_server->register_servlet(letter_servlet);
     web_server->register_servlet(albums_servlet);
     web_server->register_servlet(albumsbyartist_servlet);
     web_server->register_servlet(artists_servlet);

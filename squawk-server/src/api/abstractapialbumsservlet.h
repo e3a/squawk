@@ -1,6 +1,6 @@
 /*
-    get the available letters
-    Copyright (C) 2013  <copyright holder> <email>
+    Abstract API Albums Servlet
+    Copyright (C) 2013  <copyright holder> <e.knecht@netwings.ch>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,27 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LETTERSERVLET_H
-#define LETTERSERVLET_H
-
-#include <string>
-
-#include "http.h"
-#include "../db/sqlite3database.h"
-#include "../db/sqlite3statement.h"
-
-#include "log4cxx/logger.h"
+#ifndef ABSTRACTAPIALBUMSSERVLET_H
+#define ABSTRACTAPIALBUMSSERVLET_H
 
 namespace squawk {
-namespace servlet {
+namespace api {
 
-class LetterServlet : public ::http::HttpServlet {
+class AbstractApiAlbumsServlet {
 public:
-    LetterServlet( const std::string path, squawk::db::Sqlite3Database * db ) : HttpServlet(path), db(db) {};
-    virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
-private:
-    static log4cxx::LoggerPtr logger;
-    squawk::db::Sqlite3Database * db;
+    AbstractApiAlbumsServlet();
 };
 }}
-#endif // LETTERSERVLET_H
+#endif // ABSTRACTAPIALBUMSSERVLET_H

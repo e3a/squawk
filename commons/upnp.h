@@ -13,6 +13,7 @@
 #define UPNP_CDS_BROWSE_FLAG "BrowseFlag"
 #define UPNP_CDS_BROWSE_FLAG_METADATA "BrowseMetadata"
 #define UPNP_CDS_BROWSE_FLAG_DIRECT_CHILDREN "BrowseDirectChildren"
+#define UPNP_COMMAND_PROTOCOL_INFO "GetProtocolInfo"
 
 namespace commons {
 /**
@@ -56,6 +57,10 @@ const static std::string XML_NS_DLNA = "urn:schemas-dlna-org:metadata-1-0/";
  * @brief XML UPNP Content Directory NAMESPACE
  */
 const static std::string XML_NS_UPNP_CDS = "urn:schemas-upnp-org:service:ContentDirectory:1";
+/**
+ * @brief XML UPNP Connection Manager NAMESPACE
+ */
+const static std::string XML_NS_UPNP_CMS = "urn:schemas-upnp-org:service:ConnectionManager:1";
 /**
  * @brief XML PV NAMESPACE
  */
@@ -119,7 +124,7 @@ private:
 };
 class UpnpContentDirectoryRequest {
 public:
-        enum TYPE { BROWSE };
+        enum TYPE { BROWSE, PROTOCOL_INFO };
         UpnpContentDirectoryRequest( TYPE type ) : type( type ) {};
         const TYPE type;
         void addValue( std::string key, std::string value ) {
@@ -169,6 +174,10 @@ inline UpnpContentDirectoryRequest parseRequest( std::string request ) {
                     request.addValue( prop.name(), prop.content() );
                 }
                 return request;
+            } else if( upnp_command[0].ns() == XML_NS_UPNP_CMS && upnp_command[0].name() == UPNP_COMMAND_PROTOCOL_INFO ) {
+                UpnpContentDirectoryRequest request( UpnpContentDirectoryRequest::PROTOCOL_INFO );
+                return request;
+
             } else {
                 throw UpnpException(1, "unkown upnp command: " +  upnp_command[0].ns() + ":" + upnp_command[0].name() );
             }

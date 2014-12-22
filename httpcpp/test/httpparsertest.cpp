@@ -19,11 +19,29 @@
 
 #include <array>
 #include <string>
+#include <tuple>
 #include <vector>
 #include "http.h"
 /* #include "http-utils.h" */
 #include <gtest/gtest.h>
 
+
+TEST(HttpRequestParser, ParseRange) {
+    //Range: bytes=0-999
+    std::tuple<int, int> range1 = http::parseRange("bytes=0-999");
+    EXPECT_EQ(0, std::get<0>(range1));
+    EXPECT_EQ(999, std::get<1>(range1));
+
+    //Range: bytes=0-
+    std::tuple<int, int> range2 = http::parseRange("bytes=0-");
+    EXPECT_EQ(0, std::get<0>(range2));
+    EXPECT_EQ(-1, std::get<1>(range2));
+
+    //Range: bytes=999-
+    std::tuple<int, int> range3 = http::parseRange("bytes=999-");
+    EXPECT_EQ(999, std::get<0>(range3));
+    EXPECT_EQ(-1, std::get<1>(range3));
+}
 
 TEST(HttpRequestParser, ParseEnumeraton) {
     http::parser_type type = http::parser_type::METHOD;
@@ -277,7 +295,7 @@ TEST(HttpRequestParser, ParseIncompleteHeader) {
   std::cout << "state: " << (state==http::PARSE_STATE::CONTINUE?"CONTINUE":"ELSE") << " == " << std::endl;
   EXPECT_EQ( state, http::PARSE_STATE::CONTINUE );
 
-/*  EXPECT_EQ(std::string("NOTIFY"), http_request.request_method);
+/*TODO  EXPECT_EQ(std::string("NOTIFY"), http_request.request_method);
     EXPECT_EQ(std::string("*"), http_request.uri);
     EXPECT_EQ(std::string("HTTP"), http_request.protocol);
     EXPECT_EQ(1, http_request.http_version_major);

@@ -14,11 +14,12 @@ a:active { color:Blue; text-decoration:underline; }
 .bold { font-weight:bold; }
 
 header { z-index: 200; color:White; position:fixed; top:0px; left:0px; width: 100%; height: 25px; background-color: LightBlue;  }
-/* header a:link { color:White; text-decoration:underline;  }
+header a:link { color:White; text-decoration:underline;  }
 header a:visited { color:White; text-decoration:underline;  }
 header a:focus { color:Silver; text-decoration:underline; }
 header a:hover { color:Silver; text-decoration:underline; }
-header a:active { color:Silver; text-decoration:underline; } */
+header a:active { color:Silver; text-decoration:underline; }
+
 header form { display: inline-block; }
 header form input { width: 25px; }
 .navigation { width:25px; height:25px; border:none; }
