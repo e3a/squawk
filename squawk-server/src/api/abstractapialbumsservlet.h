@@ -27,4 +27,14 @@ public:
     AbstractApiAlbumsServlet();
 };
 }}
+
+class AbstractApiAlbumsServlet : ApiAlbumsServlet {
+public:
+  AbstractApiAlbumsServlet( const std::string path, squawk::db::Sqlite3Database * db ) : HttpServlet(path), db(db) {}
+  virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
+private:
+  static log4cxx::LoggerPtr logger;
+  squawk::db::Sqlite3Database * db;
+};
+}}
 #endif // ABSTRACTAPIALBUMSSERVLET_H

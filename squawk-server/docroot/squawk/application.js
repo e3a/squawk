@@ -19,7 +19,7 @@ templateUrl: 'album.html',
 controller: 'AlbumDetailCtrl'
 }).
 when('/artist/:artistId/album', {
-templateUrl: 'album-by-artist.html',
+templateUrl: 'album-list.html',
 controller: 'AlbumByArtistCtrl'
 }).
 otherwise({

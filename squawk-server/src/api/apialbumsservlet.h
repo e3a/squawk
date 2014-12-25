@@ -23,9 +23,8 @@
 #include <string>
 
 #include "http.h"
-#include "../db/database.h"
-/* #include "../db/sqlite3database.h"
-#include "../db/sqlite3statement.h" */
+#include "../db/sqlite3database.h"
+#include "../db/sqlite3statement.h"
 
 #include "log4cxx/logger.h"
 

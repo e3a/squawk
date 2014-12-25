@@ -32,19 +32,44 @@
 /* #include "http.h" */
 
 namespace commons {
+/**
+ * \brief namespace for the string utilities.
+ */
 namespace string {
-
+  /**
+   * @brief Left trim the string
+   * @param s in string
+   * @param t characters to trim
+   * @return the trimmed string
+   */
   inline std::string ltrim(std::string s, const char* t = " \t\n\r\f\v" ) {
       s.erase(0, s.find_first_not_of( t ));
       return s;
   }
+  /**
+   * @brief Right trim the string
+   * @param s in string
+   * @param t characters to trim
+   * @return the trimmed string
+   */
   inline std::string rtrim(std::string s, const char* t = " \t\n\r\f\v" ) {
       s.erase(s.find_last_not_of( t ) + 1);
       return s;
   }
+  /**
+   * @brief Trim the string
+   * @param s in string
+   * @param t characters to trim
+   * @return the trimmed string
+   */
   inline std::string trim(std::string s, const char* t = " \t\n\r\f\v" ) {
         return ltrim(rtrim(s, t), t);
   }
+  /**
+   * @brief Convert the string to lowercase
+   * @param s in string
+   * @return
+   */
   inline std::string to_lower(std::string str) {
     std::ostringstream ss;
     std::locale loc;
@@ -53,6 +78,11 @@ namespace string {
     }
     return ss.str();
   };
+  /**
+   * @brief Convert the string to uppercase
+   * @param s in string
+   * @return
+   */
   inline std::string to_upper(std::string str) {
     std::ostringstream ss;
     std::locale loc;
@@ -69,9 +99,23 @@ namespace string {
         return true;
       } else return false;
   };
+  /**
+   * @brief Test if the string starts with
+   * @param string
+   * @param prefix
+   * @return
+   */
   inline bool starts_with(std::string str, std::string prefix) {
     return( str.compare(0, prefix.size(), prefix) == 0 );
   };
+  /**
+   * @brief Check if string is number
+   * @param string
+   * @return
+   */
+  inline bool is_number(const std::string &s) {
+    return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit);
+  }
   template<typename T>
   /**
    * returns a string for the input value.
@@ -221,6 +265,9 @@ namespace string {
   }
 }}
 namespace commons {
+/**
+ * \brief namespace for the system utilities.
+ */
 namespace system {
 inline std::string uname() {
   struct utsname uts;
@@ -237,6 +284,9 @@ inline std::string time_string() {
 };
 }}
 namespace commons {
+/**
+ * \brief namespace for the file system utilities.
+ */
 namespace filesystem {
 inline bool is_directory(std::string & filename) {
   struct stat sb;

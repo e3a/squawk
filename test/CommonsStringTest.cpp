@@ -25,32 +25,8 @@
 #include <gtest/gtest.h>
 
 
-TEST( XmlEncodeTest, SimpleText ) {
-
-    std::string test("Lorem ipsum dolor sit amet");
-    EXPECT_EQ( test, commons::string::escape_xml( test ) );
+TEST( UpnpTest, IsNumber ) {
+    ASSERT_TRUE( commons::string::is_number( "123" ) );
+    ASSERT_FALSE( commons::string::is_number( "ABC" ) );
+    ASSERT_FALSE( commons::string::is_number( "A123" ) );
 }
-
-TEST( XmlEncodeTest, EscapeGT ) {
-
-    std::string test("<Lorem ipsum dolor sit amet>");
-    EXPECT_EQ( "&lt;Lorem ipsum dolor sit amet&gt;", commons::string::escape_xml( test ) );
-}
-
-TEST( XmlEncodeTest, EscapeUml ) {
-
-    std::string test("Lörem ipsum dölör sit ämet");
-    EXPECT_EQ( "L&#246;rem ipsum d&#246;l&#246;r sit &#228;met", commons::string::escape_xml( test ) );
-}
-
-TEST( XmlEncodeTest, EscapeExtraEuro ) {
-
-    std::string test("Lör\u20ACm ipsum dölör sit ämet");
-    EXPECT_EQ( "L&#246;r&#8364;m ipsum d&#246;l&#246;r sit &#228;met", commons::string::escape_xml( test ) );
-}
-
-/* TEST( XmlEncodeTest, EscapeExtraViolin ) {
-
-    std::string test("Lor𝄞 m ipsum dölör sit ämet");
-    EXPECT_EQ( "Lor&#119070; m ipsum d&#246;l&#246;r sit &#228;met", commons::string::escape_xml( test ) );
-} */

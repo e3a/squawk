@@ -30,7 +30,7 @@
                               "where m.album_id=?"
 
 namespace squawk {
-namespace servlet {
+namespace api {
 
 log4cxx::LoggerPtr ApiAlbumsServlet::logger(log4cxx::Logger::getLogger("squawk.servlet.ApiAlbumsServlet"));
 
@@ -41,23 +41,84 @@ void ApiAlbumsServlet::do_get( http::HttpRequest & request, ::http::HttpResponse
     squawk::db::Sqlite3Statement * stmt_artist = NULL;
     try {
         response << "{";
+        std::string qAlbums = "from tbl_cds_albums albums ";
+        bool first_query_token = true;
+        if( request.parameters.find("artist-id")!=request.parameters.end() &&
+            commons::string::is_number( commons::string::trim( request.parameters["artist-id"] ) ) ) {
+            first_query_token = false;
+            qAlbums = "from tbl_cds_albums albums " \
+                      "JOIN tbl_cds_artists_albums m ON albums.ROWID = m.album_id " \
+                      "where m.artist_id=" + request.parameters["artist-id"];
+        }
+        if( request.parameters.find("artist")!=request.parameters.end() ) {
+            first_query_token = false;
+            qAlbums = "from tbl_cds_albums albums " \
+                    "JOIN tbl_cds_artists_albums m ON album.ROWID = m.album_id, " \
+                    "JOIN tbl_cds_artists_albums m ON album.ROWID = m.album_id " \
+                      "where m.artist_id=?";
+        }
+        if( request.parameters.find("letter")!=request.parameters.end() &&
+            request.parameters["letter"].size() == 1 && request.parameters["letter"] != "\"") {
+            if ( first_query_token ) {
+                first_query_token = false;
+                qAlbums += " where ";
+            } else qAlbums += " and ";
+            qAlbums += " letter = \"" + request.parameters["letter"] + "\"";
+        }
+        if( request.parameters.find("name")!=request.parameters.end() ) {
+            if ( first_query_token ) {
+                first_query_token = false;
+                qAlbums += " where ";
+            } else qAlbums += " and ";
+            qAlbums += " clean_name like \"" + request.parameters["name"] + "\"";
+        }
+        if( request.parameters.find("genre")!=request.parameters.end() ) {
+            if ( first_query_token ) {
+                first_query_token = false;
+                qAlbums += " where ";
+            } else qAlbums += " and ";
+            qAlbums += " genre = \"" + request.parameters["genre"] + "\"";
+        }
+        if( request.parameters.find("year")!=request.parameters.end() &&
+            commons::string::is_number( request.parameters["year"] ) ) {
+            if ( first_query_token ) {
+                first_query_token = false;
+                qAlbums += " where ";
+            } else qAlbums += " and ";
+            qAlbums += " year = \"" + request.parameters["year"] + "\"";
+        }
+/*        if( request.parameters.find("order-cryteria")==request.parameters.end() ) {
 
+        } else {
+
+        }
+        if( request.parameters.find("order")==request.parameters.end() ) {
+
+        } else {
+
+        } */
+
+        //create count element
         if( request.parameters.find("attributes")==request.parameters.end() ||
             request.parameters["attributes"].find("count") != std::string::npos ) {
 
-            stmt_count = db->prepare_statement( QUERY_ALBUMS_COUNT );
+            if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "select count(*) " + qAlbums );
+            stmt_count = db->prepare_statement( "select count(*) " + qAlbums );
             while( stmt_count->step() ) {
                 response << "\"count\":" << std::to_string( stmt_count->get_int(0) );
             }
         }
 
-        if(request.parameters.find("index")!=request.parameters.end() &&
-           request.parameters.find("limit")!=request.parameters.end() ) {
-            stmt = db->prepare_statement( QUERY_ALBUMS_PAGE );
+        //set the pager
+        if(request.parameters.find("index")!=request.parameters.end() && commons::string::is_number( request.parameters["index"] ) &&
+           request.parameters.find("limit")!=request.parameters.end() &&  commons::string::is_number( request.parameters["limit"] ) ) {
+            if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "select albums.name, albums.genre, albums.year, albums.ROWID " + qAlbums + " LIMIT ?, ?");
+            stmt = db->prepare_statement( "select albums.name, albums.genre, albums.year, albums.ROWID " + qAlbums + " LIMIT ?, ?" );
             stmt->bind_int(1, commons::string::parse_string<int>(request.parameters["index"]));
             stmt->bind_int(2, commons::string::parse_string<int>(request.parameters["limit"]));
         } else {
-            stmt = db->prepare_statement( QUERY_ALBUMS );
+            if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "select albums.name, albums.genre, albums.year, albums.ROWID " + qAlbums );
+            stmt = db->prepare_statement( "select albums.name, albums.genre, albums.year, albums.ROWID " + qAlbums );
         }
         stmt_artist = db->prepare_statement( QUERY_ARTIST_BY_ALBUM );
 
@@ -71,26 +132,48 @@ void ApiAlbumsServlet::do_get( http::HttpRequest & request, ::http::HttpResponse
             response << ",\"albums\":[";
             bool first_album = true;
             while( stmt->step() ) {
-                if( first_album ){
-                    first_album = false;
-                } else response << ", ";
-                response << "{\"name\":\"" << commons::string::escape_json(stmt->get_string(0)) <<
-                            "\", \"genre\":\"" << commons::string::escape_json(stmt->get_string(1)) <<
-                            "\", \"year\":\"" << commons::string::escape_json(stmt->get_string(2)) <<
-                            "\", \"id\":" << std::to_string(stmt->get_int(3)) << ", \"artists\":[";
 
-                stmt_artist->bind_int(1, stmt->get_int(3));
-                bool first_artist = true;
-                while( stmt_artist->step() ) {
-                    if( first_artist ){
-                        first_artist = false;
-                    } else response << ", ";
-
-                    response << "{\"id\":" << std::to_string(stmt_artist->get_int(0)) <<
-                                ",  \"name\":\"" << commons::string::escape_json(stmt_artist->get_string(1)) << "\"}";
+                response << ( first_album ? "{" : ",{" );
+                if( first_album ) first_album = false;
+                bool first_attribute = true;
+                if( request.parameters.find("attributes")==request.parameters.end() ||
+                    request.parameters["attributes"].find("name") != std::string::npos ) {
+                    if( first_attribute ) first_attribute = false; else response << ",";
+                    response << "\"name\":\"" << commons::string::escape_json(stmt->get_string(0)) << "\"";
                 }
-                stmt_artist->reset();
-                response << "]}";
+                if( request.parameters.find("attributes")==request.parameters.end() ||
+                    request.parameters["attributes"].find("genre") != std::string::npos ) {
+                    if( first_attribute ) first_attribute = false; else response << ",";
+                    response << "\"genre\":\"" << commons::string::escape_json(stmt->get_string(1)) << "\"";
+                }
+                if( request.parameters.find("attributes")==request.parameters.end() ||
+                    request.parameters["attributes"].find("year") != std::string::npos ) {
+                    if( first_attribute ) first_attribute = false; else response << ",";
+                    response << "\"year\":\"" << commons::string::escape_json(stmt->get_string(2)) << "\"";
+                }
+                if( request.parameters.find("attributes")==request.parameters.end() ||
+                    request.parameters["attributes"].find("id") != std::string::npos ) {
+                    if( first_attribute ) first_attribute = false; else response << ",";
+                    response << "\"id\":" << std::to_string(stmt->get_int(3));
+                }
+
+                if( request.parameters.find("attributes")==request.parameters.end() ||
+                    request.parameters["attributes"].find("artist") != std::string::npos ) {
+                    response << ", \"artists\":[";
+                    stmt_artist->bind_int(1, stmt->get_int(3));
+                    bool first_artist = true;
+                    while( stmt_artist->step() ) {
+                        if( first_artist ){
+                            first_artist = false;
+                        } else response << ", ";
+
+                        response << "{\"id\":" << std::to_string(stmt_artist->get_int(0)) <<
+                                    ",\"name\":\"" << commons::string::escape_json(stmt_artist->get_string(1)) << "\"}";
+                    }
+                    response << "]";
+                    stmt_artist->reset();
+                }
+                response << "}";
             }
             response << "]";
 
@@ -104,10 +187,10 @@ void ApiAlbumsServlet::do_get( http::HttpRequest & request, ::http::HttpResponse
         LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e->code() << "-> " << e->what());
         if(stmt != NULL) db->release_statement(stmt);
         if(stmt_artist != NULL) db->release_statement(stmt_artist);
-        throw;
+        throw http::http_status::INTERNAL_SERVER_ERROR;
     } catch( ... ) {
         LOG4CXX_FATAL(logger, "Other Excpeption in get_albums.");
-        throw;
+        throw http::http_status::INTERNAL_SERVER_ERROR;
     }
     response.set_mime_type( ::http::mime::JSON );
     response.set_status( ::http::http_status::OK );

@@ -31,7 +31,7 @@
 #include "fileservlet.h"
 
 
-#include "servlet/apialbumsservlet.h"
+#include "api/apialbumsservlet.h"
 #include "servlet/apiartistservlet.h"
 #include "servlet/apialbumservlet.h"
 #include "servlet/apistatisticservlet.h"
@@ -79,7 +79,7 @@ void SquawkServer::start() {
 
     squawk::servlet::UpnpXmlDescription * xmldescription = new squawk::servlet::UpnpXmlDescription(std::string("/rootDesc.xml"), squawk_config );
     squawk::servlet::ApiStatisticServlet * statistic_servlet = new squawk::servlet::ApiStatisticServlet(std::string("/api/statistic"), database);
-    squawk::servlet::ApiAlbumsServlet * albums_servlet = new squawk::servlet::ApiAlbumsServlet(std::string("/api/album"), database);
+    squawk::api::ApiAlbumsServlet * albums_servlet = new squawk::api::ApiAlbumsServlet(std::string("/api/album"), database);
     squawk::servlet::ApiAlbumsByArtist * albumsbyartist_servlet = new squawk::servlet::ApiAlbumsByArtist(std::string("/api/artist/(\\d+)/album"), database);
     squawk::servlet::ApiArtistServlet * artists_servlet = new squawk::servlet::ApiArtistServlet(std::string("/api/artist"), database);
     squawk::servlet::ApiAlbumServlet * album_servlet = new squawk::servlet::ApiAlbumServlet(std::string("/api/album/(\\d*)"), database);

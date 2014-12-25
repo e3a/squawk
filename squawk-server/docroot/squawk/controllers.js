@@ -233,7 +233,8 @@ squawkControllers.controller('AlbumDetailCtrl', ['$scope', '$http', '$routeParam
   $scope.showGallery = 'true';
 }]);
 squawkControllers.controller('AlbumByArtistCtrl', ['$scope', '$http', '$routeParams', '$window',  function AlbumByArtistCtrl($scope, $http, $routeParams, $window) {
-  $http.get('/api/artist/' + $routeParams.artistId + '/album').success(function(data) {
+    alert( "get albums by artist: " + $routeParams.artistId );
+    $http.get('/api/albums?artist-id=' + $routeParams.artistId + "&index=0&limit=10").success(function(data) {
     $scope.albums = data.albums;
   });
   $scope.songsOrderProp = 'album';

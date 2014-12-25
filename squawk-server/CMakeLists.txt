@@ -30,9 +30,9 @@ link_directories(${Boost_LIBRARY_DIR})
 set(SQUAWK src/squawkconfig.cpp)
 set(DATABASE src/db/sqlite3statement.cpp src/db/sqlite3database.cpp)
 set(MEDIA src/media/mediadao.cpp src/media/libavcpp.cpp src/media/fileparser.cpp src/media/flacparser.cpp)
-set(API src/api/abstractapialbumsservlet.cpp
+set(API src/api/apialbumsservlet.cpp
         src/http/api/apiupnpdevicehandler.cpp)
-set(SERVLET src/servlet/apialbumsbyartist.cpp src/servlet/apiartistservlet.cpp src/servlet/apialbumsservlet.cpp src/servlet/apialbumservlet.cpp
+set(SERVLET src/servlet/apialbumsbyartist.cpp src/servlet/apiartistservlet.cpp src/servlet/apialbumservlet.cpp
             src/servlet/apistatisticservlet.cpp src/servlet/coverservlet.cpp src/servlet/imageservlet.cpp src/servlet/songservlet.cpp src/servlet/upnpxmldescription.cpp
             src/servlet/letterservlet.cpp
             src/servlet/upnpcontentdirectory.cpp src/servlet/upnpmusicdirectorymodule.cpp src/servlet/upnpvideodirectory.cpp
@@ -63,6 +63,6 @@ if (build_tests)
     target_link_libraries(testmain_server pthread)
     target_link_libraries(testmain_server
         ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
-    add_test(squawk-tests testmain_server)
+    add_test(squawk-server testmain_server)
 endif()
 
