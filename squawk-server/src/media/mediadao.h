@@ -24,9 +24,18 @@
 #include "../db/sqlite3database.h" //TODO include generic header
 #include "../db/database.h"
 
+#include "image.h"
 
 namespace squawk {
 namespace media {
+
+
+struct file_item {
+  enum IMAGE_TYPE { COVER, OTHER, FOLDER } type;
+  file_item(std::string name, std::string mime_type, unsigned long mtime, unsigned long size) : name(name), mime_type(mime_type), mtime(mtime), size(size) {};
+  std::string name, mime_type;
+  unsigned long mtime, size;
+};
 
 class MediaDao {
 public:
@@ -37,11 +46,16 @@ public:
     bool exist_audiofile(std::string filename, long mtime, long size, bool update);
     bool exist_videofile(std::string filename, long mtime, long size, bool update);
     bool exist_imagefile(std::string filename, long mtime, long size, bool update);
+
+    unsigned long getOrCreateDirectory(const std::string & path, const std::string & name, const unsigned long & parent, const int & type );
+    unsigned long saveFile(const file_item & file, const unsigned long & parent, commons::image::Image * imagefile);
+
     squawk::media::Album get_album(std::string path);
     unsigned long save_album(std::string path, squawk::media::Album * album);
     unsigned long save_artist(squawk::media::Artist * artist);
     void save_audiofile(std::string filename, long mtime, long size, unsigned long album_id, squawk::media::Song * song);
-    unsigned long save_imagefile(std::string filename, long mtime, long size, unsigned long album_id, squawk::media::Image * imagefile);
+    unsigned long createDirectory(const std::string path );
+    unsigned long save_imagefile(const file_item & file, const unsigned long & album, commons::image::Image * imagefile);
     unsigned long save_videofile(std::string filename, long mtime, long size, std::string mime_type);
     void sweep( long mtime );
 
@@ -50,7 +64,7 @@ private:
     squawk::db::Sqlite3Database * db;
     std::map<std::string, squawk::db::Sqlite3Statement *> stmtMap;
     bool exist(std::string table, std::string filename, long mtime, long size, bool update);
-    const std::string create_statements[9] {
+    const std::string create_statements[10] {
         "create table if not exists tbl_cds_audiofiles(album_id, filename NOT NULL, filesize, mtime, title, track, timestamp, mime_type, bitrate, sample_rate, bits_per_sample, channels, length, disc);",
         "CREATE UNIQUE INDEX IF NOT EXISTS UniqueIndexFilename ON tbl_cds_audiofiles (filename)",
         "create table if not exists tbl_cds_artists_albums(album_id, artist_id, role);",
@@ -59,7 +73,8 @@ private:
         "create table if not exists tbl_cds_albums(path, name, genre, year, clean_name, letter);",
         "create table if not exists tbl_cds_images(album, filename, mtime, timestamp, filesize, type, mime_type, width, height);",
         "CREATE UNIQUE INDEX IF NOT EXISTS UniqueIndexImagesFilename ON tbl_cds_images (filename)",
-        "create table if not exists tbl_cds_movies(name, filename, mtime, timestamp, filesize, type, mime_type);"
+        "create table if not exists tbl_cds_movies(name, parent, type, filename, mtime, timestamp, filesize, mime_type);",
+        "create table if not exists tbl_cds_files(name, parent, type, filename, mtime, timestamp, filesize, mime_type, width, height, color);"
     };
 };
 }}

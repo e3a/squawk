@@ -15,6 +15,15 @@ namespace media {
 
 log4cxx::LoggerPtr MediaDao::logger(log4cxx::Logger::getLogger("squawk.media.MediaDao"));
 
+const char *SQL_GET_DIRECTORY = "select ROWID from tbl_cds_files where filename = ?";
+const char *SQL_INSERT_DIRECTORY ="insert into tbl_cds_files(name, parent, type, filename) values(?,?,?,?)";
+const char *SQL_GET_FILE = "select ROWID from tbl_cds_files where filename = ?";
+const char *SQL_INSERT_FILE_IMAGE = "insert into tbl_cds_files(parent, filename, mtime, timestamp, filesize, type, mime_type, width, height) " \
+                               "values (?,?,?,?,?,?,?,?,?)";
+const char *SQL_UPDATE_FILE_IMAGE = "update tbl_cds_files SET " \
+                                   "parent=?, mtime=?, timestamp=?, filesize=?, type=?, mime_type=?, width=?, height=? where ROWID = ?";
+
+
 const char *SQL_GET_AUDIOFILE = "select audiofile.ROWID from tbl_cds_audiofiles audiofile where audiofile.filename = ?";
 const char *SQL_GET_ALBUM = "select album.name, album.genre, album.year, album.ROWID from tbl_cds_albums album where album.path = ?";
 const char *SQL_GET_IMAGE = "select image.ROWID from tbl_cds_images image where image.filename = ?";
@@ -73,6 +82,12 @@ void MediaDao::start_transaction() {
         stmtMap["update_tbl_cds_images"] = db->prepare_statement("update tbl_cds_images set timestamp=? where ROWID=?");
         stmtMap[SQL_TABEL_NAME_MOVIES] = db->prepare_statement("select ROWID from tbl_cds_movies where filename=? and filesize=? and mtime=?");
         stmtMap["update_tbl_cds_movies"] = db->prepare_statement("update tbl_cds_movies set timestamp=? where ROWID=?");
+
+        stmtMap["GET_DIRECTORY"] = db->prepare_statement( SQL_GET_DIRECTORY );
+        stmtMap["INSERT_DIRECTORY"] = db->prepare_statement( SQL_INSERT_DIRECTORY );
+        stmtMap["GET_FILE"] = db->prepare_statement( SQL_GET_FILE );
+        stmtMap["INSERT_FILE_IMAGE"] = db->prepare_statement( SQL_INSERT_FILE_IMAGE );
+        stmtMap["UPDATE_FILE_IMAGE"] = db->prepare_statement( SQL_UPDATE_FILE_IMAGE );
 
         stmtMap["GET_AUDIOFILE"] = db->prepare_statement( SQL_GET_AUDIOFILE );
         stmtMap["GET_ALBUM"] = db->prepare_statement( SQL_GET_ALBUM );
@@ -147,6 +162,80 @@ bool MediaDao::exist(std::string table, std::string filename, long mtime, long s
     }
     return found;
 }
+unsigned long MediaDao::getOrCreateDirectory(const std::string & path, const std::string & name, const unsigned long & parent, const int & type ) {
+    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "getOrCreateDirectory:" << path );
+    int directory_id = 0;
+    try {
+        squawk::db::Sqlite3Statement * stmt = stmtMap[ "GET_DIRECTORY" ];
+        stmt->bind_text(1, path);
+        if( stmt->step() ) {
+            directory_id = stmt->get_int( 0 );
+        } else {
+            squawk::db::Sqlite3Statement * stmtCreate = stmtMap[ "INSERT_DIRECTORY" ];
+            stmtCreate->bind_text(1, name);
+            stmtCreate->bind_int(2, parent);
+            stmtCreate->bind_int(3, type);
+            stmtCreate->bind_text(4, path);
+
+            stmtCreate->insert();
+            stmtCreate->reset();
+
+            directory_id = db->last_insert_rowid();
+        }
+        stmt->reset();
+    } catch( ::db::DbException * e ) {
+        LOG4CXX_FATAL(logger, "Can not get album by path, Exception:" << e->code() << "-> " << e->what());
+        throw;
+    }
+    return directory_id;
+}
+unsigned long MediaDao::saveFile(const file_item & file, const unsigned long & parent, commons::image::Image * imagefile) {
+    LOG4CXX_TRACE(logger, "save imagefile:" << file.name );
+    try {
+       squawk::db::Sqlite3Statement * stmt_get_image = stmtMap["GET_FILE"];
+        stmt_get_image->bind_text(1, file.name);
+        if( stmt_get_image->step() ) {
+            int image_id = stmt_get_image->get_int( 0 );
+
+            squawk::db::Sqlite3Statement * stmt = stmtMap["UPDATE_FILE_IMAGE"];
+
+            stmt->bind_int(1, parent);
+            stmt->bind_int(2, file.mtime);
+            stmt->bind_int(3, std::time(0));
+            stmt->bind_int(4, file.size);
+            stmt->bind_int(5, file.type);
+            stmt->bind_text(6, file.mime_type);
+            stmt->bind_int(7, imagefile->width());
+            stmt->bind_int(8, imagefile->height());
+            stmt->bind_int(9, image_id );
+            stmt->update();
+            stmt_get_image->reset();
+            stmt->reset();
+            return image_id;
+
+        } else {
+            squawk::db::Sqlite3Statement * stmt = stmtMap["INSERT_FILE_IMAGE"];
+            stmt->bind_int(1, parent);
+            stmt->bind_text(2, file.name);
+            stmt->bind_int(3, file.mtime);
+            stmt->bind_int(4, std::time(0));
+            stmt->bind_int(5, file.size);
+            stmt->bind_int(6, file.type);
+            stmt->bind_text(7, file.mime_type);
+            stmt->bind_int(8, imagefile->width());
+            stmt->bind_int(9, imagefile->height());
+            stmt->insert();
+            stmt_get_image->reset();
+            stmt->reset();
+            return db->last_insert_rowid();
+        }
+    } catch( ::db::DbException * e ) {
+        LOG4CXX_FATAL(logger, "Can not save imagefile, Exception:" << e->code() << "-> " << e->what());
+        throw;
+    }
+}
+
+
 squawk::media::Album MediaDao::get_album(std::string path) {
     LOG4CXX_TRACE(logger, "get Album:" << path );
     squawk::media::Album album;
@@ -291,25 +380,38 @@ void MediaDao::save_audiofile(std::string filename, long mtime, long size, unsig
         throw;
     }
 }
-unsigned long MediaDao::save_imagefile(std::string filename, long mtime, long size, unsigned long album, squawk::media::Image * imagefile) {
-    LOG4CXX_TRACE(logger, "save imagefile:" << filename );
+unsigned long MediaDao::createDirectory( const std::string path ) {
+    LOG4CXX_TRACE(logger, "create and get directory:" << path );
+    std::list<std::string> listPath = commons::filesystem::getPathTokens( path );
+    std::cout << "-- Path" << std::endl;
+    std::string relative_path;
+    int parent = 0;
+    for( auto & token : listPath ) {
+        relative_path += "/" + token;
+        std::cout << " >" << relative_path << std::endl;
+        parent = getOrCreateDirectory(relative_path, token, parent, 1);
+    }
+    return parent;
+}
+unsigned long MediaDao::save_imagefile(const file_item & file, const unsigned long & album, commons::image::Image * imagefile) {
+    LOG4CXX_TRACE(logger, "save imagefile:" << file.name );
     try {
 
         squawk::db::Sqlite3Statement * stmt_get_image = stmtMap["GET_IMAGE"];
-        stmt_get_image->bind_text(1, filename);
+        stmt_get_image->bind_text(1, file.name);
         if( stmt_get_image->step() ) {
             int image_id = stmt_get_image->get_int( 0 );
 
             squawk::db::Sqlite3Statement * stmt = stmtMap["UPDATE_IMAGE"];
 
             stmt->bind_int(1, album);
-            stmt->bind_int(2, mtime);
+            stmt->bind_int(2, file.mtime);
             stmt->bind_int(3, std::time(0));
-            stmt->bind_int(4, size);
-            stmt->bind_int(5, imagefile->type);
-            stmt->bind_text(6, imagefile->mime_type);
-            stmt->bind_int(7, imagefile->width);
-            stmt->bind_int(8, imagefile->height);
+            stmt->bind_int(4, file.size);
+            stmt->bind_int(5, file.type);
+            stmt->bind_text(6, file.mime_type);
+            stmt->bind_int(7, imagefile->width());
+            stmt->bind_int(8, imagefile->height());
             stmt->bind_int(9, image_id );
             stmt->update();
             stmt_get_image->reset();
@@ -319,14 +421,14 @@ unsigned long MediaDao::save_imagefile(std::string filename, long mtime, long si
         } else {
             squawk::db::Sqlite3Statement * stmt = stmtMap["INSERT_IMAGE"];
             stmt->bind_int(1, album);
-            stmt->bind_text(2, filename);
-            stmt->bind_int(3, mtime);
+            stmt->bind_text(2, file.name);
+            stmt->bind_int(3, file.mtime);
             stmt->bind_int(4, std::time(0));
-            stmt->bind_int(5, size);
-            stmt->bind_int(6, imagefile->type);
-            stmt->bind_text(7, imagefile->mime_type);
-            stmt->bind_int(8, imagefile->width);
-            stmt->bind_int(9, imagefile->height);
+            stmt->bind_int(5, file.size);
+            stmt->bind_int(6, file.type);
+            stmt->bind_text(7, file.mime_type);
+            stmt->bind_int(8, imagefile->width());
+            stmt->bind_int(9, imagefile->height());
             stmt->insert();
             stmt_get_image->reset();
             stmt->reset();

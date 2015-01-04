@@ -1,6 +1,6 @@
 /*
-    Abstract API Albums Servlet
-    Copyright (C) 2013  <copyright holder> <e.knecht@netwings.ch>
+    cover servlet header file.
+    Copyright (C) 2013  e.knecht@netwings.ch
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,15 +16,19 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "abstractapialbumsservlet.h"
+#ifndef COVERSERVLET_H
+#define COVERSERVLET_H
+
+#include "http.h"
+#include "fileservlet.h"
 
 namespace squawk {
 namespace api {
 
-void createAlbums() {
-
-}
-
-AbstractApiAlbumsServlet::AbstractApiAlbumsServlet() {}
-
+class CoverServlet : public ::http::servlet::FileServlet {
+public:
+    explicit CoverServlet(const std::string path, const std::string docroot) : FileServlet(path, docroot) {}
+    virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
+};
 }}
+#endif // COVERSERVLET_H

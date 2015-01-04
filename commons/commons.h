@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <ctime>
+#include <list>
 #include <string>
 #include <sstream>
 #include <sys/utsname.h>
@@ -288,6 +289,28 @@ namespace commons {
  * \brief namespace for the file system utilities.
  */
 namespace filesystem {
+inline std::list<std::string> getPathTokens(const std::string & path) {
+    std::list<std::string> result_list;
+    if(path.empty() || path.find('/') == std::string::npos)
+        result_list.push_back( path );
+
+    int end_pos = 0;
+    int first_pos = 0;
+    do {
+        first_pos = path.find( '/', end_pos );
+        if(first_pos != std::string::npos ) {
+            end_pos = path.find( '/', first_pos + 1 );
+            if(end_pos != std::string::npos ) {
+                if( end_pos - first_pos > 1 ) {
+                    result_list.push_back( path.substr(first_pos + 1, ( end_pos - first_pos - 1 ) ) );
+                }
+            } else if( path.size() - first_pos > 1 ) {
+                result_list.push_back( path.substr( first_pos + 1 ) );
+            }
+        }
+    } while( first_pos != std::string::npos );
+    return result_list;
+}
 inline bool is_directory(std::string & filename) {
   struct stat sb;
   return (stat(filename.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode));

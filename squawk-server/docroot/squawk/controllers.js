@@ -1,3 +1,12 @@
+var album_text_length = 20;
+
+function trimAlbumText( text ) {
+    if( text.length > album_text_length ) {
+        return text.substring(0,album_text_length - 3 ) + "...";
+    }
+    return text;
+}
+
 var items_per_line = 8;
 var loaded_lines_start = 0;
 var loaded_lines_end = 0;
@@ -194,7 +203,43 @@ var squawkControllers = angular.module('squawkControllers', [])
       });
       }
   };
-}]);
+}]).directive('album', ["$window", "$rootScope", function ($window, $rootScope) {
+    return {
+      restrict: 'E',
+        scope: {
+            album: '=album'
+        },
+    link: function(scope, element, attrs) {
+        element.html('');
+        var frag = document.createDocumentFragment();
+
+        var domImg = document.createElement("img");
+        domImg.setAttribute("src", '/album/' + scope.album.id + '/cover.jpg');
+        domImg.setAttribute("style","width:150px; height:150px;");
+
+        frag.appendChild(domImg);
+        frag.appendChild( document.createElement( "br" ) );
+
+        var aAlbumRef = document.createElement("a");
+        aAlbumRef.setAttribute("href","#/album/" + scope.album.id );
+        var spanTextAlbum = document.createTextNode( trimAlbumText( scope.album.name ) );
+        aAlbumRef.appendChild(spanTextAlbum);
+        frag.appendChild(aAlbumRef);
+        frag.appendChild(document.createElement("br"));
+
+        for( i=0; i<scope.album.artists.length; i++) {
+            var aArtistRef = document.createElement("a");
+            aArtistRef.setAttribute("href","#/artist/" + scope.album.artists[i].id + "/album");
+            var spanTextArtist = document.createTextNode( trimAlbumText( scope.album.artists[i].name ) );
+            aArtistRef.appendChild(spanTextArtist);
+            frag.appendChild(aArtistRef);
+        }
+        frag.appendChild(document.createElement("br"));
+
+        element.append(frag);
+        }
+    };
+  }]);
 
 
     
@@ -203,10 +248,12 @@ squawkControllers.controller('AlbumListCtrl', ['$scope', '$http', '$window', fun
   $scope.imageSize = getImageSize($window);
   $scope.pageSize = Math.floor($window.innerHeight/$scope.imageSize)*items_per_line;
 
-  jQuery.ajax({url: "/api/albums?attributes=count", async: false, success: function( data ) {
-    $scope.albumCount = data.count;
-    $scope.pageCount = Math.ceil(data.count/$scope.pageSize);
-  }});
+    jQuery.ajax({url: "/api/album/letter", async: false, success: function( data ) {
+        $scope.letters = data;
+    }});
+    jQuery.ajax({url: "/api/album?attributes=id,name,artist&letter=A", async: false, success: function( data ) {
+        $scope.albums = data.albums;
+    }});
 
 /*    $scope.$watch('orderProp', function(newValue, oldValue) {
       if(newValue != oldValue) {
@@ -224,7 +271,11 @@ squawkControllers.controller('ArtistListCtrl', ['$scope', '$http', function Arti
   });
   $scope.orderProp = 'artist'; */
 }]);
-
+squawkControllers.controller('VideoListCtrl', ['$scope', '$http', function ArtistListCtrl($scope, $http) {
+  $http.get('/api/video').success(function(data) {
+    $scope.videos = data;
+  });
+}]);
 squawkControllers.controller('AlbumDetailCtrl', ['$scope', '$http', '$routeParams',  function AlbumDetailCtrl($scope, $http, $routeParams) {
   $http.get('/api/album/' + $routeParams.albumId).success(function(data) {
     $scope.album = data;
@@ -233,8 +284,7 @@ squawkControllers.controller('AlbumDetailCtrl', ['$scope', '$http', '$routeParam
   $scope.showGallery = 'true';
 }]);
 squawkControllers.controller('AlbumByArtistCtrl', ['$scope', '$http', '$routeParams', '$window',  function AlbumByArtistCtrl($scope, $http, $routeParams, $window) {
-    alert( "get albums by artist: " + $routeParams.artistId );
-    $http.get('/api/albums?artist-id=' + $routeParams.artistId + "&index=0&limit=10").success(function(data) {
+    $http.get('/api/albums?attributes=id,name,artist&artist-id=' + $routeParams.artistId).success(function(data) {
     $scope.albums = data.albums;
   });
   $scope.songsOrderProp = 'album';

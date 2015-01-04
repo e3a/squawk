@@ -18,6 +18,7 @@
 */
 
 #include <array>
+#include <list>
 #include <string>
 
 #include "../commons/commons.h"
@@ -25,8 +26,37 @@
 #include <gtest/gtest.h>
 
 
-TEST( UpnpTest, IsNumber ) {
+TEST( CommonsTest, IsNumber ) {
     ASSERT_TRUE( commons::string::is_number( "123" ) );
     ASSERT_FALSE( commons::string::is_number( "ABC" ) );
     ASSERT_FALSE( commons::string::is_number( "A123" ) );
+}
+TEST( CommonsTest, PathTokens ) {
+    std::list<std::string> result = commons::filesystem::getPathTokens( "/foo/bar" );
+    ASSERT_EQ( 2, result.size() );
+    std::list<std::string>::iterator itr = result.begin();
+    ASSERT_STREQ( "foo", (*itr).c_str() );
+    ASSERT_STREQ( "bar", (*++itr).c_str() );
+}
+TEST( CommonsTest, PathTokensStartSlash ) {
+    std::list<std::string> result = commons::filesystem::getPathTokens( "//foo/bar" );
+    ASSERT_EQ( 2, result.size() );
+    std::list<std::string>::iterator itr = result.begin();
+    ASSERT_STREQ( "foo", (*itr).c_str() );
+    ASSERT_STREQ( "bar", (*++itr).c_str() );
+}TEST( CommonsTest, PathTokensEndSlash ) {
+    std::list<std::string> result = commons::filesystem::getPathTokens( "/foo/bar/" );
+    ASSERT_EQ( 2, result.size() );
+    std::list<std::string>::iterator itr = result.begin();
+    ASSERT_STREQ( "foo", (*itr).c_str() );
+    ASSERT_STREQ( "bar", (*++itr).c_str() );
+}
+TEST( CommonsTest, PathTokensSlash ) {
+    std::list<std::string> result = commons::filesystem::getPathTokens( "//Super/califragi//listic/expialidocious/" );
+    ASSERT_EQ( 4, result.size() );
+    std::list<std::string>::iterator itr = result.begin();
+    ASSERT_STREQ( "Super", (*itr).c_str() );
+    ASSERT_STREQ( "califragi", (*++itr).c_str() );
+    ASSERT_STREQ( "listic", (*++itr).c_str() );
+    ASSERT_STREQ( "expialidocious", (*++itr).c_str() );
 }

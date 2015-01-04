@@ -35,6 +35,7 @@ void WebServer::handle_request(HttpRequest & request, HttpResponse & response, s
     for(auto * servlet : servlets) {
         if(servlet->match(request.uri)) {
             try {
+                std::cout << "execute servlet: " << (servlet->getPath()) << std::endl;
 
                 if( request.request_method == "GET" ) {
                     servlet->do_get(request, response);
@@ -47,10 +48,13 @@ void WebServer::handle_request(HttpRequest & request, HttpResponse & response, s
 
 
             } catch(http_status & status) {
+                std::cerr << "create error code with status: " /* << status */ << std::endl;
                 servlet->create_stock_reply(status, response);
             } catch(...) {
+                std::cerr << "create error code without status." << std::endl;
                 servlet->create_stock_reply(http_status::INTERNAL_SERVER_ERROR, response);
             }
+            //log request
             std::cout << request.client_ip << " user-identifier anonymous [" << "] \"" << request.request_method << " " <<
                          request.uri << " HTTP/" << request.http_version_major << "." << request.http_version_minor << " " <<
                          int(response.status) << " " << response.get_size() << std::endl;

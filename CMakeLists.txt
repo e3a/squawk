@@ -22,9 +22,11 @@ find_package(PCRE++ REQUIRED)
 set(LIBS ${LIBS} -lpcrecpp)
 find_package(Log4cxx REQUIRED)
 set(LIBS ${LIBS} ${LOG4CXX_LIBRARIES})
+find_package(Imlib2 REQUIRED)
+set(LIBS ${LIBS} ${IMLIB2_LIBRARIES})
 
 SET( SQUAWK_INCLUDES ${CMAKE_SOURCE_DIR}/commons ${CMAKE_SOURCE_DIR}/httpcpp/includes ${CMAKE_SOURCE_DIR}/ssdpcpp/includes
-     /home/e3a/asio-1.10.2/include/ ${LIBXML2_INCLUDE_DIR})
+     /home/e3a/asio-1.10.2/include/ ${LIBXML2_INCLUDE_DIR} ${IMLIB2_INCLUDE_DIR})
 
 add_subdirectory (httpcpp)
 add_subdirectory (ssdpcpp)

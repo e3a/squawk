@@ -30,23 +30,21 @@
 #include "mediadao.h"
 
 #include "pcrecpp.h" 
+#include "sys/stat.h"
 
 #include "log4cxx/logger.h"
 
 namespace squawk {
 namespace media {
 
-struct file_item {
-  file_item(std::string name, std::string mime_type, unsigned long mtime, unsigned long size) : name(name), mime_type(mime_type), mtime(mtime), size(size) {};
-  std::string name, mime_type;
-  unsigned long mtime, size;
-};
-
 class FileParser {
   public:
     FileParser(squawk::db::Sqlite3Database * db, SquawkConfig * squawk_config) : mediaDao(new MediaDao(db)), squawk_config(squawk_config) {
         parsers.insert( parsers.end(), new squawk::media::FlacParser() );
         parsers.insert( parsers.end(), new squawk::media::LibAVcpp() );
+        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/audio" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
+        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/images" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
+        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/video" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
     };
     FileParser() {
         parsers.insert( parsers.end(), new squawk::media::FlacParser() );
@@ -73,11 +71,8 @@ class FileParser {
     std::vector< MetadataParser* > parsers;
 
     std::map<std::string, int> statistic;
-    DIRECTORY_TYPE _parse(std::string path);
+    DIRECTORY_TYPE _parse(const std::string & basepath, const std::string & path);
     
-    void create_image_thumb(std::string image, std::string thumb);
-    void resize_image(std::string image, std::string thumb);
-
     std::string get_mime_type(const std::string & filename);
   
     static pcrecpp::RE re;

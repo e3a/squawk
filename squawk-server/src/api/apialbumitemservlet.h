@@ -1,6 +1,6 @@
 /*
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) 2013  <copyright holder> <email>
+    API Album Item Servlet
+    Copyright (C) 2013  <copyright holder> <e.knecht@netwings.ch>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef APIALBUMHANDLER_H
-#define APIALBUMHANDLER_H
+#ifndef APIALBUMITEMSERVLET_H
+#define APIALBUMITEMSERVLET_H
 
 #include <string>
 
@@ -28,15 +28,15 @@
 #include "log4cxx/logger.h"
 
 namespace squawk {
-namespace servlet {
+namespace api {
 
-class ApiAlbumServlet : public ::http::HttpServlet {
+class ApiAlbumItemServlet : public ::http::HttpServlet {
 public:
-  ApiAlbumServlet( const std::string path, squawk::db::Sqlite3Database * db ) : HttpServlet(path), db(db) {};
+  ApiAlbumItemServlet( const std::string path, squawk::db::Sqlite3Database * db ) : HttpServlet(path), db(db) {};
   virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
   static log4cxx::LoggerPtr logger;
   squawk::db::Sqlite3Database * db;
 };
 }}
-#endif // APIALBUMHANDLER_H
+#endif // APIALBUMITEMSERVLET_H

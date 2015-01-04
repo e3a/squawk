@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "apialbumservlet.h"
+#include "apialbumitemservlet.h"
 #include "../db/database.h"
 
 #include <sstream>
@@ -33,11 +33,11 @@
 #define QUERY_IMAGES "select ROWID from tbl_cds_images where album = ? order by type asc"
 
 namespace squawk {
-namespace servlet {
+namespace api {
 
-log4cxx::LoggerPtr ApiAlbumServlet::logger(log4cxx::Logger::getLogger("squawk.servlet.ApiAlbumServlet"));
+log4cxx::LoggerPtr ApiAlbumItemServlet::logger(log4cxx::Logger::getLogger("squawk.api.ApiAlbumItemServlet"));
 
-void ApiAlbumServlet::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
+void ApiAlbumItemServlet::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
     int album_id = 0;
     bool result = match(request.uri, &album_id);

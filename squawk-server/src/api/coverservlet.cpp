@@ -1,6 +1,6 @@
 /*
-    Abstract API Albums Servlet
-    Copyright (C) 2013  <copyright holder> <e.knecht@netwings.ch>
+    cover servlet implementation.
+    Copyright (C) 2013  e.knecht@netwings.ch
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,25 +16,27 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef ABSTRACTAPIALBUMSSERVLET_H
-#define ABSTRACTAPIALBUMSSERVLET_H
+#include <sstream>
+
+#include "coverservlet.h"
 
 namespace squawk {
 namespace api {
 
-class AbstractApiAlbumsServlet {
-public:
-    AbstractApiAlbumsServlet();
-};
-}}
+void CoverServlet::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
-class AbstractApiAlbumsServlet : ApiAlbumsServlet {
-public:
-  AbstractApiAlbumsServlet( const std::string path, squawk::db::Sqlite3Database * db ) : HttpServlet(path), db(db) {}
-  virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
-private:
-  static log4cxx::LoggerPtr logger;
-  squawk::db::Sqlite3Database * db;
-};
+    int cover_id = 0;
+    bool result = match(request.uri, &cover_id);
+    if(result && cover_id > 0) {
+
+        std::stringstream ss;
+        ss << std::string("/") << cover_id  << std::string(".jpg");
+        request.uri = ss.str();
+
+        FileServlet::do_get(request, response);
+
+    } else {
+        throw ::http::http_status::BAD_REQUEST;
+    }
+}
 }}
-#endif // ABSTRACTAPIALBUMSSERVLET_H

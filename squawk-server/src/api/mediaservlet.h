@@ -1,5 +1,5 @@
 /*
-    cover servlet header file.
+    media servlet header file.
     Copyright (C) 2013  e.knecht@netwings.ch
 
     This program is free software: you can redistribute it and/or modify
@@ -16,19 +16,28 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COVERSERVLET_H
-#define COVERSERVLET_H
+#ifndef MEDIASERVLET_H
+#define MEDIASERVLET_H
 
 #include "http.h"
 #include "fileservlet.h"
 
-namespace squawk {
-namespace servlet {
+#include "../db/sqlite3database.h"
 
-class CoverServlet : public ::http::servlet::FileServlet {
+#include "log4cxx/logger.h"
+
+namespace squawk {
+namespace api {
+
+class MediaServlet : public ::http::servlet::FileServlet {
 public:
-    explicit CoverServlet(const std::string path, const std::string docroot) : FileServlet(path, docroot) {}
-    virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
+    explicit MediaServlet( const std::string path, const std::string docroot, squawk::db::Sqlite3Database * db ) :
+        FileServlet( path, docroot ), db( db ), mediadirectory( docroot ) {}
+    virtual void do_get( ::http::HttpRequest & request, ::http::HttpResponse & response );
+private:
+    static log4cxx::LoggerPtr logger;
+    squawk::db::Sqlite3Database * db;
+    const std::string mediadirectory;
 };
 }}
-#endif // COVERSERVLET_H
+#endif // MEDIASERVLET_H

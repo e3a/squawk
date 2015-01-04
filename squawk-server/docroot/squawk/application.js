@@ -22,6 +22,10 @@ when('/artist/:artistId/album', {
 templateUrl: 'album-list.html',
 controller: 'AlbumByArtistCtrl'
 }).
+when('/video', {
+templateUrl: 'video-list.html',
+controller: 'VideoListCtrl'
+}).
 otherwise({
 redirectTo: '/album'
 });

@@ -77,14 +77,15 @@ inline std::string get_stock_body(http_status status) {
     }
   }
 
-HttpServlet::HttpServlet(std::string path) {
-    re = new pcrecpp::RE( path.c_str() );
+HttpServlet::HttpServlet(std::string _path) {
+    re = new pcrecpp::RE( _path.c_str() );
+    path = _path;
 }
 HttpServlet::~HttpServlet() {
     delete re;
 }
 bool HttpServlet::match(const std::string & request_path) {
-    return re->PartialMatch(request_path.c_str());
+    return re->FullMatch(request_path.c_str());
 }
 void HttpServlet::do_get(HttpRequest & request, HttpResponse & response) {
     create_stock_reply(http_status::NOT_IMPLEMENTED, response);

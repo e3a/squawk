@@ -1,0 +1,13 @@
+<div width="100%" style="border: solid blue">
+<video id="example_video_1" class="video-js vjs-default-skin"
+  controls preload="auto" width="640" height="264"
+  poster="http://video-js.zencoder.com/oceans-clip.png"
+  data-setup='{"example_option":true}'>
+  <source src="http://192.168.0.13:8080/media/video/14.mkv"></source>
+ <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
+</video>
+
+    <div class="album" ng-repeat="video in videos">
+        <a href="/media/video/{{video.id}}.mkv">{{video.name}}</a>
+    </div>
+</div>

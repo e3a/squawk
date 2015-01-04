@@ -1,6 +1,6 @@
 /*
-    <one line to give the library's name and an idea of what it does.>
-    Copyright (C) 2013  <copyright holder> <email>
+    API Browse Items Servlet
+    Copyright (C) 2013  <copyright holder> <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -17,8 +17,8 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef APIALBUMSHANDLER_H
-#define APIALBUMSHANDLER_H
+#ifndef APIBROWSESERVLET_H
+#define APIBROWSESERVLET_H
 
 #include <string>
 
@@ -29,15 +29,15 @@
 #include "log4cxx/logger.h"
 
 namespace squawk {
-namespace servlet {
-  
-class ApiAlbumsServlet : public ::http::HttpServlet {
+namespace api {
+
+class ApiBrowseServlet : public ::http::HttpServlet {
 public:
-  ApiAlbumsServlet( const std::string path, squawk::db::Sqlite3Database * db ) : HttpServlet(path), db(db) {}
+  ApiBrowseServlet( const std::string path, squawk::db::Sqlite3Database * db ) : HttpServlet(path), db(db) {}
   virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
   static log4cxx::LoggerPtr logger;
   squawk::db::Sqlite3Database * db;
 };
 }}
-#endif // APIALBUMSHANDLER_H
+#endif // APIBROWSESERVLET_H

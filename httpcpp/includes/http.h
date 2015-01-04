@@ -200,6 +200,11 @@ namespace http {
 		The path that is required to create an instance of HttpServlet must be a PCRE regular expression.
 		with the get_request_path_element function you can access the groups of the expression:
 		
+
+        An optional sub-pattern that does not exist in the matched string is assigned the empty string.
+        Therefore, a number group that does not exist will return in a no match. You can use a string and convert the
+        number yourself.
+
 		for example:
 		
 			HttpServlet servlet( "/api/user/(\\d+)" );
@@ -208,6 +213,7 @@ namespace http {
     class HttpServlet {
 		private:
             pcrecpp::RE * re = nullptr;
+            std::string path;
         public:
             /**
              * @brief Abstract HttpServlet for implementing your own Servlets.
@@ -231,7 +237,7 @@ namespace http {
              * @return
              */
             template <class FIRST> bool match( const std::string & request_path, FIRST * arg1 ) {
-                return re->PartialMatch(request_path.c_str(), arg1);
+                return re->FullMatch(request_path.c_str(), arg1);
             }
             /**
              * @brief Match the path with parameters in the url
@@ -241,7 +247,7 @@ namespace http {
              * @return
              */
             template <class FIRST, class SECOND> bool match( const std::string & request_path, FIRST * arg1, SECOND * arg2 ) {
-                return re->PartialMatch(request_path.c_str(), arg1, arg2);
+                return re->FullMatch(request_path.c_str(), arg1, arg2);
             }
             /**
              * @brief Match the path with parameters in the url
@@ -252,7 +258,7 @@ namespace http {
              * @return
              */
             template <class FIRST, class SECOND, class THIRD> bool match( const std::string & request_path, FIRST * arg1, SECOND * arg2, THIRD * arg3 ) {
-                return re->PartialMatch(request_path.c_str(), arg1, arg2, arg3 );
+                return re->FullMatch(request_path.c_str(), arg1, arg2, arg3 );
             }
             /**
 			 * Callback function for the GET method.
@@ -285,7 +291,24 @@ namespace http {
              */
             virtual void do_head(HttpRequest & request, HttpResponse & response);
 
+            /**
+             * Create a stock reply with the given status code.
+             * @brief create_stock_reply
+             * @param status
+             * @param response
+             */
             void create_stock_reply(http_status status, HttpResponse & response);
+
+            /**
+             * Get the servlet path.
+             * @brief create_stock_reply
+             * @param status
+             * @param response
+             */
+            std::string getPath() {
+                return path;
+            }
+
             /**
              * Utility to create a response.
              * @brief create_response Utility to create a HttpResponse.
@@ -296,7 +319,6 @@ namespace http {
              * @param mime_type The Mime-Type of the Response.
              */
             void create_response(HttpResponse & response, ::http::http_status http_status, std::istream * ss, int content_length, mime::MIME_TYPE mime_type );
-
     };
 
     enum class PARSE_STATE { TRUE, FALSE, CONTINUE };

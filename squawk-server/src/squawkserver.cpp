@@ -31,13 +31,15 @@
 #include "fileservlet.h"
 
 
-#include "api/apialbumsservlet.h"
-#include "servlet/apiartistservlet.h"
-#include "servlet/apialbumservlet.h"
+#include "api/apialbumlistservlet.h"
+#include "api/apiartistlistservlet.h"
+#include "api/apialbumitemservlet.h"
 #include "servlet/apistatisticservlet.h"
-#include "servlet/apialbumsbyartist.h"
-#include "servlet/letterservlet.h"
-#include "servlet/coverservlet.h"
+#include "api/apialbumsletterservlet.h"
+#include "api/apivideolistservlet.h"
+#include "api/mediaservlet.h"
+#include "api/coverservlet.h"
+#include "api/apibrowseservlet.h"
 #include "servlet/imageservlet.h"
 #include "servlet/songservlet.h"
 #include "servlet/upnpxmldescription.h"
@@ -79,32 +81,39 @@ void SquawkServer::start() {
 
     squawk::servlet::UpnpXmlDescription * xmldescription = new squawk::servlet::UpnpXmlDescription(std::string("/rootDesc.xml"), squawk_config );
     squawk::servlet::ApiStatisticServlet * statistic_servlet = new squawk::servlet::ApiStatisticServlet(std::string("/api/statistic"), database);
-    squawk::api::ApiAlbumsServlet * albums_servlet = new squawk::api::ApiAlbumsServlet(std::string("/api/album"), database);
-    squawk::servlet::ApiAlbumsByArtist * albumsbyartist_servlet = new squawk::servlet::ApiAlbumsByArtist(std::string("/api/artist/(\\d+)/album"), database);
-    squawk::servlet::ApiArtistServlet * artists_servlet = new squawk::servlet::ApiArtistServlet(std::string("/api/artist"), database);
-    squawk::servlet::ApiAlbumServlet * album_servlet = new squawk::servlet::ApiAlbumServlet(std::string("/api/album/(\\d*)"), database);
-    squawk::servlet::LetterServlet * letter_servlet = new squawk::servlet::LetterServlet(std::string("/api/albums/letter"), database);
+    squawk::api::ApiAlbumListServlet * albums_servlet = new squawk::api::ApiAlbumListServlet(std::string("/api/album"), database);
+    squawk::api::ApiVideoListServlet * videos_servlet = new squawk::api::ApiVideoListServlet(std::string("/api/video"), database);
+//    squawk::servlet::ApiAlbumsByArtist * albumsbyartist_servlet = new squawk::servlet::ApiAlbumsByArtist(std::string("/api/artist/(\\d+)/album"), database);
+    squawk::api::ApiArtistListServlet * artists_servlet = new squawk::api::ApiArtistListServlet(std::string("/api/artist"), database);
+    squawk::api::ApiAlbumItemServlet * album_servlet = new squawk::api::ApiAlbumItemServlet(std::string("/api/album/(\\d*)"), database);
+    squawk::api::ApiAlbumsLetterServlet * letter_servlet = new squawk::api::ApiAlbumsLetterServlet(std::string("/api/album/letter"), database);
 
-    squawk::servlet::CoverServlet * cover_servlet = new squawk::servlet::CoverServlet("/album/(\\d*)/cover.jpg", squawk_config->string_value(CONFIG_TMP_DIRECTORY));
+    squawk::api::CoverServlet * cover_servlet = new squawk::api::CoverServlet("/album/(\\d*)/cover.jpg", squawk_config->string_value(CONFIG_TMP_DIRECTORY));
     squawk::servlet::ImageServlet * image_servlet = new squawk::servlet::ImageServlet("/album/image/(\\d*).jpg", squawk_config->string_value(CONFIG_TMP_DIRECTORY));
     squawk::servlet::SongServlet * song_servlet = new squawk::servlet::SongServlet("/song/(\\d*).(flac|mp3)", squawk_config->string_value(CONFIG_MEDIA_DIRECTORY), database);
 
-    squawk::upnp::UpnpMediaServlet * upnp_media_servlet = new squawk::upnp::UpnpMediaServlet("/(video|audio|image|cover)/(\\d*).(flac|mp3|avi|mp4|mkv)", squawk_config->string_value(CONFIG_MEDIA_DIRECTORY), database);
+    squawk::api::MediaServlet * media_servlet = new squawk::api::MediaServlet("/file/(video|audio|image|cover)/(\\d*).(flac|mp3|avi|mp4|mkv|jpg)", squawk_config->string_value(CONFIG_MEDIA_DIRECTORY), database);
+    squawk::api::ApiBrowseServlet * browse_servlet = new squawk::api::ApiBrowseServlet("/(video|image|book)/?([0-9]+)?", database);
+
+    squawk::upnp::UpnpMediaServlet * upnp_media_servlet = new squawk::upnp::UpnpMediaServlet("/(video|audio|image)/(\\d*).(flac|mp3|avi|mp4|mkv)", squawk_config->string_value(CONFIG_MEDIA_DIRECTORY), database);
 
     http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->string_value(CONFIG_HTTP_DOCROOT));
 
     web_server->register_servlet(content_directory);
     web_server->register_servlet(connection_manager);
     web_server->register_servlet(xmldescription);
-    web_server->register_servlet(album_servlet);
     web_server->register_servlet(letter_servlet);
+    web_server->register_servlet(album_servlet);
     web_server->register_servlet(albums_servlet);
-    web_server->register_servlet(albumsbyartist_servlet);
+    web_server->register_servlet(videos_servlet);
+//    web_server->register_servlet(albumsbyartist_servlet);
     web_server->register_servlet(artists_servlet);
     web_server->register_servlet(cover_servlet);
     web_server->register_servlet(image_servlet);
     web_server->register_servlet(song_servlet);
+    web_server->register_servlet(browse_servlet);
     web_server->register_servlet(statistic_servlet);
+    web_server->register_servlet(media_servlet);
     web_server->register_servlet(upnp_media_servlet);
     web_server->register_servlet(fileServlet);
     web_server->start();

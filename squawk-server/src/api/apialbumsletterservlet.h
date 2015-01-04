@@ -1,5 +1,5 @@
 /*
-    API Albums Servlet
+    API Albums Letter Servlet
     Copyright (C) 2013  <copyright holder> <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
@@ -17,8 +17,8 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef APIALBUMSHANDLER_H
-#define APIALBUMSHANDLER_H
+#ifndef APIALBUMSLETTERSERVLET_H
+#define APIALBUMSLETTERSERVLET_H
 
 #include <string>
 
@@ -31,13 +31,13 @@
 namespace squawk {
 namespace api {
 
-class ApiAlbumsServlet : public ::http::HttpServlet {
+class ApiAlbumsLetterServlet : public ::http::HttpServlet {
 public:
-  ApiAlbumsServlet( const std::string path, squawk::db::Sqlite3Database * db ) : HttpServlet(path), db(db) {}
-  virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
+    ApiAlbumsLetterServlet( const std::string path, squawk::db::Sqlite3Database * db ) : HttpServlet(path), db(db) {};
+    virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
-  static log4cxx::LoggerPtr logger;
-  squawk::db::Sqlite3Database * db;
+    static log4cxx::LoggerPtr logger;
+    squawk::db::Sqlite3Database * db;
 };
 }}
-#endif // APIALBUMSHANDLER_H
+#endif // APIALBUMSLETTERSERVLET_H

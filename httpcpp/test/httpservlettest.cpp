@@ -35,8 +35,30 @@ TEST(HttpServlet, ParsePathWithElement) {
     HttpServerImpl servlet("/foo/bar/(\\d+)/file.txt");
 
     int result = 0;
+    EXPECT_FALSE(servlet.match("/foo/bar/false/file.txt", &result));
     EXPECT_TRUE(servlet.match("/foo/bar/123/file.txt", &result));
     EXPECT_EQ(123, result);
+}
+TEST(HttpServlet, ParsePathWithNumber) {
+    HttpServerImpl servlet("/(video|image|book)/?([0-9]+)?");
+
+    std::string result;
+    std::string type;
+    EXPECT_TRUE(servlet.match("/video/123", &type, &result));
+    EXPECT_STREQ("123", result.c_str());
+    EXPECT_STREQ("video", type.c_str());
+
+    result = "0";
+    EXPECT_TRUE(servlet.match("/image/", &type, &result));
+    EXPECT_STREQ("", result.c_str());
+    EXPECT_STREQ("image", type.c_str());
+
+    result = "0";
+    EXPECT_TRUE(servlet.match("/image", &type, &result));
+    EXPECT_STREQ("", result.c_str());
+    EXPECT_STREQ("image", type.c_str());
+
+    EXPECT_FALSE(servlet.match("/image/u", &type, &result));
 }
 TEST(HttpServlet, ParsePathWithTwoElement) {
     HttpServerImpl servlet("/(foo|bar)/(\\d+)/file.txt");

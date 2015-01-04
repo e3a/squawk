@@ -31,8 +31,9 @@
 
 #include "http.h"
 #include "commons.h"
+#include "image.h"
 
-#include "Imlib2.h"
+// #include "Imlib2.h"
 
 namespace squawk {
 namespace media {
@@ -49,7 +50,7 @@ void FileParser::parse(std::string path) {
     start = std::chrono::system_clock::now();
     if( commons::filesystem::is_directory(path) ) {
         mediaDao->start_transaction();
-        _parse(path);
+        _parse(path,path);
 
         //output statistic
         end = std::chrono::system_clock::now();
@@ -75,7 +76,7 @@ void FileParser::parse(std::string path) {
     }
 }
 
-FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
+FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, const std::string & path) {
 
     std::map< FILE_TYPE, std::list< file_item > > files;
     // list< string > directories;
@@ -116,7 +117,7 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
                     }
 
                 } else if ( s.st_mode & S_IFDIR ) {
-                    dir_type = _parse(std::string(path + "/" + std::string(entry->d_name)));
+                    dir_type = _parse(basepath, std::string(path + "/" + std::string(entry->d_name)));
                 } else {
                     LOG4CXX_ERROR(logger, "path is neither a reqular file nor a directory:" << path)
                 }
@@ -171,41 +172,45 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
         if(dir_type == MUSIC) {
             for(std::list< file_item >::iterator list_iter = files[IMAGEFILE].begin(); list_iter != files[IMAGEFILE].end(); list_iter++) {
 
-                if(album.id == 0) {
-                    std::string cleanPath = get_album_clean_path( path );
-                    album = mediaDao->get_album(cleanPath);
-                }
-                std::stringstream cover_stream;
-                cover_stream << squawk_config->string_value(CONFIG_TMP_DIRECTORY) << "/" << album.id << ".jpg";
-                std::string cover_filename = cover_stream.str();
-                std::string filename = get_artist_clean_name((*list_iter).name);
-
                 if(! mediaDao->exist_imagefile((*list_iter).name, (*list_iter).mtime, (*list_iter).size, true)) {
-                    Imlib_Image image = imlib_load_image((*list_iter).name.c_str());
-                    imlib_context_set_image(image);
-                    if (image) {
-                        squawk::media::Image imagefile;
-                        imagefile.height = imlib_image_get_height();
-                        imagefile.width = imlib_image_get_width();
-                        imagefile.type = ((*list_iter).name.find("front") == std::string::npos && (*list_iter).name.find("cover") == std::string::npos ? squawk::media::Image::OTHER : squawk::media::Image::COVER);
-                        imagefile.mime_type = "image/jpeg";
-                        int image_id = mediaDao->save_imagefile((*list_iter).name,  (*list_iter).mtime, (*list_iter).size, album.id, &imagefile);
-                        imlib_free_image();
+                    if(album.id == 0) {
+                        std::string cleanPath = get_album_clean_path( path );
+                        album = mediaDao->get_album(cleanPath);
+                    }
+                    (*list_iter).type = ((*list_iter).name.find("front") == std::string::npos && (*list_iter).name.find("cover") == std::string::npos ?
+                                         squawk::media::file_item::OTHER : squawk::media::file_item::COVER);
 
-                        std::stringstream image_stream;
-                        image_stream << squawk_config->string_value(CONFIG_TMP_DIRECTORY) << "/image-" << image_id << ".jpg";
+                    commons::image::Image image( (*list_iter).name );
+                    int image_id = mediaDao->save_imagefile((*list_iter), album.id, &image);
 
-                        resize_image((*list_iter).name, image_stream.str());
-                        if( imagefile.type == squawk::media::Image::COVER ) {
-                            create_image_thumb((*list_iter).name, cover_filename);
-                        }
-                    } else {
-                        LOG4CXX_WARN(logger, "image not loaded:" << (*list_iter).name)
+                    std::stringstream image_stream;
+                    image_stream << squawk_config->string_value(CONFIG_TMP_DIRECTORY) << "/image-" << image_id << ".jpg";
+
+                    image.scale(1000, 1000, image_stream.str());
+                    if( (*list_iter).type == squawk::media::file_item::COVER ) {
+                        std::stringstream cover_stream;
+                        cover_stream << squawk_config->string_value(CONFIG_TMP_DIRECTORY) << "/" << album.id << ".jpg";
+                        std::string cover_filename = cover_stream.str();
+                        image.scale(150, 150, cover_filename);
                     }
                 }
             }
         } else {
-            LOG4CXX_ERROR(logger, "found images " << files[IMAGEFILE].size() << ":" << path) //TODO
+            if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "found images " << files[IMAGEFILE].size() << ":" << path)
+            //check if file exists
+                    //create directory
+                    std::string relative_path = path.substr( basepath.size() );
+                    std::cout << "image path:" << relative_path << std::endl;
+                    unsigned long path_id = mediaDao->createDirectory( relative_path );
+                    //save file
+                    for(std::list< file_item >::iterator list_iter = files[IMAGEFILE].begin(); list_iter != files[IMAGEFILE].end(); list_iter++) {
+                        commons::image::Image image( (*list_iter).name );
+                        unsigned long id = mediaDao->saveFile((*list_iter), path_id, &image);
+
+                        //create tumbs
+                        image.scale(150, 150, squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/images" + "/cover" + commons::string::to_string<unsigned long>(id) + ".jpg" );
+                        image.scale(1000, 1000, squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/images" + "/" + commons::string::to_string<unsigned long>(id) + ".jpg");
+                    }
         }
         files.erase(IMAGEFILE);
     }
@@ -218,47 +223,8 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(std::string path) {
             }
         }
     }
-
     return dir_type;
 }
-
-void FileParser::create_image_thumb(std::string image, std::string thumb) {
-    Imlib_Image imlib_image = imlib_load_image(image.c_str());
-    if(imlib_image) {
-        imlib_context_set_image(imlib_image);
-        Imlib_Image imlib_thumb = imlib_create_cropped_scaled_image(0, 0, imlib_image_get_width(), imlib_image_get_height(), 100, 100);
-        imlib_free_image();
-        imlib_context_set_image(imlib_thumb);
-        imlib_save_image(thumb.c_str());
-        imlib_free_image();
-    } else {
-        LOG4CXX_WARN(logger, "image not loaded:" << image)
-    }
-}
-void FileParser::resize_image(std::string image, std::string thumb) {
-    Imlib_Image imlib_image = imlib_load_image(image.c_str());
-    if(imlib_image) {
-        imlib_context_set_image(imlib_image);
-        int x, y;
-        if(imlib_image_get_width() > imlib_image_get_height()) {
-            double ratio = (double)1000 / (double)imlib_image_get_width();
-            x = (double)imlib_image_get_width() * ratio;
-            y = (double)imlib_image_get_height() * ratio;
-        } else {
-            double ratio = (double)1000 / (double)imlib_image_get_height();
-            x = (double)imlib_image_get_width() * ratio;
-            y = (double)imlib_image_get_height() * ratio;
-        }
-        Imlib_Image imlib_thumb = imlib_create_cropped_scaled_image(0, 0, imlib_image_get_width(), imlib_image_get_height(), x, y);
-        imlib_free_image();
-        imlib_context_set_image(imlib_thumb);
-        imlib_save_image(thumb.c_str());
-        imlib_free_image();
-    } else {
-        LOG4CXX_WARN(logger, "image not loaded:" << image)
-    }
-}
-
 // TODO remove
 std::string FileParser::get_artist_clean_name(std::string artist) {
     return commons::string::trim(commons::string::to_lower(artist));

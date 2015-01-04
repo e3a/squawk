@@ -17,8 +17,8 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef APIALBUMSBYARTIST_H
-#define APIALBUMSBYARTIST_H
+#ifndef APIVIDEOLISTSERVLET_H
+#define APIVIDEOLISTSERVLET_H
 
 #include <string>
 
@@ -29,15 +29,15 @@
 #include "log4cxx/logger.h"
 
 namespace squawk {
-namespace servlet {
+namespace api {
 
-class ApiAlbumsByArtist : public ::http::HttpServlet {
+class ApiVideoListServlet : public ::http::HttpServlet {
 public:
-    ApiAlbumsByArtist( const std::string path, squawk::db::Sqlite3Database * db ) : HttpServlet(path), db(db) {};
+    ApiVideoListServlet(const std::string path, squawk::db::Sqlite3Database * db) : HttpServlet(path), db(db) {}
     virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
     static log4cxx::LoggerPtr logger;
     squawk::db::Sqlite3Database * db;
 };
 }}
-#endif // APIALBUMSBYARTIST_H
+#endif // APIVIDEOLISTSERVLET_H
