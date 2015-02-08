@@ -141,12 +141,30 @@ public:
      * @brief The meta tag names.
      */
     enum TAG { ARTIST, ALBUM, COMPOSER, DISC, TRACK, TITLE, YEAR, GENRE, COMMENT };
-
+    /**
+     * @brief MediaFile
+     * @param filename
+     */
     MediaFile( std::string filename ) : filename(filename), _duration(0) {};
+    /**
+     * @brief duration
+     * @return
+     */
     int duration() { return _duration; }
+    /**
+     * @brief duration
+     * @param duration
+     */
     void duration( int duration ) { _duration = duration; }
+    /**
+     * @brief size
+     * @return
+     */
     int size() { return commons::filesystem::filesize( filename ); }
-
+    /**
+     * @brief name
+     * @return
+     */
     std::string name() {
         int start = 0;
         int end = filename.size();
@@ -158,18 +176,40 @@ public:
         }
         return filename.substr(start, end - start);
     }
+    /**
+     * @brief getAudioStreams
+     * @return
+     */
     std::vector<AudioStream> getAudioStreams() {
         return audio_streams;
     }
+    /**
+     * @brief getVideoStreams
+     * @return
+     */
     std::vector<VideoStream> getVideoStreams() {
         return video_streams;
     }
+    /**
+     * @brief addTag
+     * @param tag
+     * @param value
+     */
     void addTag( TAG tag, std::string value ) {
         tags[tag] = value;
     }
+    /**
+     * @brief getTag
+     * @param tag
+     * @return
+     */
     std::string getTag( TAG tag ) {
         return tags[tag];
     }
+    /**
+     * @brief tagNames
+     * @return
+     */
     std::vector<TAG> tagNames() {
         std::vector<TAG> result;
         for(auto & itrTag : tags ) {
@@ -177,13 +217,12 @@ public:
         }
         return result;
     }
-
 private:
     int _duration;
     std::string filename;
     std::vector<VideoStream> video_streams;
     std::vector<AudioStream> audio_streams;
-    std::map<TAG, std::string> tags;
+    std::map<TAG, std::string > tags;
     void addVideoStream( VideoStream && video ) {
         video_streams.push_back( video );
     }
