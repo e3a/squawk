@@ -25,6 +25,7 @@
 #include <list>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <sys/utsname.h>
 #include <sys/stat.h>
 
@@ -315,5 +316,10 @@ inline bool is_directory(std::string & filename) {
   struct stat sb;
   return (stat(filename.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode));
 };
+inline int filesize(const std::string & filename) {
+    std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
+    return in.tellg();
+};
+
 }}
 #endif // COMMONS_UTILS_H

@@ -1,6 +1,6 @@
-# Build httpcpp
+# Build squawk project
 # run the cmake command from your build directory:
-# cmake .. -DCMAKE_COMPILER_IS_GNUCXX=true -Dbuild_tests=true -DCMAKE_BUILD_TYPE=debug
+# cmake .. -DCMAKE_COMPILER_IS_GNUCXX=true -Dbuild_tests=true -DCMAKE_BUILD_TYPE=debug -DTESTFILES='"/home/e3a/testfiles/"' -DASIO_PATH=~/asio-1.10.2/include/
 cmake_minimum_required(VERSION 2.8.9)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -12,6 +12,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-std=c++11)
 endif()
 set(CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG} -O0)
+add_definitions(-DASIO_STANDALONE)
+add_definitions(-DTESTFILES=${TESTFILES})
 
 find_package(GoogleTest REQUIRED)
 find_package(LibXml2 REQUIRED)
@@ -24,9 +26,12 @@ find_package(Log4cxx REQUIRED)
 set(LIBS ${LIBS} ${LOG4CXX_LIBRARIES})
 find_package(Imlib2 REQUIRED)
 set(LIBS ${LIBS} ${IMLIB2_LIBRARIES})
+#find_package(LibAVCodec COMPONENTS avformat avcodec avutil avresample)
+find_package(LibAVCodec COMPONENTS avformat avcodec avutil)
+set(LIBS ${LIBS} ${AVCODEC_LIBRARIES})
 
 SET( SQUAWK_INCLUDES ${CMAKE_SOURCE_DIR}/commons ${CMAKE_SOURCE_DIR}/httpcpp/includes ${CMAKE_SOURCE_DIR}/ssdpcpp/includes
-     /home/e3a/asio-1.10.2/include/ ${LIBXML2_INCLUDE_DIR} ${IMLIB2_INCLUDE_DIR})
+     ${ASIO_PATH} ${LIBXML2_INCLUDE_DIR} ${IMLIB2_INCLUDE_DIR} ${AVCODEC_INCLUDES})
 
 add_subdirectory (httpcpp)
 add_subdirectory (ssdpcpp)
@@ -34,9 +39,10 @@ add_subdirectory (squawk-server)
 
 if (build_tests)
     enable_testing()
-    include_directories(${ROOT} ${SQUAWK_INCLUDES} ${Boost_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS} includes)
-    add_executable(testmain test/CommonsStringTest.cpp
-        test/XmlEncodeTest.cpp test/XmlParseTest.cpp test/XmlWriterTest.cpp test/UpnpTest.cpp )
+    #include_directories(${ROOT} ${SQUAWK_INCLUDES} ${Boost_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS} includes)
+    include_directories(${ROOT} ${SQUAWK_INCLUDES} ${GTEST_INCLUDE_DIRS} includes)
+    add_executable(testmain test/CommonsStringTest.cpp test/MediaTest.cpp
+                            test/XmlEncodeTest.cpp test/XmlParseTest.cpp test/XmlWriterTest.cpp test/UpnpTest.cpp )
     target_link_libraries(testmain pthread)
     target_link_libraries(testmain
         ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})

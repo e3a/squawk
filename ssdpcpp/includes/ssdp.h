@@ -26,7 +26,7 @@
 #include <http.h>
 
 #include "log4cxx/logger.h"
-#include "boost/asio.hpp"
+#include "asio.hpp"
 
 #define NS_ROOT_DEVICE "upnp:rootdevice"
 #define NS_MEDIASERVER "urn:schemas-upnp-org:device:MediaServer:1"
@@ -186,7 +186,7 @@ private:
   std::map< std::string, std::string > create_response(size_t bytes_recvd, std::string nt, std::string location);
   std::map< std::string, std::string > namespaces;
   std::map< std::string, UpnpDevice > upnp_devices;
-  boost::asio::io_service io_service;
+  asio::io_service io_service;
 };
 }}
 #endif // SSDPCONNECTION_H

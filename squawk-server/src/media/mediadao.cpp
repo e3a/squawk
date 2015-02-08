@@ -22,6 +22,11 @@ const char *SQL_INSERT_FILE_IMAGE = "insert into tbl_cds_files(parent, filename,
                                "values (?,?,?,?,?,?,?,?,?)";
 const char *SQL_UPDATE_FILE_IMAGE = "update tbl_cds_files SET " \
                                    "parent=?, mtime=?, timestamp=?, filesize=?, type=?, mime_type=?, width=?, height=? where ROWID = ?";
+const char *SQL_INSERT_FILE_VIDEO = "insert into tbl_cds_files(parent, filename, mtime, timestamp, filesize, type, mime_type, name) " \
+                               "values (?,?,?,?,?,?,?,?)";
+const char *SQL_UPDATE_FILE_VIDEO = "update tbl_cds_files SET " \
+                                   "parent=?, mtime=?, timestamp=?, filesize=?, type=?, mime_type=?, name=? where ROWID = ?";
+
 
 
 const char *SQL_GET_AUDIOFILE = "select audiofile.ROWID from tbl_cds_audiofiles audiofile where audiofile.filename = ?";
@@ -88,6 +93,8 @@ void MediaDao::start_transaction() {
         stmtMap["GET_FILE"] = db->prepare_statement( SQL_GET_FILE );
         stmtMap["INSERT_FILE_IMAGE"] = db->prepare_statement( SQL_INSERT_FILE_IMAGE );
         stmtMap["UPDATE_FILE_IMAGE"] = db->prepare_statement( SQL_UPDATE_FILE_IMAGE );
+        stmtMap["INSERT_FILE_VIDEO"] = db->prepare_statement( SQL_INSERT_FILE_VIDEO );
+        stmtMap["UPDATE_FILE_VIDEO"] = db->prepare_statement( SQL_UPDATE_FILE_VIDEO );
 
         stmtMap["GET_AUDIOFILE"] = db->prepare_statement( SQL_GET_AUDIOFILE );
         stmtMap["GET_ALBUM"] = db->prepare_statement( SQL_GET_ALBUM );
@@ -174,7 +181,7 @@ unsigned long MediaDao::getOrCreateDirectory(const std::string & path, const std
             squawk::db::Sqlite3Statement * stmtCreate = stmtMap[ "INSERT_DIRECTORY" ];
             stmtCreate->bind_text(1, name);
             stmtCreate->bind_int(2, parent);
-            stmtCreate->bind_int(3, type);
+            stmtCreate->bind_int(3, DIRECTORY );
             stmtCreate->bind_text(4, path);
 
             stmtCreate->insert();
@@ -203,7 +210,7 @@ unsigned long MediaDao::saveFile(const file_item & file, const unsigned long & p
             stmt->bind_int(2, file.mtime);
             stmt->bind_int(3, std::time(0));
             stmt->bind_int(4, file.size);
-            stmt->bind_int(5, file.type);
+            stmt->bind_int(5, IMAGE );
             stmt->bind_text(6, file.mime_type);
             stmt->bind_int(7, imagefile->width());
             stmt->bind_int(8, imagefile->height());
@@ -220,7 +227,7 @@ unsigned long MediaDao::saveFile(const file_item & file, const unsigned long & p
             stmt->bind_int(3, file.mtime);
             stmt->bind_int(4, std::time(0));
             stmt->bind_int(5, file.size);
-            stmt->bind_int(6, file.type);
+            stmt->bind_int(6, IMAGE );
             stmt->bind_text(7, file.mime_type);
             stmt->bind_int(8, imagefile->width());
             stmt->bind_int(9, imagefile->height());
@@ -234,6 +241,54 @@ unsigned long MediaDao::saveFile(const file_item & file, const unsigned long & p
         throw;
     }
 }
+/* unsigned long MediaDao::saveFile(const file_item & file, const unsigned long & parent, commons::media::Video * videofile ) {
+    LOG4CXX_TRACE(logger, "save video:" << file.name );
+    try {
+       squawk::db::Sqlite3Statement * stmt_get_audio = stmtMap["GET_FILE"];
+        stmt_get_audio->bind_text(1, file.name);
+        if( stmt_get_audio->step() ) {
+            int video_id = stmt_get_audio->get_int( 0 );
+
+            squawk::db::Sqlite3Statement * stmt = stmtMap["UPDATE_FILE_VIDEO"];
+
+            stmt->bind_int(1, parent);
+            stmt->bind_int(2, file.mtime);
+            stmt->bind_int(3, std::time(0));
+            stmt->bind_int(4, file.size);
+            stmt->bind_int(5, VIDEO );
+            stmt->bind_text(6, file.mime_type);
+            stmt->bind_text(7, videofile->name());
+            // stmt->bind_int(7, imagefile->width());
+            // stmt->bind_int(8, imagefile->height());
+            stmt->bind_int(8, video_id );
+            stmt->update();
+            stmt_get_audio->reset();
+            stmt->reset();
+            return video_id;
+
+        } else {
+            squawk::db::Sqlite3Statement * stmt = stmtMap["INSERT_FILE_VIDEO"];
+            stmt->bind_int(1, parent);
+            stmt->bind_text(2, file.name);
+            stmt->bind_int(3, file.mtime);
+            stmt->bind_int(4, std::time(0));
+            stmt->bind_int(5, file.size);
+            stmt->bind_int(6, VIDEO );
+            stmt->bind_text(7, file.mime_type);
+            stmt->bind_text(8, videofile->name());
+            // stmt->bind_int(8, imagefile->width());
+            // stmt->bind_int(9, imagefile->height());
+            stmt->insert();
+            stmt_get_audio->reset();
+            stmt->reset();
+            return db->last_insert_rowid();
+        }
+    } catch( ::db::DbException * e ) {
+        LOG4CXX_FATAL(logger, "Can not save videofile, Exception:" << e->code() << "-> " << e->what());
+        //TODO release statements
+        throw;
+    }
+} */
 
 
 squawk::media::Album MediaDao::get_album(std::string path) {

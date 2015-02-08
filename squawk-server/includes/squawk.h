@@ -30,6 +30,8 @@ namespace squawk {
 
 static const bool DEBUG = true; //make macro
 
+enum FILE_TYPE { DIRECTORY = 0, IMAGE = 1, VIDEO = 2 };
+
 namespace media {
 
 inline std::string clean_name( std::string name ) {

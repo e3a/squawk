@@ -25,6 +25,7 @@
 #include "../db/database.h"
 
 #include "image.h"
+#include "media.h"
 
 namespace squawk {
 namespace media {
@@ -49,6 +50,7 @@ public:
 
     unsigned long getOrCreateDirectory(const std::string & path, const std::string & name, const unsigned long & parent, const int & type );
     unsigned long saveFile(const file_item & file, const unsigned long & parent, commons::image::Image * imagefile);
+    // TODO unsigned long saveFile(const file_item & file, const unsigned long & parent, commons::media::Video * videofile );
 
     squawk::media::Album get_album(std::string path);
     unsigned long save_album(std::string path, squawk::media::Album * album);

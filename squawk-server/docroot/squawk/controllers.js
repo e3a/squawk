@@ -239,6 +239,27 @@ var squawkControllers = angular.module('squawkControllers', [])
         element.append(frag);
         }
     };
+}]).directive('videoItem', ["$window", "$rootScope", function ($window, $rootScope) {
+    return {
+      restrict: 'E',
+        scope: {
+            video: '=video'
+        },
+    link: function(scope, element, attrs) {
+        element.html('');
+        var frag = document.createDocumentFragment();
+
+        var aAlbumRef = document.createElement("a");
+        aAlbumRef.setAttribute("href", "javascript:void(0)" );
+        aAlbumRef.setAttribute("onClick", "playVideo(\"" + scope.video.url + "\")" );
+        var spanTextAlbum = document.createTextNode( scope.video.name );
+        aAlbumRef.appendChild(spanTextAlbum);
+        frag.appendChild(aAlbumRef);
+        frag.appendChild(document.createElement("br"));
+
+        element.append(frag);
+        }
+    };
   }]);
 
 
@@ -271,8 +292,8 @@ squawkControllers.controller('ArtistListCtrl', ['$scope', '$http', function Arti
   });
   $scope.orderProp = 'artist'; */
 }]);
-squawkControllers.controller('VideoListCtrl', ['$scope', '$http', function ArtistListCtrl($scope, $http) {
-  $http.get('/api/video').success(function(data) {
+squawkControllers.controller('VideoListCtrl', ['$scope', '$http', '$routeParams', function ArtistListCtrl($scope, $http, $routeParams) {
+  $http.get('/video/' + $routeParams.videoId ).success(function(data) {
     $scope.videos = data;
   });
 }]);

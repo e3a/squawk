@@ -81,7 +81,7 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
             if( type == "audio" ) {
                 stmt_song = db->prepare_statement( "select songs.filename from tbl_cds_audiofiles songs where songs.ROWID = ?" );
             } else if( type == "video" ) {
-                stmt_song = db->prepare_statement( "select video.filename from tbl_cds_movies video where video.ROWID = ?" );
+                stmt_song = db->prepare_statement( "select video.filename from tbl_cds_files video where video.ROWID = ?" );
             } else if( squawk::DEBUG ) LOG4CXX_TRACE( logger, "can not find type: " << type )
 
             stmt_song->bind_int( 1, song_id );

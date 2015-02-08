@@ -24,7 +24,7 @@
 
 #include "ssdp.h"
 
-#include <boost/asio.hpp>
+#include <asio.hpp>
 
 namespace squawk {
 namespace ssdp {
@@ -38,7 +38,7 @@ public:
  /**
   * Create a new SSDPAsioConnection.
   */
-  SSDPAsioConnection(boost::asio::io_service& io_service,
+  SSDPAsioConnection(::asio::io_service& io_service,
       std::string listen_address,
       std::string multicast_address,
       int port
@@ -62,11 +62,15 @@ private:
   SSDPCallback * handler;
   std::string multicast_address;
   int multicast_port;
-  boost::asio::ip::udp::socket socket;
-  boost::asio::ip::udp::endpoint sender_endpoint;
-  void handle_receive_from(const boost::system::error_code& error, size_t bytes_recvd);
+  ::asio::ip::udp::socket socket;
+  ::asio::ip::udp::endpoint sender_endpoint;
+  void handle_receive_from(const ::asio::error_code&, size_t bytes_recvd);
   enum { max_length = 8192 };
   std::array< char, max_length > data;
+
+  /// Strand to ensure the connection's handlers are not called concurrently.
+  ::asio::io_service::strand strand_;
+
 };
 }}}
 #endif // SSDPASIOCONNECTION_H

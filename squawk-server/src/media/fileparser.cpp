@@ -32,6 +32,7 @@
 #include "http.h"
 #include "commons.h"
 #include "image.h"
+#include "media.h"
 
 // #include "Imlib2.h"
 
@@ -216,11 +217,19 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
     }
 
     if(files.find( VIDEOFILE ) != files.end()) {
+        std::string relative_path = path.substr( basepath.size() );
+        std::cout << "image path:" << relative_path << std::endl;
+        unsigned long path_id = mediaDao->createDirectory( relative_path );
+        //save file
         for(auto & video : files[VIDEOFILE] ) {
-            if(! mediaDao->exist_videofile( video.name, video.mtime, video.size, true ) ) {
+//TODO            if(! mediaDao->exist_videofile( video.name, video.mtime, video.size, true ) ) {
                 if(squawk::DEBUG) LOG4CXX_DEBUG(logger, "save video" << video.name )
-                mediaDao->save_videofile(video.name, video.mtime, video.size, video.mime_type);
-            }
+                        // TODO commons::media::Video videofile( video.name );
+                        // TODO mediaDao->saveFile( video, path_id, &videofile );
+
+                //create tumbs
+                //TODO
+//            }
         }
     }
     return dir_type;

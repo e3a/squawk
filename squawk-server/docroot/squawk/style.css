@@ -8,6 +8,7 @@ a:hover { color:Blue; text-decoration:underline; }
 a:active { color:Blue; text-decoration:underline; }
 
 .bold { font-weight:bold; }
+.hidden { visibility: hidden; }
 
 .body {
 -moz-column-count:5; /* Firefox */

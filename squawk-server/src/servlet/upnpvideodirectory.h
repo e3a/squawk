@@ -45,7 +45,7 @@ private:
     squawk::db::Sqlite3Database * db;
 
     /* get video count */
-    static constexpr const char * SQL_VIDEO_COUNT = "select count(*) from tbl_cds_movies";
+    static constexpr const char * SQL_VIDEO_COUNT = "select count(*) from tbl_cds_files where type=2";
     int videoCount() {
         int count;
         squawk::db::Sqlite3Statement * stmt_videos = NULL;
@@ -68,7 +68,7 @@ private:
         return count;
     }
     /* get videos */
-    static constexpr const char * SQL_VIDEOS = "select ROWID, name, filename, mime_type from tbl_cds_movies order by name";
+    static constexpr const char * SQL_VIDEOS = "select ROWID, name, filename, mime_type from tbl_cds_files where type=2 order by name";
     void videos( std::function<void(const int, const std::string, const std::string)> callback ) {
         squawk::db::Sqlite3Statement * stmt_videos = NULL;
         try {

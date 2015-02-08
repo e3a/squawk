@@ -22,7 +22,7 @@ when('/artist/:artistId/album', {
 templateUrl: 'album-list.html',
 controller: 'AlbumByArtistCtrl'
 }).
-when('/video', {
+when('/video/:videoId', {
 templateUrl: 'video-list.html',
 controller: 'VideoListCtrl'
 }).

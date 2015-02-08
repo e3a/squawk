@@ -66,7 +66,7 @@ void UpnpVideoDirectory::parseNode( commons::xml::XMLWriter * xmlWriter, commons
            xmlWriter->attribute(item_element, "restricted", "1");
 
            xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "title", name );
-           xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "class", "object.item.audioItem.videoItem" );
+           xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "class", "object.item.videoItem" );
 
            xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "date", /* year_ + */ "2014-01-01" ); //TODO
 

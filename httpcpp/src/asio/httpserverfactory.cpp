@@ -22,7 +22,7 @@
 #include <iostream>
 #include <string>
 #include <asio.hpp>
-#include <boost/bind.hpp>
+/* #include <boost/bind.hpp> */
 
 
 http::asio_impl::server * HttpServerFactory::httpd = nullptr;

@@ -24,7 +24,7 @@
 #include "commons.h"
 
 #define QUERY_SONG "select songs.filename from tbl_cds_audiofiles songs where songs.ROWID = ?"
-#define QUERY_VIDEO "select video.filename from tbl_cds_videos video where video.ROWID = ?"
+#define QUERY_VIDEO "select video.filename from tbl_cds_files video where video.ROWID = ?"
 
 namespace squawk {
 namespace api {

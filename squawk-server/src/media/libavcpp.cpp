@@ -23,6 +23,7 @@
 #include <cstring>
 
 #include "commons.h"
+#include "media.h"
 
 extern "C" {
 #include <libavformat/avformat.h>

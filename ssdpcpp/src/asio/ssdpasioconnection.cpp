@@ -20,7 +20,8 @@
 #include <mimetypes.h>
 #include <http.h>
 
-#include "boost/bind.hpp"
+#include <thread>
+#include <future>
 
 namespace squawk {
 namespace ssdp {
@@ -30,30 +31,36 @@ void SSDPAsioConnection::set_handler(SSDPCallback * _handler) {
   handler = _handler;
 }
 
-SSDPAsioConnection::SSDPAsioConnection(boost::asio::io_service& io_service,
+SSDPAsioConnection::SSDPAsioConnection(::asio::io_service& io_service,
     std::string listen_address,
     std::string multicast_address,
     int multicast_port)
-  : socket(io_service), multicast_address(multicast_address), multicast_port(multicast_port) {
+  : strand_(io_service), socket(io_service), multicast_address(multicast_address), multicast_port(multicast_port) {
   
-  boost::asio::ip::address _multicast_address = boost::asio::ip::address::from_string(multicast_address);
-  boost::asio::ip::address _listen_address = boost::asio::ip::address::from_string(listen_address);
+  ::asio::ip::address _multicast_address = ::asio::ip::address::from_string(multicast_address);
+  ::asio::ip::address _listen_address = ::asio::ip::address::from_string(listen_address);
     
   // Create the socket so that multiple may be bound to the same address.
-  boost::asio::ip::udp::endpoint listen_endpoint(_listen_address, multicast_port);
+  ::asio::ip::udp::endpoint listen_endpoint(_listen_address, multicast_port);
   socket.open(listen_endpoint.protocol());
-  socket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
+  socket.set_option(::asio::ip::udp::socket::reuse_address(true));
   socket.bind(listen_endpoint);
 
   // Join the multicast group.
   socket.set_option(
-      boost::asio::ip::multicast::join_group(_multicast_address));
+      ::asio::ip::multicast::join_group(_multicast_address));
 
-  socket.async_receive_from(
-      boost::asio::buffer(data, max_length), sender_endpoint,
-      boost::bind(&SSDPAsioConnection::handle_receive_from, this,
-	boost::asio::placeholders::error,
-	boost::asio::placeholders::bytes_transferred));
+  socket.async_receive_from(::asio::buffer(data, max_length), sender_endpoint,
+      strand_.wrap(
+        std::bind(&SSDPAsioConnection::handle_receive_from, this,
+          std::placeholders::_1,
+          std::placeholders::_2)));
+
+/*  socket.async_receive_from(
+      ::asio::buffer(data, max_length), sender_endpoint,
+      ::bind(&SSDPAsioConnection::handle_receive_from, this,
+    ::asio::placeholders::error,
+    ::asio::placeholders::bytes_transferred)); */
 }
 
 SSDPAsioConnection::~SSDPAsioConnection() {}
@@ -73,29 +80,35 @@ void SSDPAsioConnection::send(std::string request_line, std::map< std::string, s
 
   std::string message = create_header(request_line, headers);
 
-  boost::asio::io_service io_service;
-  boost::asio::ip::udp::endpoint endpoint(boost::asio::ip::address::from_string(multicast_address.c_str()), multicast_port);
-  boost::asio::ip::udp::socket socket(io_service, endpoint.protocol());
+  ::asio::io_service io_service;
+  ::asio::ip::udp::endpoint endpoint(::asio::ip::address::from_string(multicast_address.c_str()), multicast_port);
+  ::asio::ip::udp::socket socket(io_service, endpoint.protocol());
   socket.send_to(
-	boost::asio::buffer(message, message.length()), endpoint);
+    ::asio::buffer(message, message.length()), endpoint);
 }
 void SSDPAsioConnection::send(Response response) {
   std::string buffer = create_header(response.request_line, response.headers);
   socket.send_to(
-      boost::asio::buffer(buffer, buffer.length()), sender_endpoint);
+      ::asio::buffer(buffer, buffer.length()), sender_endpoint);
 }
-void SSDPAsioConnection::handle_receive_from(const boost::system::error_code& error, size_t bytes_recvd) {
+void SSDPAsioConnection::handle_receive_from(const ::asio::error_code & error, size_t bytes_recvd) {
   if (!error) {
       http::HttpRequest request;
      http::HttpParser::parse_http_request(request, data, bytes_recvd);
 //    std::map<std::string, std::string> map = squawk::utils::http::parse_header(); 
     handler->handle_receive(request);
 
-    socket.async_receive_from(
-      boost::asio::buffer(data, max_length), sender_endpoint,
-      boost::bind(&SSDPAsioConnection::handle_receive_from, this,
-      boost::asio::placeholders::error,
-      boost::asio::placeholders::bytes_transferred));
+    socket.async_receive_from(::asio::buffer(data, max_length), sender_endpoint,
+        strand_.wrap(
+          std::bind(&SSDPAsioConnection::handle_receive_from, this,
+            std::placeholders::_1,
+            std::placeholders::_2)));
+
+/*    socket.async_receive_from(
+      ::asio::buffer(data, max_length), sender_endpoint,
+      ::bind(&SSDPAsioConnection::handle_receive_from, this,
+      ::asio::placeholders::error,
+      ::asio::placeholders::bytes_transferred)); */
   }
 }
 }}}

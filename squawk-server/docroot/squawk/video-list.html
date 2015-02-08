@@ -1,13 +1,19 @@
 <div width="100%" style="border: solid blue">
-<video id="example_video_1" class="video-js vjs-default-skin"
-  controls preload="auto" width="640" height="264"
-  poster="http://video-js.zencoder.com/oceans-clip.png"
-  data-setup='{"example_option":true}'>
-  <source src="http://192.168.0.13:8080/media/video/14.mkv"></source>
+<script>
+    function playVideo( url ) {
+        alert( "ready:" + url );
+        var video = document.getElementById('example_video_1');
+        $('#example_video_1').attr('src', url);
+        video.load();
+    }
+</script>
+<video id="example_video_1" class="video-js vjs-default-skin" controls width="80%" height="80%">
  <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
 </video>
 
-    <div class="album" ng-repeat="video in videos">
-        <a href="/media/video/{{video.id}}.mkv">{{video.name}}</a>
+    <div ng-switch on="video.type" class="video" ng-repeat="video in videos">
+        <a ng-switch-when="0" href="/squawk/#/video/{{video.id}}">[] {{video.name}}</a>
+        <video-item ng-switch-when="2" video="video" />
+        <a ng-switch-default href="/media/{{video.id}}">D {{video.name}}</a>
     </div>
 </div>
