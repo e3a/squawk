@@ -131,7 +131,11 @@ namespace http {
   class HttpResponse {
   public:
       HttpResponse() {};
-      ~HttpResponse() {};
+      ~HttpResponse() {
+          if( body_istream ) {
+              delete body_istream; //TODO unique pointer
+          }
+      };
 
       size_t get_size() {
           return size;

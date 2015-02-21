@@ -24,9 +24,8 @@
 #include <map>
 
 #include <squawk.h>
+#include <media.h>
 #include "../squawkconfig.h"
-#include "libavcpp.h"
-#include "flacparser.h"
 #include "mediadao.h"
 
 #include "pcrecpp.h" 
@@ -40,22 +39,22 @@ namespace media {
 class FileParser {
   public:
     FileParser(squawk::db::Sqlite3Database * db, SquawkConfig * squawk_config) : mediaDao(new MediaDao(db)), squawk_config(squawk_config) {
-        parsers.insert( parsers.end(), new squawk::media::FlacParser() );
-        parsers.insert( parsers.end(), new squawk::media::LibAVcpp() );
-        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/audio" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
-        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/images" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
-        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/video" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
+//TODO        parsers.insert( parsers.end(), new squawk::media::FlacParser() );
+//TODO        parsers.insert( parsers.end(), new squawk::media::LibAVcpp() );
+        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/audio" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH ); //TODO not used
+        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/images" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH ); //TODO not used
+        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/video" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH ); //TODO not used
     };
     FileParser() {
-        parsers.insert( parsers.end(), new squawk::media::FlacParser() );
-        parsers.insert( parsers.end(), new squawk::media::LibAVcpp() );
+//TODO        parsers.insert( parsers.end(), new squawk::media::FlacParser() );
+//TODO        parsers.insert( parsers.end(), new squawk::media::LibAVcpp() );
     }
     ~FileParser() {
-        for( auto * parser : parsers )
-            delete parser;
+//TODO        for( auto * parser : parsers )
+//TODO            delete parser;
     }
     enum FILE_TYPE {MP3, OGG, FLAC, MUSEPACK, MONKEY_AUDIO, IMAGE, AUDIOFILE, IMAGEFILE, VIDEOFILE, UNKNOWN};
-    void parse(std::string path);
+    void parse( std::vector< std::string > & paths );
 
     enum DIRECTORY_TYPE { MUSIC, IMAGES, MOVIES, NONE };
 
@@ -68,7 +67,7 @@ class FileParser {
     SquawkConfig * squawk_config;
     MediaDao * mediaDao;
 
-    std::vector< MetadataParser* > parsers;
+//TODO    std::vector< MetadataParser* > parsers;
 
     std::map<std::string, int> statistic;
     DIRECTORY_TYPE _parse(const std::string & basepath, const std::string & path);

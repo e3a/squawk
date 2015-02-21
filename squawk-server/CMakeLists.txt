@@ -26,7 +26,7 @@ link_directories(${Boost_LIBRARY_DIR})
 
 set(SQUAWK src/squawkconfig.cpp)
 set(DATABASE src/db/sqlite3statement.cpp src/db/sqlite3database.cpp)
-set(MEDIA src/media/mediadao.cpp src/media/libavcpp.cpp src/media/fileparser.cpp src/media/flacparser.cpp)
+set(MEDIA src/media/mediadao.cpp src/media/fileparser.cpp)
 set(API src/api/apibrowseservlet.cpp src/api/apialbumlistservlet.cpp src/api/apialbumsletterservlet.cpp src/api/apialbumitemservlet.cpp
         src/api/apiartistlistservlet.cpp src/api/apivideolistservlet.cpp
         src/api/mediaservlet.cpp src/api/coverservlet.cpp
@@ -48,6 +48,7 @@ if (build_tests)
     include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIR} ${ID3_INCLUDE_DIR} ${FLAC++_INCLUDE_DIR} ${GTEST_INCLUDE_DIRS} includes)
     add_executable(testmain_server test/testmain.cpp
         test/TestTextParse.cpp
+        test/TestConfigParser.cpp
         #test/media/teststringparse.cpp
         test/media/testartist.cpp
         test/api/testapiartisthandler.cpp

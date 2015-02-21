@@ -148,11 +148,13 @@ private:
     }
 
     /* get artists */
-    static constexpr const char * SQL_ARTIST = "select ROWID, name from tbl_cds_artists order by name";
-    void artists( std::function<void(const int, const std::string)> callback ) {
+    static constexpr const char * SQL_ARTIST = "select ROWID, name from tbl_cds_artists order by name LIMIT ?, ?";
+    void artists( const int & start_index, const int & request_count, std::function<void(const int, const std::string)> callback ) {
         squawk::db::Sqlite3Statement * stmt_artists = NULL;
         try {
             stmt_artists = db->prepare_statement( SQL_ARTIST );
+            stmt_artists->bind_int( 1, start_index );
+            stmt_artists->bind_int( 2, request_count );
             while( stmt_artists->step() ) {
                 callback( stmt_artists->get_int( 0 ), stmt_artists->get_string(1) );
             }
@@ -200,12 +202,15 @@ private:
     /* get albums by artists */
     static constexpr const char * SQL_ARTIST_ALBUM = "select album.name, album.genre, album.year, album.ROWID " \
             "from tbl_cds_albums album, tbl_cds_artists_albums m, tbl_cds_artists artist " \
-            "where artist.ROWID = ? and album.ROWID = m.album_id and artist.ROWID = m.artist_id";
-    void albums( const int artist_id, std::function<void(const int, const std::string, const std::string, const std::string)> callback ) {
+            "where artist.ROWID = ? and album.ROWID = m.album_id and artist.ROWID = m.artist_id LIMIT ?,?";
+    void albums( const int & artist_id, const int & start_index, const int & request_count,
+                 std::function<void(const int, const std::string, const std::string, const std::string)> callback ) {
         squawk::db::Sqlite3Statement * stmt_artist_albums = NULL;
         try {
             stmt_artist_albums = db->prepare_statement( SQL_ARTIST_ALBUM );
             stmt_artist_albums->bind_int( 1, artist_id );
+            stmt_artist_albums->bind_int( 2, start_index );
+            stmt_artist_albums->bind_int( 3, request_count );
             while( stmt_artist_albums->step() ) {
                 callback( stmt_artist_albums->get_int( 3 ), stmt_artist_albums->get_string(0),
                           stmt_artist_albums->get_string(1), stmt_artist_albums->get_string(2) );

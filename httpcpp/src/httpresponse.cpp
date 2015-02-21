@@ -163,7 +163,7 @@ std::string HttpResponse::get_message_header() {
     }
     //add last Modified Date
     if( last_modified ){
-        ss << HTTP_HEADER_LAST_MODIFIED << std::string(": ") << time_to_string( gmtime( &last_modified ) ) << LINE_BREAK;
+        //TODO ss << HTTP_HEADER_LAST_MODIFIED << std::string(": ") << time_to_string( gmtime( &last_modified ) ) << LINE_BREAK;
     }
     //add now
     time_t now = time( nullptr );
@@ -193,7 +193,7 @@ void HttpResponse::set_mime_type(mime::MIME_TYPE type) {
 
 void HttpResponse::reset() {
     if( body_istream ) {
-        delete body_istream;
+        delete body_istream; //TODO unique pointer
     }
     body_istream = nullptr;
     body_stream.str( string( "" ) );

@@ -72,7 +72,7 @@ void FileServlet::do_get(HttpRequest & request, HttpResponse & response) {
     }
 
     // Open the file to send back.
-    std::ifstream * is = new std::ifstream(full_path.c_str(), std::ios::in | std::ios::binary);
+    std::ifstream * is = new std::ifstream(full_path.c_str(), std::ios::in | std::ios::binary); //TODO remove new
     if ( !is->is_open() ) {
         std::cout << "can not open file:" << full_path << std::endl;
         throw http_status::NOT_FOUND;
@@ -130,7 +130,7 @@ void FileServlet::do_head(HttpRequest & request, HttpResponse & response) {
     }
 
     // Open the file to send back.
-    std::ifstream * is = new std::ifstream(full_path.c_str(), std::ios::in | std::ios::binary);
+    std::ifstream * is = new std::ifstream(full_path.c_str(), std::ios::in | std::ios::binary); //TODO remove new
     if ( !is->is_open() ) {
         std::cout << "can not open file:" << full_path << std::endl;
         throw http_status::NOT_FOUND;

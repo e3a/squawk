@@ -132,3 +132,24 @@ TEST( MediaTest, ParseDivxWiegelesHeliSki_DivXPlus_19Mbps) {
     ASSERT_STREQ( "Encoded in DivX Plus HD!", media_file.getTag( commons::media::MediaFile::COMMENT ).c_str() );
 
 }
+TEST( MediaTest, ParseMkvCover ) {
+    commons::media::MediaFile media_file = commons::media::MediaParser::parseFile( std::string(TESTFILES) +  "cover_art.mkv" );
+
+    ASSERT_EQ( 1, media_file.getAudioStreams().size() );
+    ASSERT_EQ( 0, media_file.getAudioStreams().front().bitrate() );
+    ASSERT_EQ( 2, media_file.getAudioStreams().front().channels() );
+    ASSERT_EQ( 0, media_file.getAudioStreams().front().bitsPerSample() );
+    ASSERT_EQ( 44100, media_file.getAudioStreams().front().sampleFrequency() );
+
+    ASSERT_EQ( 1, media_file.getVideoStreams().size() );
+    ASSERT_EQ( 1272, media_file.getVideoStreams()[0].width() );
+    ASSERT_EQ( 720, media_file.getVideoStreams()[0].height() );
+
+    ASSERT_EQ( 156, media_file.duration() );
+
+    ASSERT_EQ( 2, media_file.tagNames().size() );
+    ASSERT_STREQ( "Dexter Season 5 trailer", media_file.getTag( commons::media::MediaFile::TITLE ).c_str() );
+//TODO    ASSERT_STREQ( "Wiegeles HeliSki", media_file.getTag( commons::media::MediaFile::TITLE ).c_str() );
+    ASSERT_STREQ( "", media_file.getTag( commons::media::MediaFile::COMMENT ).c_str() );
+
+}

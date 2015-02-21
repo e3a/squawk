@@ -1,6 +1,7 @@
 #ifndef UPNP_H
 #define UPNP_H
 
+#include <memory>
 #include <map>
 #include <ostream>
 #include <string>
@@ -20,6 +21,22 @@ namespace commons {
  * \brief namespace for the upnp utilities.
  */
 namespace upnp {
+
+/** @brief upnp:class:object.container */
+const static std::string UPNP_CLASS_CONTAINER = "object.container";
+/** @brief upnp:class:object.container.album.musicAlbum */
+const static std::string UPNP_CLASS_MUSIC_ALBUM = "object.container.album.musicAlbum";
+/** @brief upnp:class:object.container.person.musicArtist */
+const static std::string UPNP_CLASS_MUSIC_ARTIST = "object.container.person.musicArtist";
+/** @brief upnp:class:object.container.person.musicArtist */
+const static std::string UPNP_CLASS_MUSIC_TRACK = "object.item.audioItem.musicTrack";
+
+/** @brief Object ID */
+const static std::string OBJECT_ID = "ObjectID";
+/** @brief Start Index Parameter */
+const static  std::string START_INDEX = "StartingIndex";
+/** @brief Requested Count Parameter */
+const static std::string REQUESTED_COUNT = "RequestedCount";
 
 /**
  * @brief XML SOAP Namespace
@@ -122,43 +139,74 @@ private:
     int total_matches_;
     int update_id_;
 };
+/**
+ * @brief The UpnpContentDirectoryRequest class
+ */
 class UpnpContentDirectoryRequest {
 public:
-        enum TYPE { BROWSE, PROTOCOL_INFO };
-        UpnpContentDirectoryRequest( TYPE type ) : type( type ) {};
-        const TYPE type;
-        void addValue( std::string key, std::string value ) {
-            props[ key ] = value;
-        };
-        std::vector< std::string > getNames() {
-            std::vector< std::string > names;
-            for( const auto &iter : props ) {
-                names.push_back( iter.first );
-            }
-            return names;
-        };
-        std::string getValue( const std::string & key ) {
-            return props[ key ];
-        };
-        bool contains( const std::string & key ) {
-            return( props.find( key ) != props.end() );
-        };
-        bool contains( const std::string & key, const std::string & value ) {
-            if( contains( key ) ) {
-                return props[ key ] == value;
-            }
-            return false;
-        };
+
+    /** The Reqquest Types */
+    enum TYPE { BROWSE, PROTOCOL_INFO };
+    /**
+     * @brief UpnpContentDirectoryRequest
+     * @param type
+     */
+    UpnpContentDirectoryRequest( TYPE type ) : type( type ) {}
+    const TYPE type;
+    void addValue( std::string key, std::string value ) {
+        props[ key ] = value;
+    }
+    /**
+     * @brief get the property names.
+     * @return
+     */
+    std::vector< std::string > getNames() {
+        std::vector< std::string > names;
+        for( const auto &iter : props ) {
+            names.push_back( iter.first );
+        }
+        return names;
+    }
+    /**
+     * @brief get property value for a key.
+     * @param key
+     * @return
+     */
+    std::string getValue( const std::string & key ) {
+        return props[ key ];
+    }
+    /**
+     * @brief test if properties contains a key.
+     * @param key
+     * @return
+     */
+    bool contains( const std::string & key ) {
+        return( props.find( key ) != props.end() );
+    }
+    /**
+     * @brief test if properties with key and value are equal.
+     * @param key
+     * @param value
+     * @return
+     */
+    bool contains( const std::string & key, const std::string & value ) {
+        if( contains( key ) ) {
+            return props[ key ] == value;
+        }
+        return false;
+    }
+    /**
+     * @brief operator write the properties to the ostream.
+     */
     friend std::ostream& operator <<(std::ostream &os,const UpnpContentDirectoryRequest &obj) {
-        os <<  "UpnpContentDirectoryRequest::Browse\n";
+        os <<  "UpnpContentDirectoryRequest::";
         for( const auto &iter : obj.props ) {
             os << "\t" << iter.first << " = " << iter.second << "\n";
         }
         return os;
-    };
-
+    }
 private:
-        std::map< std::string, std::string > props;
+    std::map< std::string, std::string > props;
 };
 
 inline UpnpContentDirectoryRequest parseRequest( std::string request ) {

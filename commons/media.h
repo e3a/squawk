@@ -23,6 +23,9 @@ extern "C" {
 }
 
 namespace commons {
+/**
+ * @brief Media Utilities.
+ */
 namespace media {
 
 /**
@@ -217,6 +220,15 @@ public:
         }
         return result;
     }
+    /**
+     * @brief check if tags contains key.
+     * @param name tag key
+     * @return
+     */
+    bool hasTag( const TAG & key ) {
+        return tags.find( key ) != tags.end();
+    }
+
 private:
     int _duration;
     std::string filename;
@@ -280,7 +292,20 @@ public:
                     }
                     case AVMEDIA_TYPE_DATA: std::cout << "AVMEDIA_TYPE_DATA" << std::endl; break;
                     case AVMEDIA_TYPE_SUBTITLE: std::cout << "AVMEDIA_TYPE_SUBTITLE" << std::endl; break;
-                    case AVMEDIA_TYPE_ATTACHMENT: std::cout << "AVMEDIA_TYPE_ATTACHMENT" << std::endl; break;
+                    case AVMEDIA_TYPE_ATTACHMENT: {
+
+                        std::cout << "AVMEDIA_TYPE_ATTACHMENT" << std::endl;
+                        open_input_decoder(i, &fmt_ctx, &input_codec_context);
+                        std::cout << "AVMEDIA_TYPE_ATTACHMENT, codec_id:" << input_codec_context->codec_id << std::endl;
+                        if( input_codec_context->codec_id == AV_CODEC_ID_MJPEG ) {
+                            std::cout << "code is AV_CODEC_ID_MJPEG:" << std::endl;
+                        } else if( input_codec_context->codec_id == AV_CODEC_ID_MJPEGB ) {
+                            std::cout << "code is AV_CODEC_ID_MJPEGB:" << std::endl;
+                        } else if( input_codec_context->codec_id == AV_CODEC_ID_LJPEG ) {
+                            std::cout << "code is AV_CODEC_ID_LJPEG:" << std::endl;
+                        }
+                        break;
+                    }
                     case AVMEDIA_TYPE_NB: std::cout << "AVMEDIA_TYPE_NB" << std::endl; break;
                     default: std::cout << "UNKNOWN" << std::endl;
                 }
@@ -291,8 +316,6 @@ public:
                 std::cout << tag->key << ":"<< tag->value << std::endl;
                 if(std::strcmp(tag->key, "TITLE")==0 ||
                         std::strcmp(tag->key, "title")==0) {
-                    char res[100];
-                    strcpy(res, tag->value);
                     media_file.addTag( MediaFile::TITLE, commons::string::trim( tag->value ) );
                 } else if(std::strcmp(tag->key, "ARTIST")==0 ||
                           std::strcmp(tag->key, "artist")==0 ||

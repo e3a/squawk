@@ -167,7 +167,9 @@ void SquawkServer::start() {
 
     //rescan the media directory
     if(squawk_config->rescan) {
-     parser->parse(squawk_config->string_value(CONFIG_MEDIA_DIRECTORY));
+        std::vector< std::string > directories;
+        directories.push_back( squawk_config->string_value(CONFIG_MEDIA_DIRECTORY) );
+        parser->parse( directories );
     } else {
         sleep( 5 ); //wait for the server to start
     }

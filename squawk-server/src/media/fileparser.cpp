@@ -42,39 +42,42 @@ namespace media {
 log4cxx::LoggerPtr FileParser::logger(log4cxx::Logger::getLogger("squawk.media.FileParser"));
 pcrecpp::RE FileParser::re("(.*)/CD[\\d+]");
 
-void FileParser::parse(std::string path) {
-    LOG4CXX_DEBUG(logger, "import files:" << path)
+void FileParser::parse( std::vector< std::string > & paths ) {
 
     long start_time = std::time( 0 );
     statistic.clear();
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();
-    if( commons::filesystem::is_directory(path) ) {
-        mediaDao->start_transaction();
-        _parse(path,path);
+    mediaDao->start_transaction();
 
-        //output statistic
-        end = std::chrono::system_clock::now();
-        std::chrono::duration<double> elapsed_seconds = end-start;
-
-        mediaDao->sweep( start_time );
-
-        std::stringstream ss;
-        int sum = 0;
-        ss << std::endl << "***************************************************" << std::endl;
-
-        for(std::map< std::string, int >::iterator iter = statistic.begin(); iter != statistic.end(); ++iter) {
-            ss << iter->first << "\t" << iter->second << std::endl;
-            sum += iter->second;
+    for( auto & path : paths ) {
+        if( commons::filesystem::is_directory(path) ) {
+            if( squawk::DEBUG ) LOG4CXX_DEBUG(logger, "import files:" << path)
+            _parse(path,path);
+        } else {
+            LOG4CXX_WARN(logger, path << "is not a directory.")
         }
-        ss << "Total:\t" << sum << std::endl;
-        ss << "Time:\t" << elapsed_seconds.count() << std::endl;
-        LOG4CXX_DEBUG(logger, ss.str())
-        mediaDao->end_transaction();
-
-    } else {
-        LOG4CXX_WARN(logger, path << "is not a directory.")
     }
+
+    //output statistic
+    end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end-start;
+
+    mediaDao->sweep( start_time );
+
+    std::stringstream ss;
+    int sum = 0;
+    ss << std::endl << "***************************************************" << std::endl;
+
+    for(std::map< std::string, int >::iterator iter = statistic.begin(); iter != statistic.end(); ++iter) {
+        ss << iter->first << "\t" << iter->second << std::endl;
+        sum += iter->second;
+    }
+    ss << "Total:\t" << sum << std::endl;
+    ss << "Time:\t" << elapsed_seconds.count() << std::endl;
+    LOG4CXX_DEBUG(logger, ss.str())
+    mediaDao->end_transaction();
+
 }
 
 FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, const std::string & path) {
@@ -135,23 +138,27 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
 
             if(! mediaDao->exist_audiofile( (*list_iter).name, (*list_iter).mtime, (*list_iter).size, true ) ) {
 
-                //get the metadata from the modules
-                squawk::media::Audiofile audiofile;
-                bool metadata_found = false;
-                for( MetadataParser * parser : parsers ) {
-                    if( parser->parse(audiofile, (*list_iter).mime_type, (*list_iter).name) ) {
-                        metadata_found = true;
-                        break;
-                    }
+                //parse the mediafile
+                commons::media::MediaFile media_file = commons::media::MediaParser::parseFile( (*list_iter).name);
+                if( media_file.getAudioStreams().size() > 1 ) {
+                    LOG4CXX_WARN(logger, "more then one audio streams (" << media_file.getAudioStreams().size() << ") found in " << (*list_iter).name )
                 }
-                if( ! metadata_found)
-                    LOG4CXX_WARN(logger, "no metadata found for file:" << (*list_iter).name)
 
-                if( ! album.equals( audiofile.album )) {
+                if( ! album.equals( media_file.getTag( commons::media::MediaFile::ALBUM ) ) ) {
 
-                    album = squawk::media::Album( audiofile.album, audiofile.genre, audiofile.year );
-                    for(auto & str_artist : audiofile.artist ) {
-                        squawk::media::Artist * artist = new Artist( str_artist );
+                    album = squawk::media::Album( media_file.getTag( commons::media::MediaFile::ALBUM ),
+                                                  media_file.getTag( commons::media::MediaFile::GENRE ),
+                                                  media_file.getTag( commons::media::MediaFile::YEAR ) );
+
+                    if( media_file.hasTag( commons::media::MediaFile::ARTIST ) ) {
+                        squawk::media::Artist * artist = new Artist( media_file.getTag( commons::media::MediaFile::ARTIST ) ); //TODO remove new
+                        if( album.add( artist ) ) {
+                            unsigned long new_artist_id = mediaDao->save_artist( artist );
+                            artist->id( new_artist_id );
+                        } else delete artist;
+                    }
+                    if( media_file.hasTag( commons::media::MediaFile::COMPOSER ) ) {
+                        squawk::media::Artist * artist = new Artist( media_file.getTag( commons::media::MediaFile::COMPOSER ) ); //TODO remove new
                         if( album.add( artist ) ) {
                             unsigned long new_artist_id = mediaDao->save_artist( artist );
                             artist->id( new_artist_id );
@@ -159,12 +166,19 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
                     }
                     album.id = mediaDao->save_album(get_album_clean_path(path), &album);
                 }
-                squawk::media::Song song(audiofile.title, (*list_iter).mime_type, (*list_iter).name, (*list_iter).mtime, audiofile.sample_rate, audiofile.bitrate,
-                                         (*list_iter).size, audiofile.sample_frequency, audiofile.length, audiofile.track, audiofile.disc, audiofile.channels,
-                                         audiofile.bits_per_sample, album.artists);
+                squawk::media::Song song(media_file.getTag( commons::media::MediaFile::TITLE ),
+                                         (*list_iter).mime_type, (*list_iter).name, (*list_iter).mtime,
+                                         media_file.getAudioStreams()[0].bitrate(),
+                                         (*list_iter).size,
+                                         media_file.getAudioStreams()[0].sampleFrequency(),
+                                         media_file.duration(),
+                                         commons::string::parse_string<int>( media_file.getTag( commons::media::MediaFile::TRACK ) ),
+                                         commons::string::parse_string<int>( media_file.getTag( commons::media::MediaFile::DISC ) ),
+                                         media_file.getAudioStreams()[0].channels(),
+                                         media_file.getAudioStreams()[0].bitsPerSample(),
+                                         album.artists);
                 mediaDao->save_audiofile((*list_iter).name, (*list_iter).mtime, (*list_iter).size, album.id, &song);
             }
-
         }
         files.erase(AUDIOFILE);
     }
@@ -187,7 +201,7 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
                     std::stringstream image_stream;
                     image_stream << squawk_config->string_value(CONFIG_TMP_DIRECTORY) << "/image-" << image_id << ".jpg";
 
-                    image.scale(1000, 1000, image_stream.str());
+                    //TODO image.scale(1000, 1000, image_stream.str());
                     if( (*list_iter).type == squawk::media::file_item::COVER ) {
                         std::stringstream cover_stream;
                         cover_stream << squawk_config->string_value(CONFIG_TMP_DIRECTORY) << "/" << album.id << ".jpg";

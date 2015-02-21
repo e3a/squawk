@@ -59,6 +59,10 @@ inline std::string get_letter( const std::string & clean_name ) {
  */
 struct Artist {
 public:
+    /**
+     * @brief Artist Class.
+     * @param name The Artist Name.
+     */
     Artist( const std::string & name ) :
         name_(name),
         clean_name_(::squawk::media::clean_name( name_ )),
@@ -85,15 +89,15 @@ private:
  * \brief The song entity.
  */
 struct Song {
-    Song() : id(0), title(""), mime_type(""), filename(""), mtime(0), samplerate(0), bitrate(0), size(0), sampleFrequency(0),
+    Song() : id(0), title(""), mime_type(""), filename(""), mtime(0), bitrate(0), size(0), sampleFrequency(0),
         playLength(0), track(0), disc(0), channels(0), bits_per_sample(0) {}
-    Song(std::string title, std::string mime_type, std::string filename, int mtime, int samplerate, int bitrate, int size,
+    Song(std::string title, std::string mime_type, std::string filename, int mtime, int bitrate, int size,
          int sampleFrequency, int playLength, int track, int disc, int channels, int bits_per_sample, std::list< Artist *> artist) :
-        id(0), title(title), mime_type(mime_type), filename(filename), mtime(mtime), samplerate(samplerate), bitrate(bitrate), size(size),
+        id(0), title(title), mime_type(mime_type), filename(filename), mtime(mtime), bitrate(bitrate), size(size),
         sampleFrequency(sampleFrequency), playLength(playLength), track(track), disc(disc), channels(channels), bits_per_sample(bits_per_sample), artist(artist) {}
     unsigned long id;
     std::string title, mime_type, filename, album, genre, comment, year;
-    int mtime, samplerate, bitrate, size, sampleFrequency, bits_per_sample, playLength, track, disc, channels;
+    int mtime, bitrate, size, sampleFrequency, bits_per_sample, playLength, track, disc, channels;
     std::list< Artist *> artist;
 };
 /**

@@ -26,12 +26,25 @@
 #include "media/fileparser.h"
 #include "ssdp.h"
 
+/**
+ * @brief The SquawkServer Class
+ */
 class SquawkServer {
   public:
+    /**
+     * @brief Create new Squawk Server.
+     * @param squawk_config The configuration Object.
+     */
     SquawkServer(squawk::SquawkConfig * squawk_config) : squawk_config(squawk_config) {}
     virtual ~SquawkServer() {}
 
+    /**
+     * @brief Start the Server.
+     */
     void start();
+    /**
+     * @brief Stop the Server.
+     */
     void stop();
 
   private:
