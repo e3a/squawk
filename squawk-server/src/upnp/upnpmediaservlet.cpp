@@ -76,7 +76,7 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
 
         try {
 
-            LOG4CXX_TRACE( logger, "song_id: " << type << ":" << song_id )
+            LOG4CXX_TRACE( logger, "id: " << type << ":" << song_id )
 
             if( type == "audio" ) {
                 stmt_song = db->prepare_statement( "select songs.filename from tbl_cds_audiofiles songs where songs.ROWID = ?" );
@@ -86,13 +86,7 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
 
             stmt_song->bind_int( 1, song_id );
             if( stmt_song->step() ) {
-                std::string filename = stmt_song->get_string(0);
-                if( ! commons::string::starts_with( filename, mediadirectory )) {
-                    throw ::http::http_status::BAD_REQUEST;
-                }
-
-                LOG4CXX_TRACE( logger, "song_file: " << filename )
-                request.uri = filename.substr( mediadirectory.length(), filename.length() );
+                request.uri = stmt_song->get_string(0);
 
             } else {
                 LOG4CXX_TRACE( logger, "file not found: " << song_id )

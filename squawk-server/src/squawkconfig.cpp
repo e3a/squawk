@@ -26,6 +26,8 @@
 #include <iostream>
 #include <uuid/uuid.h>
 
+#include "commons.h"
+#include "xml.h"
 
 //TODO remove
 #include <unistd.h>
@@ -37,7 +39,7 @@
 "\t-r [ --rescan ]          rescan database at startup.\n" \
 "\t-l [ --logger ] arg      logger properties file. \n" \
 "\t-c [ --config-file ] arg configuration properties file.\n" \
-"\t--media-directory arg    media path.\n" \
+"\t--media-directory arg    media paths. (repeat option for multiple paths)\n" \
 "\t--http-ip arg            http server IP.\n" \
 "\t--http-port arg          http server port.\n" \
 "\t--http-docroot arg       http server docroot.\n" \
@@ -50,109 +52,116 @@
 
 namespace squawk {
 
-bool SquawkConfig::exist(std::string key) {
-  return ( store.find(key) != store.end());
+std::string SquawkConfig::logger() {
+    if(  store.find( CONFIG_LOGGER_PROPERTIES ) != store.end() ) {
+        return store[ CONFIG_LOGGER_PROPERTIES ][0];
+    } else return std::string();
 }
-void SquawkConfig::value(std::string key, std::string value) {
-  store[key] = value;
+std::string SquawkConfig::multicastAddress() {
+    return store[ CONFIG_MULTICAST_ADDRESS ][0];
 }
-void SquawkConfig::value(std::string key, int value) {
-  std::ostringstream ss;
-  ss << value;
-  store[key] = ss.str();
+int SquawkConfig::multicastPort() {
+    return commons::string::parse_string<int>( store[ CONFIG_MULTICAST_PORT ][0] );
 }
-std::string SquawkConfig::string_value(std::string key) {
-  return store[key];
+std::string SquawkConfig::httpAddress() {
+    return store[ CONFIG_HTTP_IP ][0];
 }
-int SquawkConfig::int_value(std::string key) {
-  return atoi(store[key].c_str());
+int SquawkConfig::httpPort() {
+    return commons::string::parse_string<int>( store[ CONFIG_HTTP_PORT ][0] );
 }
-
+std::string SquawkConfig::localListenAddress() {
+    return store[ CONFIG_LOCAL_LISTEN_ADDRESS ][0];
+}
+std::string SquawkConfig::tmpDirectory() {
+    return store[ CONFIG_TMP_DIRECTORY ][0];
+}
+std::string SquawkConfig::databaseFile() {
+    return store[ CONFIG_DATABASE_FILE ][0];
+}
+std::string SquawkConfig::docRoot() {
+    return store[ CONFIG_HTTP_DOCROOT ][0];
+}
+std::vector< std::string > SquawkConfig::mediaDirectories() {
+    return store[ CONFIG_MEDIA_DIRECTORY ];
+}
+std::string SquawkConfig::configFile() {
+    return store[ CONFIG_FILE ][0];
+}
+std::string SquawkConfig::uuid() {
+    return store[ CONFIG_UUID ][0];
+}
 
 bool SquawkConfig::validate() {
     bool valid = true;
-    if(! exist(CONFIG_FILE)) {
+    if(store.find( CONFIG_FILE ) == store.end()) {
         std::cerr << "* the configuration file is not set." << std::endl;
         valid = false;
-    } if(! exist(CONFIG_MEDIA_DIRECTORY)) {
+    } if(store.find( CONFIG_MEDIA_DIRECTORY ) == store.end()) {
         std::cerr << "* the media directory location is not set." << std::endl;
         valid = false;
-    } if(! exist(CONFIG_HTTP_DOCROOT)) {
+    } if(store.find( CONFIG_HTTP_DOCROOT ) == store.end()) {
         std::cerr << "* the docroot location is not set." << std::endl;
         valid = false;
-    } if(! exist(CONFIG_DATABASE_FILE)) {
+    } if(store.find( CONFIG_DATABASE_FILE ) == store.end()) {
         std::cerr << "* the database file is not set." << std::endl;
         valid = false;
-    } if(! exist(CONFIG_TMP_DIRECTORY)) {
+    } if(store.find( CONFIG_TMP_DIRECTORY ) == store.end()) {
         std::cerr << "* the folder for the temporary files is not set." << std::endl;
         valid = false;
 
-    } if(! exist(CONFIG_HTTP_IP)) {
-        value(CONFIG_HTTP_IP, std::string("0.0.0.0"));
-    } if(! exist(CONFIG_LOCAL_LISTEN_ADDRESS)) {
-        value(CONFIG_LOCAL_LISTEN_ADDRESS, std::string("0.0.0.0"));
-    } if(! exist(CONFIG_MULTICAST_ADDRESS)) {
-        value(CONFIG_MULTICAST_ADDRESS, std::string("239.255.255.250"));
-    } if(! exist(CONFIG_MULTICAST_PORT)) {
-        value(CONFIG_MULTICAST_PORT, 1900);
-    } if(! exist(CONFIG_HTTP_PORT)) {
-        value(CONFIG_HTTP_PORT, 8080);
-    } if(! exist(CONFIG_HTTP_THREADS)) {
-        value(CONFIG_HTTP_THREADS, 20);
-    } if(! exist(CONFIG_UUID)) {
+    } if(store.find( CONFIG_HTTP_IP ) == store.end()) {
+        setValue(CONFIG_HTTP_IP, std::string("0.0.0.0"));
+    } if(store.find( CONFIG_LOCAL_LISTEN_ADDRESS ) == store.end()) {
+        setValue(CONFIG_LOCAL_LISTEN_ADDRESS, std::string("0.0.0.0"));
+    } if(store.find( CONFIG_MULTICAST_ADDRESS ) == store.end()) {
+        setValue(CONFIG_MULTICAST_ADDRESS, std::string("239.255.255.250"));
+    } if(store.find( CONFIG_MULTICAST_PORT ) == store.end()) {
+        setValue(CONFIG_MULTICAST_PORT, "1900");
+    } if(store.find( CONFIG_HTTP_PORT ) == store.end()) {
+        setValue(CONFIG_HTTP_PORT, "8080");
+    } if(store.find( CONFIG_UUID ) == store.end()) {
         uuid_t out;
         uuid_generate_random((unsigned char *)&out);
         char buffer[37];
         uuid_unparse((unsigned char *)&out, buffer);
-        value(CONFIG_UUID, std::string(buffer));
+        setValue( CONFIG_UUID, std::string(buffer) );
     }
     return valid;
 }
+void SquawkConfig::load( std::string filename ) {
 
-bool SquawkConfig::load(std::string filename) {
+    std::ifstream t( filename ); //let the XMLReader load the file.
+    std::stringstream buffer;
+    buffer << t.rdbuf();
 
-    size_t size;
-    char *buffer = new char[255];
-    buffer = getcwd( buffer, size);
-    std::cout << "current dir: " << buffer << std::endl;
-
-
-
-
-  std::filebuf fb;
-  if (fb.open (filename.c_str(), std::ios::in)) {
-    std::istream is(&fb);
-    
-    for (std::string line; std::getline(is, line); ) {
-      int pos = line.find("=");
-      if(pos != std::string::npos) {
-        std::string key = line.substr(0, pos);
-        std::string value = line.substr(pos+1, line.length());
-        if(! exist(key)) {
-            store[key] = value;
+    commons::xml::XMLReader reader( buffer.str() );
+    std::vector< commons::xml::Node > root_node = reader.getElementsByName ( "squawk" );
+    for( auto & node : root_node[0].children () ) {
+        if( node.name() == "media-directories" ) {
+            for( auto & dir : node.children() ) {
+                setValue( CONFIG_MEDIA_DIRECTORY, dir.content(), true, true );
+            }
+        } else {
+            setValue( node.name(), node.content(), false, false );
         }
-      }
     }
-    fb.close();
-    return true;
-  }
-  return false;
 }
-void SquawkConfig::save(std::string filename) {
-  std::ofstream file;
-  file.open( filename.c_str());
-  if (file.is_open()) {
-    for(std::map< std::string, std::string >::iterator iter = store.begin(); iter != store.end(); ++iter) {
-      file << iter->first << "=" << iter->second << std::endl;
+void SquawkConfig::save(const std::string & filename) {
+    commons::xml::XMLWriter writer;
+    commons::xml::Node root_node = writer.element( "squawk" );
+    for( auto & itr : store ) {
+        if( itr.first ==  CONFIG_MEDIA_DIRECTORY ) {
+            commons::xml::Node directories = writer.element( root_node, "", "media-directories" );
+            for( auto & dir : itr.second ) {
+                writer.element( directories, "", itr.first, dir );
+            }
+        } else {
+            writer.element( root_node, "", itr.first, itr.second[0] );
+        }
     }
-    file.close();
-  } else {
-    std::cerr << "can not open configuration file at:" << filename << std::endl;
-    throw -1;
-  }
+    writer.write( filename, true );
 }
 bool SquawkConfig::parse(int ac, const char* av[]) {
-    std::stringstream buffer;
     bool valid = true;
     for(int i=0; i<ac; i++) {
         //search for switches
@@ -167,29 +176,27 @@ bool SquawkConfig::parse(int ac, const char* av[]) {
 
         } else if( i + 1 < ac ) {
             if(std::string(av[i]) == std::string("-c") || std::string(av[i]) == std::string("--config-file")) {
-                value(CONFIG_FILE, std::string(av[++i]));
+                setValue(CONFIG_FILE, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("-l") || std::string(av[i]) == std::string("--logger")) {
-                value(CONFIG_LOGGER_PROPERTIES, std::string(av[++i]));
+                setValue(CONFIG_LOGGER_PROPERTIES, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--media-directory")) {
-                value(CONFIG_MEDIA_DIRECTORY, std::string(av[++i]));
+                setValue(CONFIG_MEDIA_DIRECTORY, std::string(av[++i]), true, true );
             } else if(std::string(av[i]) == std::string("--http-ip")) {
-                value(CONFIG_HTTP_IP, std::string(av[++i]));
+                setValue(CONFIG_HTTP_IP, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--http-port")) {
-                value(CONFIG_HTTP_PORT, std::string(av[++i]));
+                setValue(CONFIG_HTTP_PORT, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--http-docroot")) {
-                value(CONFIG_HTTP_DOCROOT, std::string(av[++i]));
-            } else if(std::string(av[i]) == std::string("--http-threads")) {
-                value(CONFIG_HTTP_THREADS, std::string(av[++i]));
+                setValue(CONFIG_HTTP_DOCROOT, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--database-file")) {
-                value(CONFIG_DATABASE_FILE, std::string(av[++i]));
+                setValue(CONFIG_DATABASE_FILE, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--tmp-directory")) {
-                value(CONFIG_TMP_DIRECTORY, std::string(av[++i]));
+                setValue(CONFIG_TMP_DIRECTORY, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--local-address")) {
-                value(CONFIG_LOCAL_LISTEN_ADDRESS, std::string(av[++i]));
+                setValue(CONFIG_LOCAL_LISTEN_ADDRESS, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--multicast-address")) {
-                value(CONFIG_MULTICAST_ADDRESS, std::string(av[++i]));
+                setValue(CONFIG_MULTICAST_ADDRESS, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--multicast-port")) {
-                value(CONFIG_MULTICAST_PORT, std::string(av[++i]));
+                setValue(CONFIG_MULTICAST_PORT, std::string(av[++i]));
             }
         } else {
             std::cerr << "parameter not set for key " << std::string(av[i]) << std::endl;

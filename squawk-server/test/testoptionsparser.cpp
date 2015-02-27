@@ -1,6 +1,5 @@
-
 /*
-    <one line to give the library's name and an idea of what it does.>
+    Test the Squawk configuration parser.
     Copyright (C) 2013  <copyright holder> <email>
 
     This library is free software; you can redistribute it and/or
@@ -28,11 +27,11 @@ TEST(SquawkParseOptions, TestConfigfile) {
     const char * options[3];
     options[0] = "-r";
     options[1] = "--config-file";
-    options[2] = "/foo/bar.properties";
+    options[2] = "/foo/bar.xml";
     squawk::SquawkConfig config;
 
     ASSERT_TRUE(config.parse(3, options));
-    EXPECT_EQ(std::string("/foo/bar.properties"), config.string_value(CONFIG_FILE));
+    EXPECT_EQ(std::string("/foo/bar.xml"), config.configFile() );
     ASSERT_TRUE(config.rescan);
 }
 
@@ -40,7 +39,7 @@ TEST(SquawkParseOptions, TestAllOptions) {
     const char * options[25];
     options[0] = "-r";
     options[1] = "--config-file";
-    options[2] = "/foo/bar.properties";
+    options[2] = "/foo/bar.xml";
     options[3] = "--logger";
     options[4] = "/foo/bar.logger";
     options[5] = "--media-directory";
@@ -67,26 +66,25 @@ TEST(SquawkParseOptions, TestAllOptions) {
     squawk::SquawkConfig config;
 
     ASSERT_TRUE(config.parse(25, options));
-    EXPECT_EQ(std::string("/foo/bar.properties"), config.string_value(CONFIG_FILE));
+    EXPECT_EQ(std::string("/foo/bar.xml"), config.configFile() );
     ASSERT_TRUE(config.rescan);
-    EXPECT_EQ(std::string("/foo/bar.logger"), config.string_value(CONFIG_LOGGER_PROPERTIES));
-    EXPECT_EQ(std::string("/foo/bar"), config.string_value(CONFIG_MEDIA_DIRECTORY));
-    EXPECT_EQ(std::string("127.0.0.1"), config.string_value(CONFIG_HTTP_IP));
-    EXPECT_EQ(std::string("8080"), config.string_value(CONFIG_HTTP_PORT));
-    EXPECT_EQ(std::string("/foo/bar/docroot"), config.string_value(CONFIG_HTTP_DOCROOT));
-    EXPECT_EQ(std::string("20"), config.string_value(CONFIG_HTTP_THREADS));
-    EXPECT_EQ(std::string("/foo/bar.db"), config.string_value(CONFIG_DATABASE_FILE));
-    EXPECT_EQ(std::string("/foo/bar/tmp"), config.string_value(CONFIG_TMP_DIRECTORY));
-    EXPECT_EQ(std::string("127.0.0.1"), config.string_value(CONFIG_LOCAL_LISTEN_ADDRESS));
-    EXPECT_EQ(std::string("254.0.0.2"), config.string_value(CONFIG_MULTICAST_ADDRESS));
-    EXPECT_EQ(std::string("1900"), config.string_value(CONFIG_MULTICAST_PORT));
+    EXPECT_EQ(std::string("/foo/bar.logger"), config.logger() );
+    EXPECT_EQ(std::string("/foo/bar"), config.mediaDirectories()[0] );
+    EXPECT_EQ(std::string("127.0.0.1"), config.httpAddress() );
+    EXPECT_EQ(8080, config.httpPort() );
+    EXPECT_EQ(std::string("/foo/bar/docroot"), config.docRoot() );
+    EXPECT_EQ(std::string("/foo/bar.db"), config.databaseFile() );
+    EXPECT_EQ(std::string("/foo/bar/tmp"), config.tmpDirectory() );
+    EXPECT_EQ(std::string("127.0.0.1"), config.localListenAddress() );
+    EXPECT_EQ(std::string("254.0.0.2"), config.multicastAddress() );
+    EXPECT_EQ(1900, config.multicastPort() );
 }
 
 TEST(SquawkParseOptions, TestIncompleteOptions) {
     const char * options[23];
     options[0] = "-r";
     options[1] = "--config-file";
-    options[2] = "/foo/bar.properties";
+    options[2] = "/foo/bar.xml";
     options[3] = "--logger";
     options[4] = "/foo/bar.logger";
     options[5] = "--media-directory";
@@ -115,38 +113,42 @@ TEST(SquawkParseOptions, TestIncompleteOptions) {
 }
 
 TEST(SquawkParseOptions, TestDefaultOptions) {
-    const char * options[14];
+    const char * options[16];
     options[0] = "--media-directory";
     options[1] = "/foo/bar";
-    options[2] = "--http-docroot";
-    options[3] = "/foo/bar/docroot";
-    options[4] = "--database-file";
-    options[5] = "/foo/bar.db";
-    options[6] = "--tmp-directory";
-    options[7] = "/foo/bar/tmp";
-    options[8] = "--config-file";
-    options[9] = "/foo/bar.properties";
-    options[10] = "--http-ip";
-    options[11] = "127.0.0.1";
-    options[12] = "--local-address";
+    options[2] = "--media-directory";
+    options[3] = "/foo/bar2";
+    options[4] = "--http-docroot";
+    options[5] = "/foo/bar/docroot";
+    options[6] = "--database-file";
+    options[7] = "/foo/bar.db";
+    options[8] = "--tmp-directory";
+    options[9] = "/foo/bar/tmp";
+    options[10] = "--config-file";
+    options[11] = "/foo/bar.xml";
+    options[12] = "--http-ip";
     options[13] = "127.0.0.1";
+    options[14] = "--local-address";
+    options[15] = "127.0.0.1";
 
     squawk::SquawkConfig config;
 
-    ASSERT_TRUE(config.parse(14, options));
+    ASSERT_TRUE(config.parse(16, options));
     ASSERT_TRUE(config.validate());
-    EXPECT_EQ(std::string("/foo/bar.properties"), config.string_value(CONFIG_FILE));
+    EXPECT_EQ(std::string("/foo/bar.xml"), config.configFile() );
 
-    EXPECT_EQ(std::string("/foo/bar"), config.string_value(CONFIG_MEDIA_DIRECTORY));
-    EXPECT_EQ(std::string("127.0.0.1"), config.string_value(CONFIG_HTTP_IP));
-    EXPECT_EQ(std::string("8080"), config.string_value(CONFIG_HTTP_PORT));
-    EXPECT_EQ(std::string("/foo/bar/docroot"), config.string_value(CONFIG_HTTP_DOCROOT));
-    EXPECT_EQ(std::string("20"), config.string_value(CONFIG_HTTP_THREADS));
-    EXPECT_EQ(std::string("/foo/bar.db"), config.string_value(CONFIG_DATABASE_FILE));
-    EXPECT_EQ(std::string("/foo/bar/tmp"), config.string_value(CONFIG_TMP_DIRECTORY));
-    EXPECT_EQ(std::string("127.0.0.1"), config.string_value(CONFIG_LOCAL_LISTEN_ADDRESS));
-    EXPECT_EQ(std::string("239.255.255.250"), config.string_value(CONFIG_MULTICAST_ADDRESS));
-    EXPECT_EQ(std::string("1900"), config.string_value(CONFIG_MULTICAST_PORT));
+    EXPECT_EQ(2, config.mediaDirectories().size() );
+    EXPECT_EQ(std::string("/foo/bar"), config.mediaDirectories()[0] );
+    EXPECT_EQ(std::string("/foo/bar2"), config.mediaDirectories()[1] );
+
+    EXPECT_EQ(std::string("127.0.0.1"), config.httpAddress());
+    EXPECT_EQ(8080, config.httpPort());
+    EXPECT_EQ(std::string("/foo/bar/docroot"), config.docRoot() );
+    EXPECT_EQ(std::string("/foo/bar.db"), config.databaseFile() );
+    EXPECT_EQ(std::string("/foo/bar/tmp"), config.tmpDirectory() );
+    EXPECT_EQ(std::string("127.0.0.1"), config.localListenAddress() );
+    EXPECT_EQ(std::string("239.255.255.250"), config.multicastAddress() );
+    EXPECT_EQ(1900, config.multicastPort() );
 }
 
 TEST(SquawkParseOptions, TestMergedOptions) {
@@ -154,23 +156,68 @@ TEST(SquawkParseOptions, TestMergedOptions) {
     options[0] = "--http-ip";
     options[1] = "127.0.0.1";
     options[2] = "--config-file";
-    options[3] = "/foo/bar.properties";
+    options[3] = "/foo/bar.xml";
 
     squawk::SquawkConfig config;
 
     ASSERT_TRUE(config.parse(4, options));
-    ASSERT_TRUE(config.load("../../squawk-server/config/squawk.properties"));
+    config.load("../../squawk-server/config/squawk.xml");
     ASSERT_TRUE(config.validate());
 
-    EXPECT_EQ(std::string("127.0.0.1"), config.string_value(CONFIG_HTTP_IP));
+    EXPECT_EQ(std::string("127.0.0.1"), config.httpAddress());
 
-    EXPECT_EQ(std::string("/home/media"), config.string_value(CONFIG_MEDIA_DIRECTORY));
-    EXPECT_EQ(std::string("8080"), config.string_value(CONFIG_HTTP_PORT));
-    EXPECT_EQ(std::string("../docroot"), config.string_value(CONFIG_HTTP_DOCROOT));
-    EXPECT_EQ(std::string("20"), config.string_value(CONFIG_HTTP_THREADS));
-    EXPECT_EQ(std::string("/var/lib/squawk/squawk.db"), config.string_value(CONFIG_DATABASE_FILE));
-    EXPECT_EQ(std::string("/var/tmp/squawk"), config.string_value(CONFIG_TMP_DIRECTORY));
-    EXPECT_EQ(std::string("0.0.0.0"), config.string_value(CONFIG_LOCAL_LISTEN_ADDRESS));
-    EXPECT_EQ(std::string("239.255.255.250"), config.string_value(CONFIG_MULTICAST_ADDRESS));
-    EXPECT_EQ(std::string("1900"), config.string_value(CONFIG_MULTICAST_PORT));
+    EXPECT_EQ(std::string("/home/media"), config.mediaDirectories()[0] );
+    EXPECT_EQ(8080, config.httpPort());
+    EXPECT_EQ(std::string("../docroot"), config.docRoot() );
+    EXPECT_EQ(std::string("/var/lib/squawk/squawk.db"), config.databaseFile() );
+    EXPECT_EQ(std::string("/var/tmp/squawk"), config.tmpDirectory() );
+    EXPECT_EQ(std::string("0.0.0.0"), config.localListenAddress() );
+    EXPECT_EQ(std::string("239.255.255.250"), config.multicastAddress() );
+    EXPECT_EQ(1900, config.multicastPort() );
+}
+
+TEST(SquawkParseOptions, TestWriteConfigfile) {
+    const char * options[16];
+    options[0] = "--media-directory";
+    options[1] = "/foo/bar";
+    options[2] = "--media-directory";
+    options[3] = "/foo/bar2";
+    options[4] = "--http-docroot";
+    options[5] = "/foo/bar/docroot";
+    options[6] = "--database-file";
+    options[7] = "/foo/bar.db";
+    options[8] = "--tmp-directory";
+    options[9] = "/foo/bar/tmp";
+    options[10] = "--config-file";
+    options[11] = "/foo/bar.xml";
+    options[12] = "--http-ip";
+    options[13] = "127.0.0.1";
+    options[14] = "--local-address";
+    options[15] = "127.0.0.1";
+
+    squawk::SquawkConfig config;
+
+    ASSERT_TRUE(config.parse(16, options));
+    EXPECT_EQ(std::string("/foo/bar.xml"), config.configFile() );
+    ASSERT_FALSE(config.rescan);
+
+    config.save("/tmp/squawk.xml");
+
+    std::string xml =
+        "<?xml version=\"1.0\"?>\n" \
+        "<squawk>\n" \
+        "  <config-file>/foo/bar.xml</config-file>\n" \
+        "  <database-file>/foo/bar.db</database-file>\n" \
+        "  <http-docroot>/foo/bar/docroot</http-docroot>\n" \
+        "  <http-ip>127.0.0.1</http-ip>\n" \
+        "  <local-address>127.0.0.1</local-address>\n" \
+        "  <media-directories>\n    <media-directory>/foo/bar</media-directory>\n    <media-directory>/foo/bar2</media-directory>\n  </media-directories>\n" \
+        "  <tmp-directory>/foo/bar/tmp</tmp-directory>\n" \
+        "</squawk>\n";
+
+    std::ifstream t( "/tmp/squawk.xml" );
+    std::stringstream buffer;
+    buffer << t.rdbuf();
+
+    ASSERT_EQ(xml, buffer.str());
 }

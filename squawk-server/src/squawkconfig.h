@@ -20,47 +20,120 @@
 #ifndef SQUAWKCONFIG_H
 #define SQUAWKCONFIG_H
 
-#include <string>
+#include <algorithm>
 #include <map>
-
-#define CONFIG_UUID "uuid"
-#define CONFIG_FILE "config-file"
-#define CONFIG_MEDIA_DIRECTORY "media-directory"
-#define CONFIG_HTTP_DOCROOT "http-docroot"
-#define CONFIG_HTTP_IP "http-ip"
-#define CONFIG_HTTP_PORT "http-port"
-#define CONFIG_HTTP_THREADS "http-threads"
-#define CONFIG_DATABASE_FILE "database-file" 
-#define CONFIG_TMP_DIRECTORY "tmp-directory"
-#define CONFIG_LOCAL_LISTEN_ADDRESS "local-address"
-#define CONFIG_MULTICAST_ADDRESS "multicast-address"
-#define CONFIG_MULTICAST_PORT "multicast-port"
-#define CONFIG_LOGGER_PROPERTIES "logger"
+#include <ostream>
+#include <string>
+#include <vector>
 
 namespace squawk {
 
 /**
- * Squawk config implements a primitive reader/writer for a key/value property file.
+ * @brief Squawk config implements a primitive reader/writer for a xml configuration file.
  */
 class SquawkConfig {
 public:
-    SquawkConfig() {};
+    SquawkConfig() {}
+    ~SquawkConfig() {}
+
+    /** @brief the logger properties files */
+    std::string logger();
+    /** @brief the multicast address */
+    std::string multicastAddress();
+    /** @brief the multicast port */
+    int multicastPort();
+    /** @brief the http address */
+    std::string httpAddress();
+    /** @brief the http port */
+    int httpPort();
+    /** @brief the local listen address */
+    std::string localListenAddress();
+    /** @brief the directory for temporary files */
+    std::string tmpDirectory();
+    /** @brief the database file */
+    std::string databaseFile();
+    /** @brief the web server document root */
+    std::string docRoot();
+    /** @brief the list of media directories */
+    std::vector< std::string > mediaDirectories();
+    /** @brief the configuration file */
+    std::string configFile();
+    /** @brief the servers uuid */
+    std::string uuid();
 
     bool rescan = false;
-    bool exist(std::string key);
 
-    void value(std::string key, std::string value);
-    void value(std::string key, int value);
-    std::string string_value(std::string key);
-    int int_value(std::string key);
-
+    /** @brief validate the options */
     bool validate();
-    bool load(std::string filename);
+    /**
+     * @brief load the configuration xml file.
+     * @param filename
+     * @return
+     */
+    void load(std::string filename);
+    /**
+     * @brief parse parse the command line options.
+     * @param ac options count
+     * @param av options strings
+     * @return
+     */
     bool parse(int ac, const char* av[]);
-    void save(std::string filename);
+    /**
+     * @brief save the configuration xml file.
+     * @param filename
+     */
+    void save(const std::string & filename);
+
+    /**
+     * @brief operator write the options to the ostream.
+     */
+    friend std::ostream& operator <<(std::ostream &os,const SquawkConfig &obj) {
+        os <<  "SquawkConfig::" << std::endl;
+        for( const auto &iter : obj.store ) {
+            os << "\t" << iter.first << " = ";
+            for( auto & v : iter.second )
+                os << v << " ";
+            os << std::endl;
+        }
+        return os;
+    }
 
 private:
-  std::map< std::string, std::string > store;
+    std::map< std::string, std::vector< std::string > > store;
+
+    /**
+     * @brief Add value to store.
+     * @param value the new value.
+     * @param append Replace the existing value or append the new value to the list.
+     *               The new value will be appended if it is not already in the list.
+     * #param overwrite Overwrite existing value.When the store already contains a value with the key nothing will be written.
+     */
+    void setValue( const std::string & key, const std::string & value, bool append = false, bool overwrite = true ) {
+        if( store.find( key ) != store.end() && !overwrite ) return;
+        if( store.find( key ) != store.end() && append &&
+            std::find( std::begin( store[ key ] ), std::end( store[ key ] ), value ) == std::end( store[ key ] ) ) {
+
+            store[ key ].push_back( value );
+
+        } else {
+            std::vector< std::string > list;
+            list.push_back( value );
+            store[ key ] = list;
+        }
+    }
+
+    std::string CONFIG_LOGGER_PROPERTIES = "logger";
+    std::string CONFIG_MULTICAST_ADDRESS = "multicast-address";
+    std::string CONFIG_MULTICAST_PORT = "multicast-port";
+    std::string CONFIG_HTTP_IP = "http-ip";
+    std::string CONFIG_HTTP_PORT = "http-port";
+    std::string CONFIG_DATABASE_FILE = "database-file";
+    std::string CONFIG_TMP_DIRECTORY = "tmp-directory";
+    std::string CONFIG_LOCAL_LISTEN_ADDRESS = "local-address";
+    std::string CONFIG_UUID = "uuid";
+    std::string CONFIG_FILE = "config-file";
+    std::string CONFIG_MEDIA_DIRECTORY = "media-directory";
+    std::string CONFIG_HTTP_DOCROOT = "http-docroot";
 };
 }
 #endif // SQUAWKCONFIG_H

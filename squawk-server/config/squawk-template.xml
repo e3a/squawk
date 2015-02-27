@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<squawk>
+  <config-file>/etc/squawk/squawk.xml</config-file>
+  <database-file>/var/lib/squawk/squawk.db</database-file>
+  <http-docroot>/home/e3a/squawk/squawk-server/docroot</http-docroot>
+  <media-directories>
+    <media-directory>/home/Music</media-directory>
+  </media-directories>
+  <tmp-directory>/var/tmp/squawk</tmp-directory>
+   <http-ip>192.168.0.13</http-ip>
+   <http-port>8080</http-port>
+   <logger>/etc/squawk/logger.properties</logger>
+   <uuid>c7eede24-9688-4f20-9d59-ab93d074027f</uuid>
+<local-address>0.0.0.0</local-address>
+<multicast-address>239.255.255.250</multicast-address>
+<multicast-port>1900</multicast-port>
+</squawk>
+
+

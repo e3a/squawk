@@ -59,7 +59,7 @@
 
 void SquawkServer::start() {
     database = new squawk::db::Sqlite3Database();
-    database->open(squawk_config->string_value(CONFIG_DATABASE_FILE));
+    database->open( squawk_config->databaseFile() );
 
     parser = new squawk::media::FileParser(database, squawk_config);
 
@@ -75,9 +75,9 @@ void SquawkServer::start() {
 
     //Setup and start the HTTP server
     web_server = new http::WebServer(
-                squawk_config->string_value(CONFIG_HTTP_IP),
-                squawk_config->string_value(CONFIG_HTTP_PORT),
-                squawk_config->int_value(CONFIG_HTTP_THREADS));
+                squawk_config->httpAddress(),
+                squawk_config->httpPort() /*,
+                squawk_config->int_value(CONFIG_HTTP_THREADS) */ );
 
     squawk::servlet::UpnpXmlDescription * xmldescription = new squawk::servlet::UpnpXmlDescription(std::string("/rootDesc.xml"), squawk_config );
     squawk::servlet::ApiStatisticServlet * statistic_servlet = new squawk::servlet::ApiStatisticServlet(std::string("/api/statistic"), database);
@@ -88,16 +88,16 @@ void SquawkServer::start() {
     squawk::api::ApiAlbumItemServlet * album_servlet = new squawk::api::ApiAlbumItemServlet(std::string("/api/album/(\\d*)"), database);
     squawk::api::ApiAlbumsLetterServlet * letter_servlet = new squawk::api::ApiAlbumsLetterServlet(std::string("/api/album/letter"), database);
 
-    squawk::api::CoverServlet * cover_servlet = new squawk::api::CoverServlet("/album/(\\d*)/cover.jpg", squawk_config->string_value(CONFIG_TMP_DIRECTORY));
-    squawk::servlet::ImageServlet * image_servlet = new squawk::servlet::ImageServlet("/album/image/(\\d*).jpg", squawk_config->string_value(CONFIG_TMP_DIRECTORY));
-    squawk::servlet::SongServlet * song_servlet = new squawk::servlet::SongServlet("/song/(\\d*).(flac|mp3)", squawk_config->string_value(CONFIG_MEDIA_DIRECTORY), database);
+    squawk::api::CoverServlet * cover_servlet = new squawk::api::CoverServlet("/album/(\\d*)/cover.jpg", squawk_config->tmpDirectory());
+    squawk::servlet::ImageServlet * image_servlet = new squawk::servlet::ImageServlet("/album/image/(\\d*).jpg", squawk_config->tmpDirectory());
+    squawk::servlet::SongServlet * song_servlet = new squawk::servlet::SongServlet("/song/(\\d*).(flac|mp3)", database);
 
-    squawk::api::MediaServlet * media_servlet = new squawk::api::MediaServlet("/file/(video|audio|image|cover)/(\\d*).(flac|mp3|avi|mp4|mkv|jpg)", squawk_config->string_value(CONFIG_MEDIA_DIRECTORY), database);
+    squawk::api::MediaServlet * media_servlet = new squawk::api::MediaServlet("/file/(video|audio|image|cover)/(\\d*).(flac|mp3|avi|mp4|mkv|jpg)", database);
     squawk::api::ApiBrowseServlet * browse_servlet = new squawk::api::ApiBrowseServlet("/(video|image|book)/?([0-9]+)?", database);
 
-    squawk::upnp::UpnpMediaServlet * upnp_media_servlet = new squawk::upnp::UpnpMediaServlet("/(video|audio|image)/(\\d*).(flac|mp3|avi|mp4|mkv)", squawk_config->string_value(CONFIG_MEDIA_DIRECTORY), database);
+    squawk::upnp::UpnpMediaServlet * upnp_media_servlet = new squawk::upnp::UpnpMediaServlet("/(video|audio|image)/(\\d*).(flac|mp3|avi|mp4|mkv)", database);
 
-    http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->string_value(CONFIG_HTTP_DOCROOT));
+    http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->docRoot());
 
     web_server->register_servlet(content_directory);
     web_server->register_servlet(connection_manager);
@@ -147,16 +147,16 @@ void SquawkServer::start() {
 */
     //Setup and start the SSDP server
     ssdp_server = new squawk::ssdp::SSDPServerImpl(
-    squawk_config->string_value(CONFIG_UUID),
-    squawk_config->string_value(CONFIG_LOCAL_LISTEN_ADDRESS),
-    squawk_config->string_value(CONFIG_MULTICAST_ADDRESS),
-    squawk_config->int_value(CONFIG_MULTICAST_PORT));
+    squawk_config->uuid(),
+    squawk_config->localListenAddress(),
+    squawk_config->multicastAddress(),
+    squawk_config->multicastPort() );
 
     //register namespaces
-    ssdp_server->register_namespace(NS_ROOT_DEVICE, std::string("http://") + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) + "/rootDesc.xml");
-    ssdp_server->register_namespace(NS_MEDIASERVER, std::string("http://") + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) + "/rootDesc.xml");
-    ssdp_server->register_namespace(NS_CONTENT_DIRECTORY, std::string("http://") + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) + "/rootDesc.xml");
-    ssdp_server->register_namespace(NS_MEDIA_RECEIVER_REGISTRAR, std::string("http://") + squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) + "/rootDesc.xml");
+    ssdp_server->register_namespace(NS_ROOT_DEVICE, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(NS_MEDIASERVER, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(NS_CONTENT_DIRECTORY, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(NS_MEDIA_RECEIVER_REGISTRAR, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
 
     //TODO squawk::http::RequestCallback * api_upnp_device_handler = new api::ApiUpnpDeviceHandler(service, ssdp_server);
     //TODO http_server->register_handler("GET", "/api/devices", api_upnp_device_handler);
@@ -167,9 +167,7 @@ void SquawkServer::start() {
 
     //rescan the media directory
     if(squawk_config->rescan) {
-        std::vector< std::string > directories;
-        directories.push_back( squawk_config->string_value(CONFIG_MEDIA_DIRECTORY) );
-        parser->parse( directories );
+        parser->parse( squawk_config->mediaDirectories() );
     } else {
         sleep( 5 ); //wait for the server to start
     }
@@ -194,17 +192,15 @@ int main(int ac, const char* av[]) {
     if(! squawk_config->parse(ac, av)) {
         exit(1);
     }
-    if(! squawk_config->load(squawk_config->string_value(CONFIG_FILE))) {
-        exit(1);
-    }
+    squawk_config->load(squawk_config->configFile());
     if(! squawk_config->validate()) {
         exit(1);
     }
-    squawk_config->save(squawk_config->string_value(CONFIG_FILE));
+    squawk_config->save(squawk_config->configFile());
 
     //load the logger
-    if (squawk_config->exist(CONFIG_LOGGER_PROPERTIES)) {
-       log4cxx::PropertyConfigurator::configure(squawk_config->string_value(CONFIG_LOGGER_PROPERTIES));
+    if ( squawk_config->logger() != "" ) {
+        log4cxx::PropertyConfigurator::configure( squawk_config->logger() );
     } else {
        log4cxx::BasicConfigurator::configure();
     }

@@ -31,15 +31,14 @@ namespace upnp {
 
 class UpnpMediaServlet : public ::http::servlet::FileServlet {
 public:
-    explicit UpnpMediaServlet( const std::string path, const std::string docroot, squawk::db::Sqlite3Database * db ) :
-        FileServlet( path, docroot ), db( db ), mediadirectory( docroot ) {}
+    explicit UpnpMediaServlet( const std::string path, squawk::db::Sqlite3Database * db ) :
+        FileServlet( path, std::string("") ), db( db ) {}
     virtual void do_get( ::http::HttpRequest & request, ::http::HttpResponse & response );
     virtual void do_head( ::http::HttpRequest & request, ::http::HttpResponse & response );
 private:
     void getFile( ::http::HttpRequest & request, ::http::HttpResponse & response );
     static log4cxx::LoggerPtr logger;
     squawk::db::Sqlite3Database * db;
-    const std::string mediadirectory;
 };
 }}
 #endif // UPNPMEDIASERVLET_H

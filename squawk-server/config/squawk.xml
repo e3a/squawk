@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<squawk>
+  <config-file>/etc/squawk.xml</config-file>
+  <database-file>/var/lib/squawk/squawk.db</database-file>
+  <http-docroot>../docroot</http-docroot>
+  <media-directories>
+    <media-directory>/home/media</media-directory>
+  </media-directories>
+  <tmp-directory>/var/tmp/squawk</tmp-directory>
+</squawk>
