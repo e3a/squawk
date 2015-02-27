@@ -23,10 +23,12 @@
 #include <utility>
 #include <thread>
 
+#include "commons.h"
+
 namespace http {
 namespace asio_impl {
 
-server::server(const std::string& address, const std::string& port, http::HttpRequestHandler * httpRequestHandler)
+server::server(const std::string& address, const int & port, http::HttpRequestHandler * httpRequestHandler)
   : io_service_(),
     signals_(io_service_),
     acceptor_(io_service_),
@@ -46,7 +48,7 @@ server::server(const std::string& address, const std::string& port, http::HttpRe
 
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
     asio::ip::tcp::resolver resolver(io_service_);
-    asio::ip::tcp::resolver::query query(address, port);
+    asio::ip::tcp::resolver::query query(address, commons::string::to_string( port ) );
     asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
     acceptor_.open(endpoint.protocol());
     acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));

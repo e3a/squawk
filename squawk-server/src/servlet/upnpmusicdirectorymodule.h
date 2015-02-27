@@ -41,9 +41,9 @@ public:
     virtual void parseNode( commons::xml::XMLWriter * xmlWriter, commons::upnp::CdsResult * cds_result, commons::upnp::UpnpContentDirectoryRequest * parseRequest );
 
 private:
-    static log4cxx::LoggerPtr logger;
-    squawk::SquawkConfig * squawk_config;
     squawk::db::Sqlite3Database * db;
+    squawk::SquawkConfig * squawk_config;
+    static log4cxx::LoggerPtr logger;
 
     /* artist count  */
     static constexpr const char * SQL_COUNT_ARTISTS = "select count(*) from tbl_cds_artists";

@@ -97,7 +97,7 @@ struct Song {
         sampleFrequency(sampleFrequency), playLength(playLength), track(track), disc(disc), channels(channels), bits_per_sample(bits_per_sample), artist(artist) {}
     unsigned long id;
     std::string title, mime_type, filename, album, genre, comment, year;
-    int mtime, bitrate, size, sampleFrequency, bits_per_sample, playLength, track, disc, channels;
+    int mtime, bitrate, size, sampleFrequency, playLength, track, disc, channels, bits_per_sample;
     std::list< Artist *> artist;
 };
 /**

@@ -48,7 +48,7 @@ void UpnpXmlDescription::do_get(::http::HttpRequest & request, ::http::HttpRespo
     writer.element( device_node, "", "modelNumber", "1" );
     writer.element( device_node, "", "modelURL", "http://" );
     writer.element( device_node, "", "serialNumber", "123456" );
-    writer.element( device_node, "", "UDN", "uuid:" + config->string_value(CONFIG_UUID) );
+    writer.element( device_node, "", "UDN", "uuid:" + config->uuid() );
 
     commons::xml::Node dlna_node = writer.element( device_node, "", "X_DLNADOC", "DMS-1.50" );
     writer.ns( dlna_node, "urn:schemas-dlna-org:device-1-0", "dlna", true );

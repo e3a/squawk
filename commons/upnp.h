@@ -100,11 +100,11 @@ const static std::string XML_NS_DLNA_METADATA = "urn:schemas-dlna-org:metadata-1
  */
 class UpnpException : public std::exception {
 public:
-  explicit UpnpException (int _code, std::string _what) throw() : _code(_code), _what(_what) {};
-  virtual ~UpnpException() throw() {};
+  explicit UpnpException (int _code, std::string _what) throw() : _code(_code), _what(_what) {}
+  virtual ~UpnpException() throw() {}
   virtual const char* what() const throw() {
-return _what.c_str();
-  };
+    return _what.c_str();
+  }
   int code() throw() {
 return _code;
   }

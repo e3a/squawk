@@ -369,8 +369,8 @@ namespace http {
      */
     class WebServer : public HttpRequestHandler {
     public:
-        WebServer(std::string local_ip, std::string port, int threads)
-            : local_ip(local_ip), port(port), threads(threads) {};
+        WebServer(std::string local_ip, int port /*, int threads */)
+            : local_ip(local_ip), port(port) /*, threads(threads) */ {}
 
         /**
          * @brief Start the server.
@@ -395,8 +395,8 @@ namespace http {
         virtual void handle_request(HttpRequest & request, HttpResponse & response, std::function<void()> fptr );
     private:
         std::vector<HttpServlet *> servlets;
-        std::string local_ip, port;
-        int threads;
+        std::string local_ip;
+        int port; //, threads;
     };
 }
 namespace http {

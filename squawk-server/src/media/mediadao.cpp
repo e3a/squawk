@@ -22,11 +22,10 @@ const char *SQL_INSERT_FILE_IMAGE = "insert into tbl_cds_files(parent, filename,
                                "values (?,?,?,?,?,?,?,?,?)";
 const char *SQL_UPDATE_FILE_IMAGE = "update tbl_cds_files SET " \
                                    "parent=?, mtime=?, timestamp=?, filesize=?, type=?, mime_type=?, width=?, height=? where ROWID = ?";
-const char *SQL_INSERT_FILE_VIDEO = "insert into tbl_cds_files(parent, filename, mtime, timestamp, filesize, type, mime_type, name) " \
-                               "values (?,?,?,?,?,?,?,?)";
+const char *SQL_INSERT_FILE_VIDEO = "insert into tbl_cds_files(parent, filename, mtime, timestamp, filesize, type, mime_type, name, width, height) " \
+                               "values (?,?,?,?,?,?,?,?,?,?)";
 const char *SQL_UPDATE_FILE_VIDEO = "update tbl_cds_files SET " \
-                                   "parent=?, mtime=?, timestamp=?, filesize=?, type=?, mime_type=?, name=? where ROWID = ?";
-
+                                   "parent=?, mtime=?, timestamp=?, filesize=?, type=?, mime_type=?, name=?, width=?, height=? where ROWID = ?";
 
 
 const char *SQL_GET_AUDIOFILE = "select audiofile.ROWID from tbl_cds_audiofiles audiofile where audiofile.filename = ?";
@@ -48,10 +47,10 @@ const char *SQL_INSERT_IMAGE = "insert into tbl_cds_images(album, filename, mtim
                                "values (?,?,?,?,?,?,?,?,?)";
 const char *SQL_UPDATE_IMAGE = "update tbl_cds_images SET " \
                                    "album=?, mtime=?, timestamp=?, filesize=?, type=?, mime_type=?, width=?, height=? where ROWID = ?";
-const char *SQL_INSERT_VIDEO = "insert into tbl_cds_movies(filename, mtime, timestamp, filesize, mime_type) " \
-                               "values (?,?,?,?,?)";
-const char *SQL_UPDATE_VIDEO = "update tbl_cds_movies SET " \
-                                   "mtime=?, timestamp=?, filesize=?, mime_type=? where ROWID = ?";
+const char *SQL_INSERT_VIDEO = "insert into tbl_cds_files(filename, mtime, timestamp, filesize, mime_type, width, height) " \
+                               "values (?,?,?,?,?,?,?)";
+const char *SQL_UPDATE_VIDEO = "update tbl_cds_files SET " \
+                                   "mtime=?, timestamp=?, filesize=?, mime_type=?, width=?, height=? where ROWID = ?";
 const char *SQL_SWEEP_AUDIOFILES = "select ROWID, album_id from tbl_cds_audiofiles where timestamp < ?";
 const char *SQL_SWEEP_IMAGES = "delete from tbl_cds_IMAGES where timestamp < ?";
 const char *SQL_SWEEP_VIDEOS = "delete from tbl_cds_movies where timestamp < ?";
@@ -241,7 +240,7 @@ unsigned long MediaDao::saveFile(const file_item & file, const unsigned long & p
         throw;
     }
 }
-/* unsigned long MediaDao::saveFile(const file_item & file, const unsigned long & parent, commons::media::Video * videofile ) {
+unsigned long MediaDao::saveVideo(const file_item & file, const unsigned long & parent, commons::media::MediaFile & media_file ) {
     LOG4CXX_TRACE(logger, "save video:" << file.name );
     try {
        squawk::db::Sqlite3Statement * stmt_get_audio = stmtMap["GET_FILE"];
@@ -257,10 +256,10 @@ unsigned long MediaDao::saveFile(const file_item & file, const unsigned long & p
             stmt->bind_int(4, file.size);
             stmt->bind_int(5, VIDEO );
             stmt->bind_text(6, file.mime_type);
-            stmt->bind_text(7, videofile->name());
-            // stmt->bind_int(7, imagefile->width());
-            // stmt->bind_int(8, imagefile->height());
-            stmt->bind_int(8, video_id );
+            stmt->bind_text(7, media_file.name());
+            stmt->bind_int(8, media_file.getVideoStreams()[0].width());
+            stmt->bind_int(9, media_file.getVideoStreams()[0].height());
+            stmt->bind_int(10, video_id );
             stmt->update();
             stmt_get_audio->reset();
             stmt->reset();
@@ -275,9 +274,9 @@ unsigned long MediaDao::saveFile(const file_item & file, const unsigned long & p
             stmt->bind_int(5, file.size);
             stmt->bind_int(6, VIDEO );
             stmt->bind_text(7, file.mime_type);
-            stmt->bind_text(8, videofile->name());
-            // stmt->bind_int(8, imagefile->width());
-            // stmt->bind_int(9, imagefile->height());
+            stmt->bind_text(8, media_file.name());
+            stmt->bind_int(9, media_file.getVideoStreams()[0].width());
+            stmt->bind_int(10, media_file.getVideoStreams()[0].height());
             stmt->insert();
             stmt_get_audio->reset();
             stmt->reset();
@@ -288,7 +287,7 @@ unsigned long MediaDao::saveFile(const file_item & file, const unsigned long & p
         //TODO release statements
         throw;
     }
-} */
+}
 
 
 squawk::media::Album MediaDao::get_album(std::string path) {

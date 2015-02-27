@@ -31,13 +31,12 @@ namespace servlet {
 
 class SongServlet : public ::http::servlet::FileServlet {
 public:
-    explicit SongServlet( const std::string path, const std::string docroot, squawk::db::Sqlite3Database * db ) :
-        FileServlet( path, docroot ), db( db ), mediadirectory( docroot ) {}
+    explicit SongServlet( const std::string path, squawk::db::Sqlite3Database * db ) :
+        FileServlet( path, std::string("") ), db( db ) {}
     virtual void do_get( ::http::HttpRequest & request, ::http::HttpResponse & response );
 private:
     static log4cxx::LoggerPtr logger;
     squawk::db::Sqlite3Database * db;
-    const std::string mediadirectory;
 };
 }}
 #endif // SONGSERVLET_H

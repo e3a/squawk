@@ -36,11 +36,11 @@ namespace xml {
  */
 class XmlException : public std::exception {
 public:
-  explicit XmlException (int _code, std::string _what) throw() : _code(_code), _what(_what) {};
-  virtual ~XmlException() throw() {};
+  explicit XmlException (int _code, std::string _what) throw() : _code(_code), _what(_what) {}
+  virtual ~XmlException() throw() {}
   virtual const char* what() const throw() {
-return _what.c_str();
-  };
+    return _what.c_str();
+  }
   int code() throw() {
 return _code;
   }
@@ -54,7 +54,7 @@ private:
  */
 class Attribute {
 public:
-    Attribute( xmlNode * node, xmlAttr * attr ) : node(node), attr(attr) {};
+    Attribute( xmlNode * node, xmlAttr * attr ) : node(node), attr(attr) {}
     std::string name() {
         return (char *)attr->name;
     }
@@ -74,19 +74,19 @@ private:
 class Node {
 friend class XMLWriter;
 public:
-    Node(xmlNode * node) : node(node) {};
+    Node(xmlNode * node) : node(node) {}
     std::string name() {
         return std::string( (char *) node->name );
-    };
+    }
     std::string ns() {
         return (char *)node->ns->href;
-    };
+    }
     std::string content() {
         xmlNode * content_node = node->children;
         if( content_node != NULL && content_node->type == XML_TEXT_NODE ) {
             return (char *) content_node->content;
         } else return "";
-    };
+    }
     std::vector< Node > children() {
         std::vector< Node > child_nodes;
         for( xmlNode * cnode = node->children; cnode; cnode = cnode->next ) {
@@ -94,7 +94,7 @@ public:
                 child_nodes.push_back( Node( cnode ) );
         }
         return child_nodes;
-    };
+    }
     std::vector< Attribute > attributes() {
         std::vector< Attribute > atts;
         for( xmlAttr * cnode = node->properties; cnode; cnode = cnode->next ) {
@@ -112,13 +112,13 @@ private:
  */
 class XMLReader {
 public:
-    XMLReader(std::string xml) {
+    XMLReader(std::string xml) { //TODO open file directly
         doc = xmlReadMemory( xml.c_str(), xml.length(), NULL, NULL, XML_PARSE_RECOVER | XML_PARSE_NOENT );
         if (doc == NULL) {
             throw XmlException( 1, "error: could not parse file." );
         }
         root_element = xmlDocGetRootElement(doc);
-    };
+    }
     ~XMLReader() {
         if( doc )
             xmlFreeDoc(doc);
@@ -332,11 +332,11 @@ public:
      * @brief to string
      * @return
      */
-    std::string str() {
+    std::string str( bool prettyPrint = false ) {
         std::string out;
         xmlChar *s;
         int size;
-        xmlDocDumpMemory( doc, &s, &size ); //TODO use DEBUG variable
+        xmlDocDumpFormatMemory( doc, &s, &size, prettyPrint ); //TODO use DEBUG variable
         if ( s == NULL )
             throw std::bad_alloc();
         try {
@@ -347,7 +347,16 @@ public:
         }
         xmlFree( s );
         return out;
-    };
+    }
+    /**
+     * @brief Save the XML to String.
+     * @return
+     */
+    void write( const std::string & filename, bool prettyPrint = false ) {
+        FILE *file = fopen( filename.c_str(), "w" );
+        xmlDocFormatDump( file, doc, prettyPrint );
+        fclose( file );
+    }
 private:
     xmlDocPtr doc = NULL;
     std::map< std::string, xmlNsPtr> namespaces;

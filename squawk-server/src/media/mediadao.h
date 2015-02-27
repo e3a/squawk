@@ -48,9 +48,9 @@ public:
     bool exist_videofile(std::string filename, long mtime, long size, bool update);
     bool exist_imagefile(std::string filename, long mtime, long size, bool update);
 
-    unsigned long getOrCreateDirectory(const std::string & path, const std::string & name, const unsigned long & parent, const int & type );
-    unsigned long saveFile(const file_item & file, const unsigned long & parent, commons::image::Image * imagefile);
-    // TODO unsigned long saveFile(const file_item & file, const unsigned long & parent, commons::media::Video * videofile );
+    unsigned long getOrCreateDirectory( const std::string & path, const std::string & name, const unsigned long & parent, const int & type );
+    unsigned long saveFile( const file_item & file, const unsigned long & parent, commons::image::Image * imagefile );
+    unsigned long saveVideo( const file_item & file, const unsigned long & parent, commons::media::MediaFile & media_file );
 
     squawk::media::Album get_album(std::string path);
     unsigned long save_album(std::string path, squawk::media::Album * album);

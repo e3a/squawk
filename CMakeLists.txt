@@ -14,6 +14,7 @@ endif()
 set(CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG} -O0)
 add_definitions(-DASIO_STANDALONE)
 add_definitions(-DTESTFILES=${TESTFILES})
+add_definitions(-Wall)
 
 find_package(GoogleTest REQUIRED)
 find_package(LibXml2 REQUIRED)
@@ -36,6 +37,9 @@ SET( SQUAWK_INCLUDES ${CMAKE_SOURCE_DIR}/commons ${CMAKE_SOURCE_DIR}/httpcpp/inc
 add_subdirectory (httpcpp)
 add_subdirectory (ssdpcpp)
 add_subdirectory (squawk-server)
+
+add_executable(media mediafile.cpp)
+target_link_libraries(media ${LIBS})
 
 if (build_tests)
     enable_testing()

@@ -42,7 +42,7 @@ namespace media {
 log4cxx::LoggerPtr FileParser::logger(log4cxx::Logger::getLogger("squawk.media.FileParser"));
 pcrecpp::RE FileParser::re("(.*)/CD[\\d+]");
 
-void FileParser::parse( std::vector< std::string > & paths ) {
+void FileParser::parse( std::vector< std::string > paths ) {
 
     long start_time = std::time( 0 );
     statistic.clear();
@@ -199,12 +199,12 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
                     int image_id = mediaDao->save_imagefile((*list_iter), album.id, &image);
 
                     std::stringstream image_stream;
-                    image_stream << squawk_config->string_value(CONFIG_TMP_DIRECTORY) << "/image-" << image_id << ".jpg";
+                    image_stream << squawk_config->tmpDirectory() << "/image-" << image_id << ".jpg";
 
                     //TODO image.scale(1000, 1000, image_stream.str());
                     if( (*list_iter).type == squawk::media::file_item::COVER ) {
                         std::stringstream cover_stream;
-                        cover_stream << squawk_config->string_value(CONFIG_TMP_DIRECTORY) << "/" << album.id << ".jpg";
+                        cover_stream << squawk_config->tmpDirectory() << "/" << album.id << ".jpg";
                         std::string cover_filename = cover_stream.str();
                         image.scale(150, 150, cover_filename);
                     }
@@ -223,8 +223,8 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
                         unsigned long id = mediaDao->saveFile((*list_iter), path_id, &image);
 
                         //create tumbs
-                        image.scale(150, 150, squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/images" + "/cover" + commons::string::to_string<unsigned long>(id) + ".jpg" );
-                        image.scale(1000, 1000, squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/images" + "/" + commons::string::to_string<unsigned long>(id) + ".jpg");
+                        image.scale(150, 150, squawk_config->tmpDirectory() + "/images" + "/cover" + commons::string::to_string<unsigned long>(id) + ".jpg" );
+                        // image.scale(1000, 1000, squawk_config->tmpDirectory() + "/images" + "/" + commons::string::to_string<unsigned long>(id) + ".jpg");
                     }
         }
         files.erase(IMAGEFILE);
@@ -236,14 +236,15 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
         unsigned long path_id = mediaDao->createDirectory( relative_path );
         //save file
         for(auto & video : files[VIDEOFILE] ) {
-//TODO            if(! mediaDao->exist_videofile( video.name, video.mtime, video.size, true ) ) {
+            if(! mediaDao->exist_videofile( video.name, video.mtime, video.size, true ) ) {
+
+                commons::media::MediaFile media_file = commons::media::MediaParser::parseFile( video.name );
                 if(squawk::DEBUG) LOG4CXX_DEBUG(logger, "save video" << video.name )
-                        // TODO commons::media::Video videofile( video.name );
-                        // TODO mediaDao->saveFile( video, path_id, &videofile );
+                mediaDao->saveVideo( video, path_id, media_file );
 
                 //create tumbs
                 //TODO
-//            }
+            }
         }
     }
     return dir_type;

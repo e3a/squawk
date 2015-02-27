@@ -28,7 +28,7 @@
 
 class HttpServerFactory {
 public:
-    static void start(const std::string& address, const std::string& port, std::size_t thread_pool_size, http::HttpRequestHandler * httpRequestHandler);
+    static void start(const std::string& address, const int & port /*, std::size_t thread_pool_size */, http::HttpRequestHandler * httpRequestHandler);
     static http::asio_impl::server * httpd;
     static std::thread httpd_thread;
 };

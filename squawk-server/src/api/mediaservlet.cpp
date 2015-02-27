@@ -54,13 +54,7 @@ void MediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse &
 
                 stmt_song->bind_int( 1, item_id );
                 if( stmt_song->step() ) {
-                    std::string filename = stmt_song->get_string(0);
-                    if( ! commons::string::starts_with( filename, mediadirectory )) {
-                        throw ::http::http_status::BAD_REQUEST;
-                    }
-
-                    LOG4CXX_TRACE( logger, "song_file: " << filename )
-                    request.uri = filename.substr( mediadirectory.length(), filename.length() );
+                    request.uri = stmt_song->get_string(0);
 
                 } else {
                     LOG4CXX_TRACE( logger, "file not found: " << type << "::" << item_id )

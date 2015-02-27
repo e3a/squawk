@@ -65,7 +65,7 @@ void WebServer::handle_request(HttpRequest & request, HttpResponse & response, s
 }
 
 void WebServer::start() {
-    HttpServerFactory::start( local_ip, port, threads, dynamic_cast< http::HttpRequestHandler * > ( this ) );
+    HttpServerFactory::start( local_ip, port/* , threads */, dynamic_cast< http::HttpRequestHandler * > ( this ) );
 }
 void WebServer::stop() { /* TODO */}
 

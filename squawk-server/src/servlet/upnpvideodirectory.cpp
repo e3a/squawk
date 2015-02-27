@@ -71,7 +71,7 @@ void UpnpVideoDirectory::parseNode( commons::xml::XMLWriter * xmlWriter, commons
            xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "date", /* year_ + */ "2014-01-01" ); //TODO
 
            commons::xml::Node dlna_res_node = xmlWriter->element(item_element, "", "res",
-               "http://" +squawk_config->string_value(CONFIG_HTTP_IP) + ":" + squawk_config->string_value(CONFIG_HTTP_PORT) +
+               "http://" +squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) +
                "/video/" + commons::string::to_string( id ) + "." + http::mime::extension( mime_type ) );
            xmlWriter->attribute(dlna_res_node, "", "protocolInfo",
                "http-get:*:" + mime_type  + ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000" );

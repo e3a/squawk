@@ -38,8 +38,8 @@ public:
     static constexpr int STREAM_EXCEPTION = 2; /** error with open media streams */
     static constexpr int CODEC_EXCEPTION = 3; /** error with open codec */
 
-  explicit MediaException (int _code, std::string _what) throw() : _code(_code), _what(_what) {};
-  virtual ~MediaException() throw() {};
+  explicit MediaException (int _code, std::string _what) throw() : _code(_code), _what(_what) {}
+  virtual ~MediaException() throw() {}
   virtual const char* what() const throw() {
 return _what.c_str();
   };
@@ -91,6 +91,16 @@ public:
      */
     void channels( int channels ) { _channels = channels; }
     /**
+     * @brief codec id
+     * @return
+     */
+    int codec() { return _codec; }
+    /**
+     * @brief codec id
+     * @param codec
+     */
+    void codec( int codec ) { _bitrate = codec; }
+    /**
      * @brief sampleFrequency
      * @return
      */
@@ -100,8 +110,19 @@ public:
      * @param sample_frequency
      */
     void sampleFrequency( int sample_frequency ) { _sample_frequency = sample_frequency; }
+
+    /**
+     * @brief operator write the object to the ostream.
+     */
+    friend std::ostream& operator <<(std::ostream &os,const AudioStream &obj) {
+        os <<  "AudioStream::" << std::endl;
+        os << " codec id: " << obj._codec << std::endl;
+        os << " channels: " << obj._channels << ", bitrate: " << obj._bitrate << ", bits_per_sample: " <<
+              obj._bits_per_sample << ", frequency: " << obj._sample_frequency << std::endl;
+        return os;
+    }
 private:
-    int _bitrate, _bits_per_sample, _channels, _sample_frequency;
+    int _bitrate, _bits_per_sample, _channels, _sample_frequency, _codec;
 };
 /**
  * @brief The VideoStream class
@@ -109,9 +130,29 @@ private:
 class VideoStream {
 public:
     /**
+     * @brief bitrate
+     * @return
+     */
+    int bitrate() { return _bitrate; }
+    /**
+     * @brief bitrate
+     * @param bitrate
+     */
+    void bitrate( int bitrate ) { _bitrate = bitrate; }
+    /**
      * @brief VideoStream
      */
-    VideoStream() : _width(0), _height(0) {};
+    VideoStream() : _width(0), _height(0), _codec(0) {}
+    /**
+     * @brief codec type
+     * @return
+     */
+    int codec() { return _codec; }
+    /**
+     * @brief codec type
+     * @param codec
+     */
+    void codec( int codec ) {  _codec = codec; }
     /**
      * @brief height
      * @return
@@ -132,8 +173,18 @@ public:
      * @param width
      */
     void width( int width ) {  _width = width; }
+
+    /**
+     * @brief operator write the object to the ostream.
+     */
+    friend std::ostream& operator <<(std::ostream &os,const VideoStream &obj) {
+        os <<  "VideoStream::" << std::endl;
+        os << " codec id: " << obj._codec << std::endl;
+        os << " bitrate: " << obj._bitrate << ", width: " << obj._width << ", height: " << obj._height << std::endl;
+        return os;
+    }
 private:
-    int _width, _height;
+    int _width, _height, _codec, _bitrate;
 };
 /**
  * @brief The MediaFile class
@@ -148,7 +199,7 @@ public:
      * @brief MediaFile
      * @param filename
      */
-    MediaFile( std::string filename ) : filename(filename), _duration(0) {};
+    MediaFile( std::string filename ) : filename(filename), _duration(0) {}
     /**
      * @brief duration
      * @return
@@ -229,9 +280,23 @@ public:
         return tags.find( key ) != tags.end();
     }
 
+    /**
+     * @brief operator write the object to the ostream.
+     */
+    friend std::ostream& operator <<(std::ostream &os, const MediaFile &obj) {
+        os <<  "MediaFile::" << std::endl;
+        os << " duration: " <<  commons::string::time_to_string( obj._duration ) << std::endl;
+        os << "Meta Information: " << std::endl;
+        for( auto & iter : obj.audio_streams ) std::cout << iter;
+        for( auto & iter : obj.video_streams ) std::cout << iter;
+        for( auto & iter : obj.tags ) {
+            os << "\t" << iter.first << " = " << iter.second << std::endl;
+        }
+        return os;
+    }
 private:
-    int _duration;
     std::string filename;
+    int _duration;
     std::vector<VideoStream> video_streams;
     std::vector<AudioStream> audio_streams;
     std::map<TAG, std::string > tags;
@@ -261,7 +326,7 @@ public:
         /** Make sure that there is only one stream in the input file. */
         if ( fmt_ctx->nb_streams > 0 ) {
             media_file.duration( fmt_ctx->duration / AV_TIME_BASE ); //set the playlength
-            for( int i=0; i<fmt_ctx->nb_streams; i++ ) { //TODO remove output
+            for( unsigned int i=0; i<fmt_ctx->nb_streams; i++ ) { //TODO remove output
                 std::cout << "input stream " << i << ", type: " << fmt_ctx->streams[i]->codec->codec_type << ": ";
                 switch( fmt_ctx->streams[i]->codec->codec_type ) {
                     case AVMEDIA_TYPE_UNKNOWN: std::cout << "AVMEDIA_TYPE_UNKNOWN" << std::endl; break;
@@ -271,6 +336,7 @@ public:
                         VideoStream videofile;
                         videofile.width( input_codec_context->width );
                         videofile.height( input_codec_context->height );
+                        videofile.codec( input_codec_context->codec_id );
                         media_file.addVideoStream( std::move( videofile ) );
                         avcodec_close(input_codec_context);
                         break;
@@ -286,6 +352,7 @@ public:
                         audiofile.bitsPerSample( input_codec_context->bits_per_raw_sample );
                         audiofile.channels( input_codec_context->channels );
                         audiofile.sampleFrequency( input_codec_context->sample_rate );
+                        audiofile.codec( input_codec_context->codec_id );
                         media_file.addAudioStream( std::move( audiofile ) );
                         avcodec_close(input_codec_context);
                         break;
@@ -412,7 +479,7 @@ private:
 
 
     /** Open an input file and the required decoder. */
-    static int open_input_decoder(int stream_index,
+    static void open_input_decoder(int stream_index,
                                AVFormatContext **input_format_context,
                                AVCodecContext **input_codec_context ) {
         AVCodec *input_codec;

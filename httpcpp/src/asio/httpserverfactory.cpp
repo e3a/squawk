@@ -28,7 +28,7 @@
 http::asio_impl::server * HttpServerFactory::httpd = nullptr;
 std::thread HttpServerFactory::httpd_thread;
 
-void HttpServerFactory::start(const std::string& address, const std::string& port, std::size_t thread_pool_size, http::HttpRequestHandler * httpRequestHandler) {
+void HttpServerFactory::start(const std::string& address, const int & port /*, std::size_t thread_pool_size */, http::HttpRequestHandler * httpRequestHandler) {
 
     try {
       // Initialise the server.

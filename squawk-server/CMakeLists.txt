@@ -4,8 +4,6 @@ cmake_minimum_required(VERSION 2.8.9)
 project(squawk-server)
 
 find_package(GoogleTest REQUIRED)
-# find_package(Boost COMPONENTS system filesystem serialization thread regex REQUIRED)
-# set(LIBS ${LIBS} ${Boost_LIBRARIES})
 
 find_package(Flac++ REQUIRED)
 set(LIBS ${LIBS} ${FLAC++_LIBRARIES})  
