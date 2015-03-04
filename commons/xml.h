@@ -295,8 +295,8 @@ public:
      * @param assign assign namespace to parent node (default false)
      */
     void ns( const Node & parent, const std::string & href, const std::string & prefix, bool assign = false ) {
-        if( href.size() == 0 || prefix.size() == 0 ) {
-            throw XmlException( 5, "XML namespace uri or prefix is empty." );
+        if( href.size() == 0 /* || prefix.size() == 0 */ ) {
+            throw XmlException( 5, "XML namespace uri is empty." );
         }
         //TODO remove default namespace
         xmlNsPtr ns = xmlNewNs( parent.node, BAD_CAST href.c_str(), ( prefix.size() == 0 ? NULL : BAD_CAST prefix.c_str() ) );

@@ -1,5 +1,5 @@
 /*
-    Squawk SSDP Server
+    SSDP Server
     
     Copyright (C) 2013  <copyright holder> <email>
 
@@ -27,11 +27,8 @@
 #include "asio/ssdpasioconnection.h" //TODO 
 
 
-#define HEADER_DATE 		"Date" //TODO
-#define HTTP_REQUEST_LINE_OK	std::string("HTTP/1.1 200 OK")
 
 #define UPNP_NS_ALL 		std::string("ssdp:all")
-#define UPNP_STATUS_ALIVE	std::string("ssdp:alive")
 
 #define UPNP_HEADER_EXT 	std::string("Ext")		/*  TODO. */
 #define UPNP_HEADER_USN 	std::string("Usn")		/*  Field value contains Unique Service Name. */
@@ -62,24 +59,27 @@
 //TODO cleanup thread
 //TODO deregister from network
 
-namespace squawk {
 namespace ssdp {
 
-log4cxx::LoggerPtr SSDPServerImpl::logger(log4cxx::Logger::getLogger("squawk.ssdp.SSDPServer"));
+log4cxx::LoggerPtr SSDPServerImpl::logger(log4cxx::Logger::getLogger("ssdp.SSDPServer"));
 
 inline bool is_root_requested( ::http::HttpRequest request ) {
     return( request.request_lines[UPNP_HEADER_ST] == NS_ROOT_DEVICE || request.request_lines[UPNP_HEADER_ST] == UPNP_NS_ALL );
 }
+
+SSDPServerImpl::SSDPServerImpl(const std::string & uuid, const std::string & local_listen_address, const std::string & multicast_address, const int & multicast_port) :
+  uuid(uuid), local_listen_address(local_listen_address), multicast_address(multicast_address), multicast_port(multicast_port) {
+}
+
 void SSDPServerImpl::start() {
     LOG4CXX_INFO(logger, "Start UPNP Server:" << local_listen_address << ":" << multicast_port << " -> " << multicast_address)
-
-    connection = new squawk::ssdp::asio::SSDPAsioConnection(io_service, local_listen_address, multicast_address, multicast_port);
+    connection = std::unique_ptr<asio::SSDPAsioConnection>( new ssdp::asio::SSDPAsioConnection(io_service, local_listen_address, multicast_address, multicast_port) );
     connection->set_handler(this);
     io_service.run();
 }
 
 void SSDPServerImpl::handle_receive(::http::HttpRequest request) {
-    LOG4CXX_TRACE(logger, "SSDPRequest:" << request)
+    LOG4CXX_TRACE(logger, "handle:receive:" << request)
     if( request.request_method == REQUEST_METHOD_MSEARCH ) {
         LOG4CXX_TRACE(logger, "M-SEARCH: " << ", ST:" << request.request_lines[UPNP_HEADER_ST])
 
@@ -125,10 +125,20 @@ void SSDPServerImpl::handle_receive(::http::HttpRequest request) {
     }
 }
 void SSDPServerImpl::announce() {
+    suppress();
     LOG4CXX_DEBUG(logger, "Announce UPNP Server")
-            for(int i=0; i<2; i++) {
-        for(std::map< std::string, std::string >::iterator iter = namespaces.begin(); iter != namespaces.end(); ++iter) {
-            send_anounce(iter->first, iter->second);
+    for(size_t i=0; i<NETWORK_COUNT; i++) {
+        for(auto & iter : namespaces ) {
+            std::cout << "announce:" << iter.first << std::endl;
+            send_anounce(iter.first, iter.second);
+        }
+    }
+}
+void SSDPServerImpl::suppress() {
+    LOG4CXX_DEBUG(logger, "Suppress UPNP Server")
+    for(size_t i=0; i<NETWORK_COUNT; i++) {
+        for(auto & iter : namespaces ) {
+            send_suppress(iter.first, iter.second);
         }
     }
 }
@@ -137,7 +147,7 @@ std::map< std::string, std::string > SSDPServerImpl::create_response(size_t byte
     std::map< std::string, std::string > map;
     map[HTTP_HEADER_CACHE_CONTROL] = std::string("max-age=1800"); //TODO
     map[UPNP_HEADER_LOCATION] = location;
-    map[UPNP_HEADER_SERVER] = commons::system::uname() + std::string(" DLNADOC/1.50 UPnP/1.0 Squawk/1.0.0"); //TODO
+    map[UPNP_HEADER_SERVER] = commons::system::uname() + std::string(" DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0"); //TODO
     map[UPNP_HEADER_ST] = nt;
     map[UPNP_HEADER_USN ] = std::string("uuid:") + uuid + std::string("::") + nt;
     map["EXT"] = "";
@@ -151,15 +161,29 @@ void SSDPServerImpl::send_anounce(std::string nt, std::string location) {
     std::map< std::string, std::string > map;
     map[HTTP_HEADER_HOST] = SSDP_MULTICAST_IP + std::string(":") + commons::string::to_string<int>(multicast_port);
     map[HTTP_HEADER_CACHE_CONTROL] = std::string("max-age=1800"); //TODO
-    map[UPNP_HEADER_LOCATION] = location;
-    map[UPNP_HEADER_SERVER] = commons::system::uname() + std::string(" DLNADOC/1.50 UPnP/1.0 Squawk/1.0.0"); //TODO
-    map[UPNP_HEADER_NT] = nt;
-    map[UPNP_HEADER_USN ] = std::string("uuid:") + uuid;
-    map[UPNP_HEADER_NTS] = UPNP_STATUS_ALIVE;
+    map[commons::string::to_upper( UPNP_HEADER_LOCATION )] = location;
+    map[UPNP_HEADER_SERVER] = commons::system::uname() + std::string(" DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0"); //TODO
+    map[commons::string::to_upper( UPNP_HEADER_NT )] = nt;
+    map[commons::string::to_upper( UPNP_HEADER_USN )] = "uuid:" + uuid + ":" + nt;
+    map[commons::string::to_upper( UPNP_HEADER_NTS )] = UPNP_STATUS_ALIVE;
     map["EXT"] = std::string("");
     map["DATE"] = commons::system::time_string();
     map[HTTP_HEADER_CONTENT_LENGTH] = std::string("0");
 
     connection->send(SSDP_HEADER_REQUEST_LINE, map);
 }
-}}
+void SSDPServerImpl::send_suppress(std::string nt, std::string location) {
+
+    std::map< std::string, std::string > map;
+    map[HTTP_HEADER_HOST] = SSDP_MULTICAST_IP + std::string(":") + commons::string::to_string<int>(multicast_port);
+    map[commons::string::to_upper( UPNP_HEADER_NT )] = nt;
+    map[commons::string::to_upper( UPNP_HEADER_USN )] = "uuid:" + uuid + ":" + nt;
+    map[commons::string::to_upper( UPNP_HEADER_NTS )] = UPNP_STATUS_BYE;
+    map[UPNP_HEADER_SERVER] = commons::system::uname() + std::string(" DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0"); //TODO
+    map["EXT"] = std::string("");
+    map["DATE"] = commons::system::time_string();
+    map[HTTP_HEADER_CONTENT_LENGTH] = std::string("0");
+
+    connection->send(SSDP_HEADER_REQUEST_LINE, map);
+}
+}

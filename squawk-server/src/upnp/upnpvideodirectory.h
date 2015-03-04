@@ -30,7 +30,7 @@
 #include "log4cxx/logger.h"
 
 namespace squawk {
-namespace servlet {
+namespace upnp {
 
 class UpnpVideoDirectory : public commons::upnp::ContentDirectoryModule {
 public:
@@ -41,8 +41,8 @@ public:
 
 private:
     static log4cxx::LoggerPtr logger;
-    squawk::SquawkConfig * squawk_config;
     squawk::db::Sqlite3Database * db;
+    squawk::SquawkConfig * squawk_config;
 
     /* get video count */
     static constexpr const char * SQL_VIDEO_COUNT = "select count(*) from tbl_cds_files where type=2";
@@ -68,13 +68,16 @@ private:
         return count;
     }
     /* get videos */
-    static constexpr const char * SQL_VIDEOS = "select ROWID, name, filename, mime_type from tbl_cds_files where type=2 order by name";
-    void videos( std::function<void(const int, const std::string, const std::string)> callback ) {
+    static constexpr const char * SQL_VIDEOS = "select ROWID, name, filename, mime_type, duration, filesize, sampleFrequency, width, height, bitrate, channels from tbl_cds_files where type=2 order by name";
+    void videos( std::function<void(const int, const std::string, const std::string,  const int & duration, const int & size, const int & sample_frequency, const int & width, const int & height, const int & bitrate, const int & channels)> callback ) {
         squawk::db::Sqlite3Statement * stmt_videos = NULL;
         try {
             stmt_videos = db->prepare_statement( SQL_VIDEOS );
             while( stmt_videos->step() ) {
-                callback( stmt_videos->get_int( 0 ), stmt_videos->get_string( 2 ), stmt_videos->get_string( 3 ) );
+                callback( stmt_videos->get_int( 0 ), stmt_videos->get_string( 2 ), stmt_videos->get_string( 3 ),
+                          stmt_videos->get_int( 4 ), stmt_videos->get_int( 5 ), stmt_videos->get_int( 6 ),
+                          stmt_videos->get_int( 7 ), stmt_videos->get_int( 8 ), stmt_videos->get_int( 9 ),
+                          stmt_videos->get_int( 10 ) );
             }
             db->release_statement( stmt_videos );
 

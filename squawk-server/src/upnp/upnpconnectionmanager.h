@@ -31,7 +31,7 @@
 #include "log4cxx/logger.h"
 
 namespace squawk {
-namespace servlet {
+namespace upnp {
 
 /**
  * @brief The UpnpConnectionManager class.

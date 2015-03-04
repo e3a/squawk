@@ -102,6 +102,9 @@ void HttpServlet::do_put(HttpRequest & request, HttpResponse & response) {
 void HttpServlet::do_head(HttpRequest & request, HttpResponse & response) {
     create_stock_reply(http_status::NOT_IMPLEMENTED, response);
 }
+void HttpServlet::do_subscribe(HttpRequest & request, HttpResponse & response) {
+    create_stock_reply(http_status::NOT_IMPLEMENTED, response);
+}
 void HttpServlet::create_stock_reply(http_status status, HttpResponse & response) {
     response.set_status(status);
     response << get_stock_body(status);

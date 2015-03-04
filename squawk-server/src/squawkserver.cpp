@@ -42,12 +42,13 @@
 #include "api/apibrowseservlet.h"
 #include "servlet/imageservlet.h"
 #include "servlet/songservlet.h"
-#include "servlet/upnpxmldescription.h"
-#include "servlet/upnpcontentdirectory.h"
-#include "servlet/upnpmusicdirectorymodule.h"
-#include "servlet/upnpvideodirectory.h"
-#include "servlet/upnpconnectionmanager.h"
 
+#include "upnp/upnpxmldescription.h"
+#include "upnp/upnpcontentdirectory.h"
+#include "upnp/upnpmusicdirectorymodule.h"
+#include "upnp/upnpvideodirectory.h"
+#include "upnp/upnpimagedirectory.h"
+#include "upnp/upnpconnectionmanager.h"
 #include "upnp/upnpmediaservlet.h"
 
 // #include "http/api/apiupnpdevicehandler.h"
@@ -64,13 +65,15 @@ void SquawkServer::start() {
     parser = new squawk::media::FileParser(database, squawk_config);
 
     //Setup and start the DLNA server
-    commons::upnp::ContentDirectoryModule * musicDirectory = new squawk::servlet::UpnpMusicDirectoryModule(squawk_config, database);
-    commons::upnp::ContentDirectoryModule * videoDirectory = new squawk::servlet::UpnpVideoDirectory(squawk_config, database);
-    squawk::servlet::UpnpContentDirectory * content_directory = new squawk::servlet::UpnpContentDirectory("/ctl/ContentDir");
+    commons::upnp::ContentDirectoryModule * musicDirectory = new squawk::upnp::UpnpMusicDirectoryModule(squawk_config, database);
+    commons::upnp::ContentDirectoryModule * videoDirectory = new squawk::upnp::UpnpVideoDirectory(squawk_config, database);
+    commons::upnp::ContentDirectoryModule * imageDirectory = new squawk::upnp::UpnpImageDirectory(squawk_config, database);
+    squawk::upnp::UpnpContentDirectory * content_directory = new squawk::upnp::UpnpContentDirectory("/ctl/ContentDir");
     content_directory->registerContentDirectoryModule(musicDirectory);
     content_directory->registerContentDirectoryModule(videoDirectory);
+    content_directory->registerContentDirectoryModule(imageDirectory);
 
-    squawk::servlet::UpnpConnectionManager * connection_manager = new squawk::servlet::UpnpConnectionManager("/ctl/ConnectionMgr");
+    squawk::upnp::UpnpConnectionManager * connection_manager = new squawk::upnp::UpnpConnectionManager("/ctl/ConnectionMgr");
 
 
     //Setup and start the HTTP server
@@ -79,7 +82,7 @@ void SquawkServer::start() {
                 squawk_config->httpPort() /*,
                 squawk_config->int_value(CONFIG_HTTP_THREADS) */ );
 
-    squawk::servlet::UpnpXmlDescription * xmldescription = new squawk::servlet::UpnpXmlDescription(std::string("/rootDesc.xml"), squawk_config );
+    squawk::upnp::UpnpXmlDescription * xmldescription = new squawk::upnp::UpnpXmlDescription(std::string("/rootDesc.xml"), squawk_config );
     squawk::servlet::ApiStatisticServlet * statistic_servlet = new squawk::servlet::ApiStatisticServlet(std::string("/api/statistic"), database);
     squawk::api::ApiAlbumListServlet * albums_servlet = new squawk::api::ApiAlbumListServlet(std::string("/api/album"), database);
     squawk::api::ApiVideoListServlet * videos_servlet = new squawk::api::ApiVideoListServlet(std::string("/api/video"), database);
@@ -146,24 +149,25 @@ void SquawkServer::start() {
     http_server->register_handler("GET", "/song/(\\d*).(flac|mp3)", song_handler);
 */
     //Setup and start the SSDP server
-    ssdp_server = new squawk::ssdp::SSDPServerImpl(
+    ssdp_server = new ssdp::SSDPServerImpl(
     squawk_config->uuid(),
     squawk_config->localListenAddress(),
     squawk_config->multicastAddress(),
     squawk_config->multicastPort() );
 
     //register namespaces
-    ssdp_server->register_namespace(NS_ROOT_DEVICE, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-    ssdp_server->register_namespace(NS_MEDIASERVER, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-    ssdp_server->register_namespace(NS_CONTENT_DIRECTORY, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-    ssdp_server->register_namespace(NS_MEDIA_RECEIVER_REGISTRAR, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(squawk_config->uuid(), std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(ssdp::NS_ROOT_DEVICE, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(ssdp::NS_MEDIASERVER, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(ssdp::NS_CONTENT_DIRECTORY, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(ssdp::NS_MEDIA_RECEIVER_REGISTRAR, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
 
     //TODO squawk::http::RequestCallback * api_upnp_device_handler = new api::ApiUpnpDeviceHandler(service, ssdp_server);
     //TODO http_server->register_handler("GET", "/api/devices", api_upnp_device_handler);
 
     //start the server
 //TODO    http_thread = std::thread(&squawk::http::Server::run, http_server);
-    ssdp_thread = std::thread(&squawk::ssdp::SSDPServerImpl::start, ssdp_server);
+    ssdp_thread = std::thread(&ssdp::SSDPServerImpl::start, ssdp_server);
 
     //rescan the media directory
     if(squawk_config->rescan) {
@@ -182,6 +186,7 @@ void SquawkServer::stop() {
     http_thread.join();
     ssdp_server->stop();
     ssdp_thread.join();
+    ssdp_server->stop();
     delete web_server, ssdp_server;
 }
 

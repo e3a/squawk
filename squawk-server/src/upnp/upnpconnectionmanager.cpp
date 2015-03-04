@@ -23,7 +23,7 @@
 #include "squawk.h"
 
 namespace squawk {
-namespace servlet {
+namespace upnp {
 
 log4cxx::LoggerPtr UpnpConnectionManager::logger(log4cxx::Logger::getLogger("squawk.servlet.UpnpConnectionManager"));
 
@@ -49,9 +49,9 @@ void UpnpConnectionManager::do_post(::http::HttpRequest & request, ::http::HttpR
             commons::xml::Node response_node = xmlWriter.element(body_node, "", "GetProtocolInfoResponse", "");
             xmlWriter.ns(response_node, commons::upnp::XML_NS_UPNP_CMS, "u", true);
 
-            commons::xml::Node source_node = xmlWriter.element(body_node, commons::upnp::XML_NS_UPNP_CMS, "Source", SOURCE_TYPES);
+            commons::xml::Node source_node = xmlWriter.element(response_node, "", "Source", SOURCE_TYPES);
             xmlWriter.attribute(source_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "type", "xsd:string");
-            commons::xml::Node sink_node = xmlWriter.element(body_node, commons::upnp::XML_NS_UPNP_CMS, "Sink", "");
+            commons::xml::Node sink_node = xmlWriter.element(response_node, "", "Sink", "");
             xmlWriter.attribute(sink_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "type", "xsd:string");
 
             response <<  xmlWriter.str();

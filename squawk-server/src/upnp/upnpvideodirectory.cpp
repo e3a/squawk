@@ -21,9 +21,9 @@
 #include "mimetypes.h"
 
 namespace squawk {
-namespace servlet {
+namespace upnp {
 
-log4cxx::LoggerPtr UpnpVideoDirectory::logger( log4cxx::Logger::getLogger( "squawk.servlet.UpnpVideoDirectory" ) );
+log4cxx::LoggerPtr UpnpVideoDirectory::logger( log4cxx::Logger::getLogger( "squawk.upnp.UpnpVideoDirectory" ) );
 
 bool UpnpVideoDirectory::match( commons::upnp::UpnpContentDirectoryRequest * request ) {
     if( request->contains( "ObjectID" ) && commons::string::starts_with( request->getValue( "ObjectID" ), "video" ) ) {
@@ -58,7 +58,8 @@ void UpnpVideoDirectory::parseNode( commons::xml::XMLWriter * xmlWriter, commons
     /* ----------- Root Node ----------- */
     if( request->contains( "ObjectID" ) && request->getValue( "ObjectID" ) == "video" ) {
 
-        videos([&] (const int id, const std::string & name, const std::string & mime_type ) {
+        videos([&] (const int id, const std::string & name, const std::string & mime_type,
+                    const int & duration, const int & size, const int & sample_frequency, const int & width, const int & height, const int & bitrate, const int & channels ) {
 
            commons::xml::Node item_element = xmlWriter->element( didl_element, "", "item", "" );
            xmlWriter->attribute(item_element, "id", "/video/" + commons::string::to_string<int>(id) );
@@ -74,7 +75,15 @@ void UpnpVideoDirectory::parseNode( commons::xml::XMLWriter * xmlWriter, commons
                "http://" +squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) +
                "/video/" + commons::string::to_string( id ) + "." + http::mime::extension( mime_type ) );
            xmlWriter->attribute(dlna_res_node, "", "protocolInfo",
-               "http-get:*:" + mime_type  + ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000" );
+                                "http-get:*:video/mp4:DLNA.ORG_PN=AVC_MP4_HP_HD_AAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000" );
+//               "http-get:*:" + mime_type  + ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000" );
+           xmlWriter->attribute(dlna_res_node, "", "duration", commons::string::time_to_string( duration ) );
+           xmlWriter->attribute(dlna_res_node, "", "size", commons::string::to_string( size ) );
+           xmlWriter->attribute(dlna_res_node, "", "sampleFrequency", commons::string::to_string( sample_frequency) );
+           xmlWriter->attribute(dlna_res_node, "", "resolution", commons::string::to_string( width ) + "x" + commons::string::to_string( height ) );
+           xmlWriter->attribute(dlna_res_node, "", "nrAudioChannels", commons::string::to_string( channels ) );
+           xmlWriter->attribute(dlna_res_node, "", "bitrate", commons::string::to_string( bitrate ) );
+
 
     });
     int video_count = videoCount();

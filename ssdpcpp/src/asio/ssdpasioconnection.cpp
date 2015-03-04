@@ -23,7 +23,6 @@
 #include <thread>
 #include <future>
 
-namespace squawk {
 namespace ssdp {
 namespace asio {
 
@@ -63,7 +62,9 @@ SSDPAsioConnection::SSDPAsioConnection(::asio::io_service& io_service,
     ::asio::placeholders::bytes_transferred)); */
 }
 
-SSDPAsioConnection::~SSDPAsioConnection() {}
+SSDPAsioConnection::~SSDPAsioConnection() {
+    std::cout << "delete SSDPAsioConnection." << std::endl;
+}
 
 inline std::string create_header(std::string request_line, std::map< std::string, std::string > headers) {
   std::ostringstream os;
@@ -111,4 +112,4 @@ void SSDPAsioConnection::handle_receive_from(const ::asio::error_code & error, s
       ::asio::placeholders::bytes_transferred)); */
   }
 }
-}}}
+}}

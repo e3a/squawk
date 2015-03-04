@@ -215,7 +215,6 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
             //check if file exists
                     //create directory
                     std::string relative_path = path.substr( basepath.size() );
-                    std::cout << "image path:" << relative_path << std::endl;
                     unsigned long path_id = mediaDao->createDirectory( relative_path );
                     //save file
                     for(std::list< file_item >::iterator list_iter = files[IMAGEFILE].begin(); list_iter != files[IMAGEFILE].end(); list_iter++) {
@@ -232,7 +231,6 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
 
     if(files.find( VIDEOFILE ) != files.end()) {
         std::string relative_path = path.substr( basepath.size() );
-        std::cout << "image path:" << relative_path << std::endl;
         unsigned long path_id = mediaDao->createDirectory( relative_path );
         //save file
         for(auto & video : files[VIDEOFILE] ) {
@@ -295,7 +293,7 @@ std::string FileParser::get_mime_type(const std::string & filename) {
     } else if( commons::string::ends_with(filename, ".mkv", true) ) {
         return "video/x-matroska";
     } else if( commons::string::ends_with(filename, ".avi", true) ) {
-        return "video/avi";
+        return "video/x-msvideo";
     } else if( commons::string::ends_with(filename, ".cue", true) ||
                commons::string::ends_with(filename, ".m3u", true) ||
                commons::string::ends_with(filename, ".txt", true) ) {

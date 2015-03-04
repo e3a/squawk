@@ -30,7 +30,7 @@
 #include "log4cxx/logger.h"
 
 namespace squawk {
-namespace servlet {
+namespace upnp {
 
 /**
  * @brief The UpnpContentDirectory class
@@ -42,6 +42,7 @@ public:
     UpnpContentDirectory( const std::string path ) : HttpServlet(path) {}
     void registerContentDirectoryModule( commons::upnp::ContentDirectoryModule * module);
     virtual void do_post(::http::HttpRequest & request, ::http::HttpResponse & response);
+    virtual void do_subscribe(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
     static log4cxx::LoggerPtr logger;
     void browse( commons::xml::XMLWriter * xmlWriter, commons::upnp::UpnpContentDirectoryRequest * upnp_command );

@@ -28,6 +28,12 @@ namespace commons {
  */
 namespace media {
 
+enum Codec {
+
+    MJPEGB = 1,
+    H264 = 2
+};
+
 /**
  * @brief The MediaException class
  */

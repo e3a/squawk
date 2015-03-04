@@ -15,6 +15,7 @@
 #define UPNP_CDS_BROWSE_FLAG_METADATA "BrowseMetadata"
 #define UPNP_CDS_BROWSE_FLAG_DIRECT_CHILDREN "BrowseDirectChildren"
 #define UPNP_COMMAND_PROTOCOL_INFO "GetProtocolInfo"
+#define UPNP_COMMAND_FEATURE_LIST "X_GetFeatureList"
 
 namespace commons {
 /**
@@ -146,7 +147,7 @@ class UpnpContentDirectoryRequest {
 public:
 
     /** The Reqquest Types */
-    enum TYPE { BROWSE, PROTOCOL_INFO };
+    enum TYPE { BROWSE, PROTOCOL_INFO, X_FEATURE_LIST };
     /**
      * @brief UpnpContentDirectoryRequest
      * @param type
@@ -224,6 +225,10 @@ inline UpnpContentDirectoryRequest parseRequest( std::string request ) {
                 return request;
             } else if( upnp_command[0].ns() == XML_NS_UPNP_CMS && upnp_command[0].name() == UPNP_COMMAND_PROTOCOL_INFO ) {
                 UpnpContentDirectoryRequest request( UpnpContentDirectoryRequest::PROTOCOL_INFO );
+                return request;
+
+            } else if( upnp_command[0].ns() == XML_NS_UPNP_CDS && upnp_command[0].name() == UPNP_COMMAND_FEATURE_LIST ) {
+                UpnpContentDirectoryRequest request( UpnpContentDirectoryRequest::X_FEATURE_LIST );
                 return request;
 
             } else {

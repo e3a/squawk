@@ -30,7 +30,7 @@
 #include "log4cxx/logger.h"
 
 namespace squawk {
-namespace servlet {
+namespace upnp {
 
 class UpnpMusicDirectoryModule : public commons::upnp::ContentDirectoryModule {
 public:

@@ -26,7 +26,6 @@
 
 #include <asio.hpp>
 
-namespace squawk {
 namespace ssdp {
 namespace asio {
 
@@ -72,5 +71,5 @@ private:
   ::asio::io_service::strand strand_;
 
 };
-}}}
+}}
 #endif // SSDPASIOCONNECTION_H

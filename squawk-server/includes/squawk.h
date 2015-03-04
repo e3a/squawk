@@ -45,14 +45,14 @@ inline std::string clean_name( std::string name ) {
     if( res.rfind("der ", 0) == 0)
         res.erase(0, 4);
     return res;
-};
+}
 inline std::string get_letter( const std::string & clean_name ) {
     if(clean_name.length()>0) {
         return commons::string::to_upper( clean_name.substr(0, 1) );
     } else {
         return std::string("");
     }
-};
+}
 
 /**
  * \brief The artist entity.

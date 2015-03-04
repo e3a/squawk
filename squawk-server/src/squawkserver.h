@@ -54,7 +54,7 @@ class SquawkServer {
     squawk::db::Sqlite3Database * database = nullptr;
     squawk::media::FileParser * parser = nullptr;
     http::WebServer * web_server = nullptr;
-    squawk::ssdp::SSDPServerImpl * ssdp_server = nullptr;
+    ssdp::SSDPServerImpl * ssdp_server = nullptr;
 };
 
 #endif // SQUAWKSERVER_H

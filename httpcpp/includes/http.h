@@ -95,8 +95,10 @@ namespace http {
     */
     struct HttpRequest {
         HttpRequest() :
-            request_method(std::string("")), uri(std::string("")), body(std::string("")),
-            request_lines(std::map< std::string, std::string >()), client_ip(std::string("")) {};
+            request_method(std::string("")), uri(std::string("")), protocol(""), body(std::string("")),
+            client_ip(std::string("")), http_version_major(0), http_version_minor(0),
+            request_lines(std::map< std::string, std::string >()),
+            parameters(std::map< std::string, std::string >()) {}
 
         std::string request_method, uri, protocol, body, client_ip;
         int http_version_major, http_version_minor;
@@ -130,7 +132,7 @@ namespace http {
    */
   class HttpResponse {
   public:
-      HttpResponse() {};
+      HttpResponse() {}
       ~HttpResponse() {
           if( body_istream ) {
               delete body_istream; //TODO unique pointer
@@ -296,6 +298,13 @@ namespace http {
             virtual void do_head(HttpRequest & request, HttpResponse & response);
 
             /**
+             * Callback function for the SUBSCIRBE method.
+             * @param request The HTTP Request object.
+             * @param response The HTTP Response object.
+             */
+            virtual void do_subscribe(HttpRequest & request, HttpResponse & response);
+
+            /**
              * Create a stock reply with the given status code.
              * @brief create_stock_reply
              * @param status
@@ -410,7 +419,7 @@ inline std::string normalize_key(std::string key) {
   std::locale loc;
   std::stringstream ss_buffer;
   char lastChar;
-  for (int i=0; i<key.length(); i++) {
+  for (size_t i=0; i<key.length(); i++) {
     if( i == 0 ) {
    ss_buffer << std::toupper(key[i],loc);
     } else if( lastChar == '-' ) {
@@ -431,7 +440,7 @@ inline void get_parameters(std::string parameters, HttpRequest & request) {
   enum parse_mode { KEY, VALUE } mode = KEY;
   std::stringstream ss_buffer_key;
   std::stringstream ss_buffer_value;
-  for (int i=0; i<parameters.length(); i++) {
+  for (size_t i=0; i<parameters.length(); i++) {
     if( parameters[i] == '=' ) {
   mode = VALUE;
     } else if( parameters[i] == '&' ) {

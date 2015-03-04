@@ -1,6 +1,6 @@
 /*
     Datastructures and utility classes for the Mime Types.
-    Copyright (C) 2013  <copyright holder> <email>
+    Copyright (C) 2013  <etienne> <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -48,13 +48,18 @@ namespace mime {
       { "json", "text/json" },
       { "txt", "text/plain" },
       { "xml", "text/xml" },
-      { "avi", "video/avi" },
+      { "avi", "video/x-msvideo" },
       { "mp4", "video/mp4" },
       { "mkv", "video/x-matroska" },
     { 0, 0 }
   };
 
-  static MIME_TYPE mime_type(const std::string & extension) {
+  /**
+   * @brief mime-type by extension.
+   * @param extension
+   * @return
+   */
+  inline MIME_TYPE mime_type(const std::string & extension) {
     int position = 0;
     for (mapping* m = mappings; m->extension; ++m) {
       if (m->extension == extension) {
@@ -65,21 +70,21 @@ namespace mime {
     return TEXT;
   }
   /**
-   * mime type for enum type.
+   * @brief mime type for enum type.
    */
-  static std::string mime_type(MIME_TYPE mime_type) {
+  inline std::string mime_type(MIME_TYPE mime_type) {
     return mappings[mime_type].mime_type;
-  };
+  }
   /**
-   * get extension by mime type.
+   * @brief get extension by mime type.
    */
-  static std::string extension( MIME_TYPE mime_type ) {
+  inline std::string extension( MIME_TYPE mime_type ) {
     return mappings[mime_type].extension;
-  };
+  }
   /**
-   * get extension by mime type string.
+   * @brief get extension by mime type string.
    */
-  static std::string extension( const std::string & mime_type ) {
+  inline std::string extension( const std::string & mime_type ) {
       int position = 0;
       MIME_TYPE type = TEXT;
       for (mapping * m = mappings; m->extension; ++m) {
@@ -89,6 +94,6 @@ namespace mime {
         position++;
       }
     return mappings[type].extension;
-  };
+  }
 }}
 #endif // MIME_TYPES_H

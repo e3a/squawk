@@ -23,12 +23,21 @@
 #include "squawk.h"
 
 namespace squawk {
-namespace servlet {
+namespace upnp {
 
-log4cxx::LoggerPtr UpnpContentDirectory::logger(log4cxx::Logger::getLogger("squawk.servlet.UpnpContentDirectory"));
+log4cxx::LoggerPtr UpnpContentDirectory::logger(log4cxx::Logger::getLogger("squawk.upnp.UpnpContentDirectory"));
 
 void UpnpContentDirectory::registerContentDirectoryModule( commons::upnp::ContentDirectoryModule * module ) {
     modules.insert( modules.end(), module );
+}
+
+void UpnpContentDirectory::do_subscribe(::http::HttpRequest & request, ::http::HttpResponse & response) {
+    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "SUBSCRIBE: " << request.body )
+    response.set_mime_type( ::http::mime::XML );
+    response.set_status( ::http::http_status::OK );
+    response.add_header("Content-Type", "text/xml; charset=\"utf-8\"");
+    response.add_header("Timeout", "Second-1800");
+    response.add_header("SID", "uuid:");
 }
 
 void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpResponse & response) {
@@ -47,10 +56,55 @@ void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpRe
 
             response.set_mime_type( ::http::mime::XML );
             response.set_status( ::http::http_status::OK );
-            return;
+
+        } else if( upnp_command.type == commons::upnp::UpnpContentDirectoryRequest::X_FEATURE_LIST ) {
+            LOG4CXX_WARN(logger, "X_GetFeatureList: " << request << "\n" << upnp_command  )
+            commons::xml::XMLWriter xmlWriter;
+            commons::xml::Node envelope_node = xmlWriter.element( "Envelope" );
+            xmlWriter.ns(envelope_node, commons::upnp::XML_NS_SOAP, "s", true);
+            xmlWriter.ns(envelope_node, commons::upnp::XML_NS_SOAPENC, "soapenc", false);
+            xmlWriter.ns(envelope_node, commons::upnp::XML_NS_SCHEMA, "xsd", false);
+            xmlWriter.ns(envelope_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "xsi", false);
+            xmlWriter.attribute(envelope_node, commons::upnp::XML_NS_SOAP, "encodingStyle", "http://schemas.xmlsoap.org/soap/encoding/");
+
+            commons::xml::Node body_node = xmlWriter.element(envelope_node, commons::upnp::XML_NS_SOAP, "Body");
+            commons::xml::Node response_node = xmlWriter.element(body_node, "", "X_GetFeatureListResponse", "");
+            xmlWriter.ns(response_node, commons::upnp::XML_NS_UPNP_CDS, "u", true);
+
+            commons::xml::XMLWriter didlWriter;
+            commons::xml::Node features_node = didlWriter.element( "Features" );
+            xmlWriter.ns(features_node, "urn:schemas-upnp-org:av:avs", "", true );
+            xmlWriter.ns(features_node, "http://www.w3.org/2001/XMLSchema-instance", "xsi" );
+            xmlWriter.attribute(features_node, "http://www.w3.org/2001/XMLSchema-instance", "encodingStyle", "urn:schemas-upnp-org:av:avs http://www.upnp.org/schemas/av/avs.xsd");
+
+            commons::xml::Node feature_node = didlWriter.element( features_node, "", "Feature" );
+            xmlWriter.attribute(feature_node, "", "name", "samsung.com_BASICVIEW");
+            xmlWriter.attribute(feature_node, "", "version", "1");
+
+            commons::xml::Node audio_node = didlWriter.element( feature_node, "", "container" );
+            xmlWriter.attribute(audio_node, "", "id", "music");
+            xmlWriter.attribute(audio_node, "", "type", "object.item.audioItem");
+
+            commons::xml::Node video_node = didlWriter.element( feature_node, "", "container" );
+            xmlWriter.attribute(video_node, "", "id", "video");
+            xmlWriter.attribute(video_node, "", "type", "object.item.videoItem");
+
+            commons::xml::Node image_node = didlWriter.element( feature_node, "", "container" );
+            xmlWriter.attribute(image_node, "", "id", "image");
+            xmlWriter.attribute(image_node, "", "type", "object.item.imageItem");
+
+            commons::xml::Node result_node = xmlWriter.element(response_node, "", "FeatureList", didlWriter.str() );
+
+            std::cout << xmlWriter.str() << std::endl;
+
+            response <<  xmlWriter.str();
+
+            response.set_mime_type( ::http::mime::XML );
+            response.set_status( ::http::http_status::OK );
 
         } else {
             LOG4CXX_WARN(logger, "invoke::Unknown Method: " << upnp_command )
+            throw ::http::http_status::BAD_REQUEST;
         }
 
     } catch( commons::upnp::UpnpException & ex ) {
@@ -60,8 +114,6 @@ void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpRe
     } catch( ... ) {
         LOG4CXX_ERROR(logger, "UPNP parse error." )
     }
-
-    throw ::http::http_status::BAD_REQUEST;
 }
 
 void UpnpContentDirectory::browse( commons::xml::XMLWriter * xmlWriter, commons::upnp::UpnpContentDirectoryRequest * upnp_command ) {

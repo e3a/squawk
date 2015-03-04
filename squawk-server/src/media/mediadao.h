@@ -58,7 +58,6 @@ public:
     void save_audiofile(std::string filename, long mtime, long size, unsigned long album_id, squawk::media::Song * song);
     unsigned long createDirectory(const std::string path );
     unsigned long save_imagefile(const file_item & file, const unsigned long & album, commons::image::Image * imagefile);
-    unsigned long save_videofile(std::string filename, long mtime, long size, std::string mime_type);
     void sweep( long mtime );
 
 private:
@@ -76,7 +75,7 @@ private:
         "create table if not exists tbl_cds_images(album, filename, mtime, timestamp, filesize, type, mime_type, width, height);",
         "CREATE UNIQUE INDEX IF NOT EXISTS UniqueIndexImagesFilename ON tbl_cds_images (filename)",
         "create table if not exists tbl_cds_movies(name, parent, type, filename, mtime, timestamp, filesize, mime_type);",
-        "create table if not exists tbl_cds_files(name, parent, type, filename, mtime, timestamp, filesize, mime_type, width, height, color);"
+        "create table if not exists tbl_cds_files(name, parent, type, filename, mtime, timestamp, filesize, mime_type, width, height, color, bitrate, sampleFrequency, channels, duration, codecId);"
     };
 };
 }}

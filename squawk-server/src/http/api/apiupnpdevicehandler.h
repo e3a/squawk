@@ -31,11 +31,11 @@ namespace api {
   
 class ApiUpnpDeviceHandler : public ::http::HttpServlet {
 public:
-    ApiUpnpDeviceHandler(const std::string path, squawk::ssdp::SSDPServerImpl * ssdp_server) :
+    ApiUpnpDeviceHandler(const std::string path, ssdp::SSDPServerImpl * ssdp_server) :
                          HttpServlet(path), ssdp_server(ssdp_server) {}
     virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
-  squawk::ssdp::SSDPServerImpl * ssdp_server;
+  ssdp::SSDPServerImpl * ssdp_server;
 };
 }}}
 #endif // APIUPNPDEVICEHANDLER_H

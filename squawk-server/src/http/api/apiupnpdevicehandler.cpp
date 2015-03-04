@@ -29,12 +29,12 @@ namespace api {
 
 void ApiUpnpDeviceHandler::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
-    std::map< std::string, squawk::ssdp::UpnpDevice > devices = ssdp_server->get_upnp_devices();
+    std::map< std::string, ssdp::UpnpDevice > devices = ssdp_server->get_upnp_devices();
     std::stringstream * buf = new std::stringstream();
     (*buf) << "{\"upnp_devices\":[";
     bool first_device = true;
 
-    for(std::map< string, squawk::ssdp::UpnpDevice >::iterator iter = devices.begin(); iter != devices.end(); ++iter) {
+    for(std::map< string, ssdp::UpnpDevice >::iterator iter = devices.begin(); iter != devices.end(); ++iter) {
         if(first_device) first_device = false;
         else (*buf) << ",";
         (*buf) << (*iter).second;

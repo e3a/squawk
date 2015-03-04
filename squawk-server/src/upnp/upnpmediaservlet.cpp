@@ -28,7 +28,7 @@
 namespace squawk {
 namespace upnp {
 
-log4cxx::LoggerPtr UpnpMediaServlet::logger(log4cxx::Logger::getLogger("squawk.servlet.UpnpMediaServlet"));
+log4cxx::LoggerPtr UpnpMediaServlet::logger(log4cxx::Logger::getLogger("squawk.upnp.UpnpMediaServlet"));
 
 void UpnpMediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & response ) {
     try {
@@ -100,11 +100,11 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
                 response.add_header("transferMode.dlna.org", "Streaming");
                 response.add_header("Accept-Ranges", "bytes");
                 response.add_header("realTimeInfo.dlna.org", "DLNA.ORG_TLAG=*");
-                response.add_header("contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000");
+                response.add_header("contentFeatures.dlna.org", "AVC_MP4_HP_HD_AAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000" ); //DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000");
                 response.add_header("Connection", "close");
                 response.add_header("EXT", "");
             }
-
+            response.add_header("Server", "Debian/wheezy/sid DLNADOC/1.50 UPnP/1.0 Squawk/0.1");
         } catch( ::db::DbException * e ) {
             if( stmt_song != NULL ) {
                 db->release_statement( stmt_song );

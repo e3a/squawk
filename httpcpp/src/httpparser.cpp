@@ -68,7 +68,7 @@ PARSE_STATE HttpParser::parse_http_request( http::HttpRequest & request, const s
     std::stringstream ss_buffer;
     std::string request_key;
 
-    for( int i=0; i<size; i++ ) { //search line break and configure the parser
+    for( size_t i=0; i<size; i++ ) { //search line break and configure the parser
 
         if( type != parser_type::REQUEST_BODY && input[i] == '\r' ) {
             break_type = CR;
@@ -82,7 +82,7 @@ PARSE_STATE HttpParser::parse_http_request( http::HttpRequest & request, const s
                     type = http::HttpParser::next(type); //TODO
 
                 } else if( type == parser_type::REQUEST_VALUE ) {
-                    request.request_lines[commons::string::trim(request_key)] = commons::string::trim(ss_buffer.str());
+                    request.request_lines[ commons::string::trim(request_key)] = commons::string::trim(ss_buffer.str());
                     ss_buffer.str(std::string());
                     ss_buffer.clear();
                     type = parser_type::REQUEST_KEY;
@@ -113,7 +113,7 @@ PARSE_STATE HttpParser::parse_http_request( http::HttpRequest & request, const s
             }
             case parser_type::REQUEST_URI: {
                 if(input[i] == ' ' ) {
-                    int qmPosition = ss_buffer.str().find("?");
+                    size_t qmPosition = ss_buffer.str().find("?");
                     if( qmPosition != std::string::npos ) {
                         request.uri = ss_buffer.str().substr(0, qmPosition );
                         utils::get_parameters(ss_buffer.str().substr(qmPosition + 1 ), request);

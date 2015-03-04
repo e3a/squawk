@@ -26,9 +26,9 @@
 #define QUERY_SONGS_BY_ALBUM ""
 
 namespace squawk {
-namespace servlet {
+namespace upnp {
 
-log4cxx::LoggerPtr UpnpMusicDirectoryModule::logger( log4cxx::Logger::getLogger( "squawk.servlet.UpnpMusicDirectoryModule" ) );
+log4cxx::LoggerPtr UpnpMusicDirectoryModule::logger( log4cxx::Logger::getLogger( "squawk.upnp.UpnpMusicDirectoryModule" ) );
 
 bool UpnpMusicDirectoryModule::match( commons::upnp::UpnpContentDirectoryRequest * request ) {
     if( request->contains( commons::upnp::OBJECT_ID ) &&

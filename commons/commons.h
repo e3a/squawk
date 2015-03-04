@@ -220,7 +220,7 @@ namespace string {
                          result = (( utf_buffer[0] & 0b00111111 ) << 6 ) | ( utf_buffer[1] & 0b00111111 );
 
                     } else if( utf_chars == 3 ) {
-                        result = (( utf_buffer[0] & 0b00011111 ) << 12 ) | (( utf_buffer[1] & 0b00111111 ) << 6 ) | utf_buffer[2] & 0b00111111;
+                        result = (( utf_buffer[0] & 0b00011111 ) << 12 ) | (( utf_buffer[1] & 0b00111111 ) << 6 ) | ( utf_buffer[2] & 0b00111111 );
 
                     } else if( utf_chars == 4 ) {
                         result = (( utf_buffer[0] & 0b00001111 ) << 18 ) | (( utf_buffer[1] & 0b00111111 ) << 12 ) | (( utf_buffer[2] & 0b00111111 ) << 6 )| ( utf_buffer[3] & 0b00111111 );
@@ -295,8 +295,8 @@ inline std::list<std::string> getPathTokens(const std::string & path) {
     if(path.empty() || path.find('/') == std::string::npos)
         result_list.push_back( path );
 
-    int end_pos = 0;
-    int first_pos = 0;
+    size_t end_pos = 0;
+    size_t first_pos = 0;
     do {
         first_pos = path.find( '/', end_pos );
         if(first_pos != std::string::npos ) {
@@ -315,11 +315,11 @@ inline std::list<std::string> getPathTokens(const std::string & path) {
 inline bool is_directory(std::string & filename) {
   struct stat sb;
   return (stat(filename.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode));
-};
+}
 inline int filesize(const std::string & filename) {
     std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
     return in.tellg();
-};
+}
 
 }}
 #endif // COMMONS_UTILS_H

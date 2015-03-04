@@ -43,7 +43,11 @@ void WebServer::handle_request(HttpRequest & request, HttpResponse & response, s
                     servlet->do_post(request, response);
                 } else if( request.request_method == "HEAD" ) {
                     servlet->do_head(request, response);
-                 }
+                } else if( request.request_method == "SUBSCRIBE" ) {
+                    servlet->do_subscribe(request, response);
+                } else {
+                    std::cerr << "unknow request method: " << request.request_method << std::endl;
+                }
                 /* TODO handle all http methods */
 
 

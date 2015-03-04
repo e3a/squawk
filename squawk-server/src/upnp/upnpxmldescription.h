@@ -28,7 +28,7 @@
 #include "log4cxx/logger.h"
 
 namespace squawk {
-namespace servlet {
+namespace upnp {
 
 /**
  * Create the UPNP XML description for the Device.
@@ -45,7 +45,7 @@ public:
      * @param path The servlet path
      * @param config the SquawkConfig class
      */
-    UpnpXmlDescription( const std::string path, SquawkConfig * config ) : HttpServlet(path), config(config) {};
+    UpnpXmlDescription( const std::string path, SquawkConfig * config ) : HttpServlet(path), config(config) {}
     virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
     static log4cxx::LoggerPtr logger;
