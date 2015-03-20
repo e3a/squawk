@@ -4,3 +4,4 @@ build/**/*
 .kdev4/
 squawk-server.git.kdev4
 CMakeLists.txt.user
+squawk.git.kdev4
