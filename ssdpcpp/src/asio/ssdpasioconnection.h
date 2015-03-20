@@ -1,6 +1,7 @@
 /*
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) 2013  <copyright holder> <email>
+    ASIO ssdp connection implmementation.
+
+    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,15 +17,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef SSDPASIOCONNECTION_H
 #define SSDPASIOCONNECTION_H
 
 #include <array>
-
-#include "ssdp.h"
+#include <memory>
+#include <thread>
 
 #include <asio.hpp>
+
+#include "ssdp.h"
 
 namespace ssdp {
 namespace asio {
@@ -37,13 +39,17 @@ public:
  /**
   * Create a new SSDPAsioConnection.
   */
-  SSDPAsioConnection(::asio::io_service& io_service,
-      std::string listen_address,
-      std::string multicast_address,
-      int port
-  );  
-  virtual ~SSDPAsioConnection();
-
+  SSDPAsioConnection( std::string listen_address, std::string multicast_address, int port );  
+  virtual ~SSDPAsioConnection() {};
+  
+ /**
+  * Start the server.
+  */
+  virtual void start();
+ /**
+  * Stop the server.
+  */
+  virtual void stop();
  /**
   * Multicast a message to the network.
   */
@@ -58,18 +64,23 @@ public:
   virtual void set_handler(SSDPCallback * handler);
     
 private: 
-  SSDPCallback * handler;
+  /* constuctor parameters */
+  ::asio::io_service io_service;
   std::string multicast_address;
   int multicast_port;
   ::asio::ip::udp::socket socket;
   ::asio::ip::udp::endpoint sender_endpoint;
-  void handle_receive_from(const ::asio::error_code&, size_t bytes_recvd);
+  ::asio::io_service::strand strand_;
+  
+  /* local variables */
+  SSDPCallback * handler;  
   enum { max_length = 8192 };
   std::array< char, max_length > data;
+  
+  /* the runner thread */
+  std::unique_ptr<std::thread> ssdp_runner;
 
-  /// Strand to ensure the connection's handlers are not called concurrently.
-  ::asio::io_service::strand strand_;
-
+  void handle_receive_from(const ::asio::error_code&, size_t bytes_recvd);
 };
 }}
 #endif // SSDPASIOCONNECTION_H

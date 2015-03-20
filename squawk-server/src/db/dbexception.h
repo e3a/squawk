@@ -1,6 +1,7 @@
 /*
-    <one line to give the library's name and an idea of what it does.>
-    Copyright (C) 2013  <copyright holder> <email>
+    Database Header files.
+
+    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -17,9 +18,29 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <gtest/gtest.h>
+#ifndef DATABASE_H
+#define DATABASE_H
 
-int main(int argc, char **argv) {
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+#include <exception>
+
+namespace squawk {
+namespace db {
+/**
+ * @brief The DatabaseException class
+ */
+class DbException : public std::exception {
+public:
+    explicit DbException (int _code, std::string _what) throw() : _code(_code), _what(_what) {}
+    virtual ~DbException() throw() {}
+    virtual const char* what() const throw() {
+        return _what.c_str();
+    }
+    int code() throw() {
+        return _code;
+    }
+private:
+    int _code;
+    std::string _what;
+};
+}}
+#endif // DATABASE_H

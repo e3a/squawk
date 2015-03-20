@@ -19,7 +19,7 @@
 
 #include "apialbumsletterservlet.h"
 
-#include "../db/database.h"
+#include "squawk.h"
 
 #include <sstream>
 
@@ -48,7 +48,7 @@ void ApiAlbumsLetterServlet::do_get(::http::HttpRequest & request, ::http::HttpR
                 response << "{\"letter\":\"" << commons::string::escape_json( letter ) <<
                             "\", \"count\":" << commons::string::to_string( stmt_letter_count->get_int(0) ) << "}";
             } else {
-                throw(new ::db::DbException(-1, "Can not step count.") );
+                throw( squawk::db::DbException(-1, "Can not step count.") );
             }
             stmt_letter_count->reset();
         }
@@ -57,8 +57,8 @@ void ApiAlbumsLetterServlet::do_get(::http::HttpRequest & request, ::http::HttpR
         db->release_statement(stmt_letter);
         db->release_statement(stmt_letter_count);
 
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not get album letters, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not get album letters, Exception:" << e.code() << "-> " << e.what());
         if(stmt_letter != NULL) db->release_statement(stmt_letter);
         if(stmt_letter_count != NULL) db->release_statement(stmt_letter_count);
         throw;

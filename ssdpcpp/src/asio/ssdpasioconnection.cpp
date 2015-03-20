@@ -1,6 +1,7 @@
 /*
     ASIO ssdp connection implmementation.
-    Copyright (C) 2013  <copyright holder> <email>
+
+    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,15 +31,12 @@ void SSDPAsioConnection::set_handler(SSDPCallback * _handler) {
   handler = _handler;
 }
 
-SSDPAsioConnection::SSDPAsioConnection(::asio::io_service& io_service,
-    std::string listen_address,
-    std::string multicast_address,
-    int multicast_port)
-  : strand_(io_service), socket(io_service), multicast_address(multicast_address), multicast_port(multicast_port) {
+SSDPAsioConnection::SSDPAsioConnection( std::string listen_address, std::string multicast_address, int multicast_port )
+  : io_service(), strand_(io_service), socket(io_service), multicast_address(multicast_address), multicast_port(multicast_port) {
   
   ::asio::ip::address _multicast_address = ::asio::ip::address::from_string(multicast_address);
   ::asio::ip::address _listen_address = ::asio::ip::address::from_string(listen_address);
-    
+
   // Create the socket so that multiple may be bound to the same address.
   ::asio::ip::udp::endpoint listen_endpoint(_listen_address, multicast_port);
   socket.open(listen_endpoint.protocol());
@@ -54,24 +52,24 @@ SSDPAsioConnection::SSDPAsioConnection(::asio::io_service& io_service,
         std::bind(&SSDPAsioConnection::handle_receive_from, this,
           std::placeholders::_1,
           std::placeholders::_2)));
-
-/*  socket.async_receive_from(
-      ::asio::buffer(data, max_length), sender_endpoint,
-      ::bind(&SSDPAsioConnection::handle_receive_from, this,
-    ::asio::placeholders::error,
-    ::asio::placeholders::bytes_transferred)); */
 }
 
-SSDPAsioConnection::~SSDPAsioConnection() {
-    std::cout << "delete SSDPAsioConnection." << std::endl;
+void SSDPAsioConnection::start() {
+  ssdp_runner = std::unique_ptr<std::thread>(new std::thread(
+    std::bind(static_cast<size_t (::asio::io_service::*)()>( &::asio::io_service::run ), &io_service ) ) );
+}
+
+void SSDPAsioConnection::stop() {
+  io_service.stop();
+  ssdp_runner->join();
 }
 
 inline std::string create_header(std::string request_line, std::map< std::string, std::string > headers) {
   std::ostringstream os;
   os << request_line + std::string("\r\n");
 
-  for(std::map< std::string, std::string >::iterator iter = headers.begin(); iter != headers.end(); ++iter) {
-    os << iter->first << ": " << iter->second << "\r\n";
+  for(auto & iter : headers) {
+    os << iter.first << ": " << iter.second << "\r\n";
   }
   os << "\r\n";
   return os.str();
@@ -81,22 +79,24 @@ void SSDPAsioConnection::send(std::string request_line, std::map< std::string, s
 
   std::string message = create_header(request_line, headers);
 
-  ::asio::io_service io_service;
+  ::asio::io_service io_service_;
   ::asio::ip::udp::endpoint endpoint(::asio::ip::address::from_string(multicast_address.c_str()), multicast_port);
-  ::asio::ip::udp::socket socket(io_service, endpoint.protocol());
+  ::asio::ip::udp::socket socket(io_service_, endpoint.protocol());
   socket.send_to(
     ::asio::buffer(message, message.length()), endpoint);
 }
+
 void SSDPAsioConnection::send(Response response) {
   std::string buffer = create_header(response.request_line, response.headers);
   socket.send_to(
       ::asio::buffer(buffer, buffer.length()), sender_endpoint);
 }
+
 void SSDPAsioConnection::handle_receive_from(const ::asio::error_code & error, size_t bytes_recvd) {
   if (!error) {
-      http::HttpRequest request;
-     http::HttpParser::parse_http_request(request, data, bytes_recvd);
-//    std::map<std::string, std::string> map = squawk::utils::http::parse_header(); 
+    http::HttpRequest request;
+    request.client_ip = sender_endpoint.address().to_string();
+    http::HttpParser::parse_http_request(request, data, bytes_recvd);
     handler->handle_receive(request);
 
     socket.async_receive_from(::asio::buffer(data, max_length), sender_endpoint,
@@ -104,12 +104,6 @@ void SSDPAsioConnection::handle_receive_from(const ::asio::error_code & error, s
           std::bind(&SSDPAsioConnection::handle_receive_from, this,
             std::placeholders::_1,
             std::placeholders::_2)));
-
-/*    socket.async_receive_from(
-      ::asio::buffer(data, max_length), sender_endpoint,
-      ::bind(&SSDPAsioConnection::handle_receive_from, this,
-      ::asio::placeholders::error,
-      ::asio::placeholders::bytes_transferred)); */
   }
 }
 }}

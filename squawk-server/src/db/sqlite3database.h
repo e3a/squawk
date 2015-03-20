@@ -1,6 +1,7 @@
 /*
     SQLite3 Database implementation.
-    Copyright (C) <year>  <name of author>
+
+    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -21,9 +22,8 @@
 #ifndef SQLITE3DATABASE_H
 #define SQLITE3DATABASE_H
 
-#include "squawk.h"
 #include "sqlite3statement.h"
-#include "sqlite3.h"
+#include "dbexception.h"
 
 namespace squawk {
 /**
@@ -36,13 +36,13 @@ namespace db {
  */
 class Sqlite3Database {
   public:
-   int exec(std::string query);
+   int exec(const std::string & query);
    /**
     * \brief Open the database.
     * \param path The path of the database file.
     * \throws DAOException throws DAOExecption
     */
-    void open(std::string path);
+    void open(const std::string & path);
    /**
     * \brief Close the database.
     */
@@ -51,7 +51,7 @@ class Sqlite3Database {
     * \brief Prepare the sql statement.
     * \throws DAOException throws DAOExecption
     */
-    Sqlite3Statement * prepare_statement(std::string statement);
+    Sqlite3Statement * prepare_statement(const std::string & statement);
    /**
     * \brief Release a statement.
     */
@@ -63,7 +63,6 @@ class Sqlite3Database {
     
   private:
     sqlite3 * db;
-    std::map< std::string, Sqlite3Statement* > statements; 
 };
 }}
 #endif // SQLITE3DATABASE_H

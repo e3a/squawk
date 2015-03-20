@@ -17,11 +17,11 @@
 */
 
 #include "upnpmediaservlet.h"
-#include "../db/database.h"
 
 #include <sstream>
 
 #include "commons.h"
+#include "squawk.h"
 
 #define QUERY_SONG
 
@@ -105,11 +105,11 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
                 response.add_header("EXT", "");
             }
             response.add_header("Server", "Debian/wheezy/sid DLNADOC/1.50 UPnP/1.0 Squawk/0.1");
-        } catch( ::db::DbException * e ) {
+        } catch( squawk::db::DbException & e ) {
             if( stmt_song != NULL ) {
                 db->release_statement( stmt_song );
             }
-            LOG4CXX_FATAL( logger, "can not get song path: " << e->code() << ":" << e->what() )
+            LOG4CXX_FATAL( logger, "can not get song path: " << e.code() << ":" << e.what() )
             throw ::http::http_status::INTERNAL_SERVER_ERROR;
         }
 

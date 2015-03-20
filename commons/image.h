@@ -1,6 +1,7 @@
 #ifndef IMAGE_IMLIB_H
 #define IMAGE_IMLIB_H
 
+#include <iostream>
 #include <string>
 #include <mimetypes.h>
 
@@ -39,7 +40,7 @@ public:
      */
     int width() {
         if( !loaded ) init();
-        imlib_image_get_height();
+        return imlib_image_get_height();
     }
     /**
      * @brief the image height
@@ -47,7 +48,7 @@ public:
      */
     int height() {
         if( !loaded ) init();
-        imlib_image_get_height();
+        return imlib_image_get_height();
     }
     /**
      * @brief the image mime-type

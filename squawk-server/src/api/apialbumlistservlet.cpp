@@ -18,9 +18,9 @@
 */
 
 #include "apialbumlistservlet.h"
-#include "../db/database.h"
 
 #include "commons.h"
+#include "squawk.h"
 
 #define QUERY_ALBUMS_COUNT "select count(*) from tbl_cds_albums"
 #define QUERY_ALBUMS "select name, genre, year, ROWID from tbl_cds_albums ORDER BY name"
@@ -186,8 +186,8 @@ void ApiAlbumListServlet::do_get( http::HttpRequest & request, ::http::HttpRespo
         }
         response << "}";
 
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e.code() << "-> " << e.what());
         if(stmt != NULL) db->release_statement(stmt);
         if(stmt_artist != NULL) db->release_statement(stmt_artist);
         throw http::http_status::INTERNAL_SERVER_ERROR;

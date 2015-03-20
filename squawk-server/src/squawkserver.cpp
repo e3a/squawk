@@ -26,6 +26,7 @@
 #include <iostream>
 #include <thread>
 #include <exception>
+#include <signal.h>
 
 #include "http.h"
 #include "fileservlet.h"
@@ -59,6 +60,9 @@
 #include "log4cxx/helpers/exception.h"
 
 void SquawkServer::start() {
+    ssdp_event_logger = 
+      std::unique_ptr<squawk::LoggerEventListener>( new squawk::LoggerEventListener() );
+  
     database = new squawk::db::Sqlite3Database();
     database->open( squawk_config->databaseFile() );
 
@@ -162,18 +166,20 @@ void SquawkServer::start() {
     ssdp_server->register_namespace(ssdp::NS_CONTENT_DIRECTORY, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
     ssdp_server->register_namespace(ssdp::NS_MEDIA_RECEIVER_REGISTRAR, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
 
+    ssdp_server->subscribe( ssdp_event_logger.get() );
+    
     //TODO squawk::http::RequestCallback * api_upnp_device_handler = new api::ApiUpnpDeviceHandler(service, ssdp_server);
     //TODO http_server->register_handler("GET", "/api/devices", api_upnp_device_handler);
 
     //start the server
 //TODO    http_thread = std::thread(&squawk::http::Server::run, http_server);
-    ssdp_thread = std::thread(&ssdp::SSDPServerImpl::start, ssdp_server);
+    ssdp_server->start();
 
     //rescan the media directory
     if(squawk_config->rescan) {
         parser->parse( squawk_config->mediaDirectories() );
     } else {
-        sleep( 5 ); //wait for the server to start
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000)); //wait for the server to start
     }
 
     std::cout << "server started and library rescanned" << std::endl;
@@ -181,13 +187,17 @@ void SquawkServer::start() {
     ssdp_server->announce();
 }
 void SquawkServer::stop() {
-    delete parser;
+    ssdp_server->stop();
+    delete ssdp_server;
+
+    std::cout << "ssdp server destroyes" << std::endl; 	
+  
+  
 //TODO    http_server->stop();
     http_thread.join();
-    ssdp_server->stop();
-    ssdp_thread.join();
-    ssdp_server->stop();
-    delete web_server, ssdp_server;
+
+    delete parser;
+    delete web_server;
 }
 
 int main(int ac, const char* av[]) {
@@ -262,3 +272,4 @@ int main(int ac, const char* av[]) {
     }
   return 1;
 }
+

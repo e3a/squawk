@@ -3,8 +3,7 @@
 
 #include "squawk.h"
 #include "../squawkconfig.h"
-#include "../db/sqlite3database.h" //TODO use generic header
-#include "../db/database.h"
+#include "../db/sqlite3database.h"
 #include <upnp.h>
 
 #include <functional>

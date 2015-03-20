@@ -21,9 +21,9 @@
 #define MEDIADAO_H
 
 #include "log4cxx/logger.h"
-#include "../db/sqlite3database.h" //TODO include generic header
-#include "../db/database.h"
+#include "../db/sqlite3database.h"
 
+#include "squawk.h"
 #include "image.h"
 #include "media.h"
 

@@ -380,6 +380,7 @@ namespace http {
     public:
         WebServer(std::string local_ip, int port /*, int threads */)
             : local_ip(local_ip), port(port) /*, threads(threads) */ {}
+        ~WebServer() {}
 
         /**
          * @brief Start the server.

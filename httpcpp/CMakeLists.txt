@@ -19,7 +19,7 @@ if (build_tests)
                   test/httpparsertest.cpp
                   test/httpservlettest.cpp
                   ${SOURCES})
-   target_link_libraries(testmain_httpcpp pthread)
+#   target_link_libraries(testmain_httpcpp pthread)
    target_link_libraries(testmain_httpcpp ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
    add_test(httpcpp-tests testmain_httpcpp)
 endif()

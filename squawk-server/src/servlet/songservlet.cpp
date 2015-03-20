@@ -17,7 +17,6 @@
 */
 
 #include "songservlet.h"
-#include "../db/database.h"
 
 #include <sstream>
 
@@ -53,11 +52,11 @@ void SongServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & 
             db->release_statement( stmt_song );
             FileServlet::do_get(request, response);
 
-        } catch( ::db::DbException * e ) {
+        } catch( squawk::db::DbException & e ) {
             if( stmt_song != NULL ) {
                 db->release_statement( stmt_song );
             }
-            LOG4CXX_FATAL( logger, "can not get song path: " << e->code() << ":" << e->what() )
+            LOG4CXX_FATAL( logger, "can not get song path: " << e.code() << ":" << e.what() )
             throw ::http::http_status::INTERNAL_SERVER_ERROR;
         }
 

@@ -20,8 +20,7 @@
 
 #include "squawk.h"
 #include "../squawkconfig.h"
-#include "../db/sqlite3database.h" //TODO use generic header
-#include "../db/database.h"
+#include "../db/sqlite3database.h"
 #include <upnp.h>
 
 #include <functional>
@@ -56,8 +55,8 @@ private:
             }
             db->release_statement( stmt_videos );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get video count, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get video count, Exception:" << e.code() << "-> " << e.what());
             if( stmt_videos != NULL ) db->release_statement( stmt_videos );
             throw;
         } catch( ... ) {
@@ -81,8 +80,8 @@ private:
             }
             db->release_statement( stmt_videos );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get videos, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get videos, Exception:" << e.code() << "-> " << e.what());
             if( stmt_videos != NULL ) db->release_statement( stmt_videos );
             throw;
         } catch( ... ) {

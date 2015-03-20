@@ -17,7 +17,6 @@
 */
 
 #include "apivideolistservlet.h"
-#include "../db/database.h"
 
 #include <sstream>
 
@@ -51,8 +50,8 @@ void ApiVideoListServlet::do_get(::http::HttpRequest & request, ::http::HttpResp
 
         db->release_statement(stmt_video);
 
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not get videos, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not get videos, Exception:" << e.code() << "-> " << e.what());
         if(stmt_video != NULL) db->release_statement(stmt_video);
         throw http::http_status::INTERNAL_SERVER_ERROR;
     } catch( ... ) {

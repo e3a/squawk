@@ -3,6 +3,8 @@
 #include <ctime>
 #include <iostream>
 
+#include <squawk.h>
+
 #define SQL_TABEL_NAME_AUDIO "tbl_cds_audiofiles"
 #define SQL_TABEL_NAME_MOVIES "tbl_cds_movies"
 #define SQL_TABEL_NAME_ARTISTS_ALBUMS "tbl_cds_artists"
@@ -63,8 +65,8 @@ MediaDao::MediaDao(squawk::db::Sqlite3Database * db) : db(db) {
             stmt_table_create = db->prepare_statement(stmt);
             stmt_table_create->step();
 
-        } catch( ::db::DbException * e) {
-            LOG4CXX_FATAL(logger, "create table, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e) {
+            LOG4CXX_FATAL(logger, "create table, Exception:" << e.code() << "-> " << e.what());
             if(stmt_table_create != NULL) db->release_statement(stmt_table_create);
             throw;
         }
@@ -110,8 +112,8 @@ void MediaDao::start_transaction() {
         stmtMap["DELETE_AUDIOFILE"] = db->prepare_statement( SQL_DELETE_AUDIOFILE );
         stmtMap["DELETE_ALBUM"] = db->prepare_statement( SQL_DELETE_ALBUM );
         stmtMap["DELETE_IMAGE"] = db->prepare_statement( SQL_DELETE_IMAGE );
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "create statements, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "create statements, Exception:" << e.code() << "-> " << e.what());
         throw;
     }
 }
@@ -156,8 +158,8 @@ bool MediaDao::exist(std::string table, std::string filename, long mtime, long s
             }
         }
         stmt->reset();
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not save audiofile, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not save audiofile, Exception:" << e.code() << "-> " << e.what());
         throw;
     }
     return found;
@@ -183,8 +185,8 @@ unsigned long MediaDao::getOrCreateDirectory(const std::string & path, const std
             directory_id = db->last_insert_rowid();
         }
         stmt->reset();
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not get album by path, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not get album by path, Exception:" << e.code() << "-> " << e.what());
         throw;
     }
     return directory_id;
@@ -229,8 +231,8 @@ unsigned long MediaDao::saveFile(const file_item & file, const unsigned long & p
             stmt->reset();
             return db->last_insert_rowid();
         }
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not save imagefile, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not save imagefile, Exception:" << e.code() << "-> " << e.what());
         throw;
     }
 }
@@ -255,7 +257,7 @@ unsigned long MediaDao::saveVideo(const file_item & file, const unsigned long & 
             if( media_file.getVideoStreams().size() > 0 ) {
                 stmt->bind_int(8, media_file.getVideoStreams()[0].width());
                 stmt->bind_int(9, media_file.getVideoStreams()[0].height());
-                stmt->bind_int(14, media_file.getVideoStreams()[0].codec());
+                stmt->bind_int(14, (int)media_file.getVideoStreams()[0].codec());
                 stmt->bind_int(10, media_file.getVideoStreams()[0].bitrate());
             } else {
                 stmt->bind_int(8, 0);
@@ -291,7 +293,7 @@ unsigned long MediaDao::saveVideo(const file_item & file, const unsigned long & 
             if( media_file.getVideoStreams().size() > 0 ) {
                 stmt->bind_int(9, media_file.getVideoStreams()[0].width());
                 stmt->bind_int(10, media_file.getVideoStreams()[0].height());
-                stmt->bind_int(15, media_file.getVideoStreams()[0].codec());
+                stmt->bind_int(15, (int)media_file.getVideoStreams()[0].codec());
                 stmt->bind_int(11, media_file.getVideoStreams()[0].bitrate());
             } else {
                 stmt->bind_int(9, 0);
@@ -312,8 +314,8 @@ unsigned long MediaDao::saveVideo(const file_item & file, const unsigned long & 
             stmt->reset();
             return db->last_insert_rowid();
         }
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not save videofile, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not save videofile, Exception:" << e.code() << "-> " << e.what());
         //TODO release statements
         throw;
     }
@@ -333,8 +335,8 @@ squawk::media::Album MediaDao::get_album(std::string path) {
             album.id = stmt->get_int(3);
         }
         stmt->reset();
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not get album by path, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not get album by path, Exception:" << e.code() << "-> " << e.what());
         throw;
     }
     return album;
@@ -378,8 +380,8 @@ unsigned long MediaDao::save_album( std::string path, squawk::media::Album * alb
                 stmt_insert_album_mapping->reset();
             }
         }
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not save album, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not save album, Exception:" << e.code() << "-> " << e.what());
         throw;
     }
     return album_id;
@@ -406,8 +408,8 @@ unsigned long MediaDao::save_artist(squawk::media::Artist * artist) {
             stmt_insert_artist->reset();
             artist_id = db->last_insert_rowid();
         }
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not save artist, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not save artist, Exception:" << e.code() << "-> " << e.what());
         throw;
     }
     return artist_id;
@@ -457,8 +459,8 @@ void MediaDao::save_audiofile(std::string filename, long mtime, long size, unsig
         }
         stmt_audiofile->reset();
 
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not save audiofile, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not save audiofile, Exception:" << e.code() << "-> " << e.what());
         throw;
     }
 }
@@ -516,8 +518,8 @@ unsigned long MediaDao::save_imagefile(const file_item & file, const unsigned lo
             stmt->reset();
             return db->last_insert_rowid();
         }
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not save imagefile, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not save imagefile, Exception:" << e.code() << "-> " << e.what());
         throw;
     }
 }
@@ -561,8 +563,8 @@ void MediaDao::sweep( long mtime ) {
         stmt_sweep_videos->reset();
 
 
-    } catch( ::db::DbException * e ) {
-        LOG4CXX_FATAL(logger, "Can not sweep files, Exception:" << e->code() << "-> " << e->what());
+    } catch( squawk::db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not sweep files, Exception:" << e.code() << "-> " << e.what());
         throw;
     } catch( ... ) {
         LOG4CXX_FATAL(logger, "Can not sweep files, other Exception.");

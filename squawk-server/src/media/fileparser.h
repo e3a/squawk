@@ -64,8 +64,8 @@ class FileParser {
     
   private:
     static log4cxx::LoggerPtr logger;
-    SquawkConfig * squawk_config;
     MediaDao * mediaDao;
+    SquawkConfig * squawk_config;
 
 //TODO    std::vector< MetadataParser* > parsers;
 

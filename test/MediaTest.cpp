@@ -32,6 +32,8 @@
 } */
 
 TEST( MediaTest, ParseMpegLayer2Mpthreetest) {
+  std::cout << "'" << std::string(TESTFILES) << "mpthreetest.mp3" << "'" << std::endl;
+  
     commons::media::MediaFile media_file = commons::media::MediaParser::parseFile( std::string(TESTFILES) + "mpthreetest.mp3" );
 
     ASSERT_EQ( 1, media_file.getAudioStreams().size() );

@@ -20,11 +20,13 @@
 #ifndef SQUAWKSERVER_H
 #define SQUAWKSERVER_H
 
+#include <memory>
 #include <thread>
 
 #include "squawkconfig.h"
 #include "media/fileparser.h"
 #include "ssdp.h"
+#include "loggereventlistener.h"
 
 /**
  * @brief The SquawkServer Class
@@ -49,12 +51,13 @@ class SquawkServer {
 
   private:
     std::thread http_thread;
-    std::thread ssdp_thread;
     squawk::SquawkConfig * squawk_config = nullptr;
     squawk::db::Sqlite3Database * database = nullptr;
     squawk::media::FileParser * parser = nullptr;
     http::WebServer * web_server = nullptr;
     ssdp::SSDPServerImpl * ssdp_server = nullptr;
+    
+    std::unique_ptr<squawk::LoggerEventListener> ssdp_event_logger;
 };
 
 #endif // SQUAWKSERVER_H

@@ -1,7 +1,7 @@
 /*
     SQLite3 Prepared Statement
     
-    Copyright (C) <year>  <name of author>
+    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -22,8 +22,10 @@
 #ifndef SQLITE3STATEMENT_H
 #define SQLITE3STATEMENT_H
 
-#include "squawk.h"
+#include <string>
+
 #include "sqlite3.h"
+#include "dbexception.h"
 
 namespace squawk {
 namespace db {
@@ -42,48 +44,48 @@ class Sqlite3Statement {
      * \param value the int parameter
      * \throws DAOException throws a DAOException
      */
-    virtual void bind_int(int index, int value);
+    void bind_int(const int & index, const int & value);
     /**
      * \brief Bind text for a prepared statement.
      * \param index the index of the value
      * \param text the textt parameter
      * \throws DAOException throws a DAOException
      */
-    virtual void bind_text(int index, std::string text);
+    void bind_text(const int & index, const std::string & text);
     /**
      * \brief  Get an int form a result set
      * \param index the index of the value
      * \return the int value
      * \throws DAOException throws a DAOException
      */
-    virtual int get_int(int index);
+    int get_int(const int & index);
     /**
      * \brief Get a text from a result set.
      * \param index the index of the value
      * \param value the int parameter
      * \throws DAOException throws a DAOException
      */
-    virtual std::string get_string(int index);
+    std::string get_string(const int & index);
     /**
      * \brief Step to the next result in the result set.
      * \return true when there is a next row, false otherwise.
      * \throws DAOException throws a DAOException
      */
-    virtual bool step();
+    bool step();
     /**
      * \brief Update row.
      * \throws DAOException throws a DAOException
      */
-    virtual int update();
+    int update();
     /**
      * \brief Insert row.
      * \throws DAOException throws a DAOException
      */
-    virtual int insert();
+    int insert();
     /**
      * \brief Reset the statement.
      */
-    virtual void reset();
+    void reset();
   private: 
     sqlite3 * db;
     sqlite3_stmt * stmt;

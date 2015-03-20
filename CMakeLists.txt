@@ -4,7 +4,10 @@
 cmake_minimum_required(VERSION 2.8.9)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-option(build_tests "Build all squawk unit tests." OFF)
+option(build_tests "Build all squawk unit tests." ON)
+option(CMAKE_COMPILER_IS_GNUCXX "is the compiler gnucxx" OFF)
+SET(TESTFILES "/home/e3a/testfiles" CACHE FILEPATH "The path to the testfiles.")
+SET(ASIO_PATH "~/asio-1.10.2/" CACHE FILEPATH "The path to asio header files.")
 
 project (squawk)
 
@@ -13,8 +16,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 set(CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG} -O0)
 add_definitions(-DASIO_STANDALONE)
-add_definitions(-DTESTFILES=${TESTFILES})
-add_definitions(-Wall)
+message( "TESTFILE: " ${TESTFILES} )
+add_definitions(-DTESTFILES="${TESTFILES}/")
+add_definitions(-Wall -Wextra)
 
 find_package(GoogleTest REQUIRED)
 find_package(LibXml2 REQUIRED)
@@ -30,9 +34,10 @@ set(LIBS ${LIBS} ${IMLIB2_LIBRARIES})
 #find_package(LibAVCodec COMPONENTS avformat avcodec avutil avresample)
 find_package(LibAVCodec COMPONENTS avformat avcodec avutil)
 set(LIBS ${LIBS} ${AVCODEC_LIBRARIES})
+set(LIBS ${LIBS} -luuid -lpthread -lm) #needed for ubuntu
 
 SET( SQUAWK_INCLUDES ${CMAKE_SOURCE_DIR}/commons ${CMAKE_SOURCE_DIR}/httpcpp/includes ${CMAKE_SOURCE_DIR}/ssdpcpp/includes
-     ${ASIO_PATH} ${LIBXML2_INCLUDE_DIR} ${IMLIB2_INCLUDE_DIR} ${AVCODEC_INCLUDES})
+     ${ASIO_PATH}/include/ ${LIBXML2_INCLUDE_DIR} ${IMLIB2_INCLUDE_DIR} ${AVCODEC_INCLUDES})
 
 add_subdirectory (httpcpp)
 add_subdirectory (ssdpcpp)
@@ -47,9 +52,9 @@ if (build_tests)
     include_directories(${ROOT} ${SQUAWK_INCLUDES} ${GTEST_INCLUDE_DIRS} includes)
     add_executable(testmain test/CommonsStringTest.cpp test/MediaTest.cpp
                             test/XmlEncodeTest.cpp test/XmlParseTest.cpp test/XmlWriterTest.cpp test/UpnpTest.cpp )
-    target_link_libraries(testmain pthread)
+#    target_link_libraries(testmain pthread)
     target_link_libraries(testmain
-        ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
+        ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} ${LIBS})
     add_test(squawk-tests testmain)
 endif()
 

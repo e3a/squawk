@@ -8,20 +8,21 @@ find_package(GoogleTest REQUIRED)
 # find_package(Flac++ REQUIRED)
 # set(LIBS ${LIBS} ${FLAC++_LIBRARIES})
 
-find_package(Lame REQUIRED)
-set(LIBS ${LIBS} ${LAME_LIBRARY})
-find_package(LibMagic REQUIRED)
-set(LIBS ${LIBS} ${LibMagic_LIBRARY})  
+# find_package(Lame REQUIRED)
+# set(LIBS ${LIBS} ${LAME_LIBRARY})
+# find_package(LibMagic REQUIRED)
+# set(LIBS ${LIBS} ${LibMagic_LIBRARY})  
 
-set(LIBS ${LIBS} ${CMAKE_BINARY_DIR}/httpcpp/libhttpcpp.a)
-set(LIBS ${LIBS} ${CMAKE_BINARY_DIR}/ssdpcpp/libssdpcpp.a)
+set(LIBS ${CMAKE_BINARY_DIR}/httpcpp/libhttpcpp.a ${LIBS})
+set(LIBS ${CMAKE_BINARY_DIR}/ssdpcpp/libssdpcpp.a ${LIBS})
 
-include_directories(${ROOT} ${SQLITE3_INCLUDE_DIR}
-  ${FLAC++_INCLUDE_DIR} ${TINYXML_INCLUDE_DIR} ${LIBXML2_INCLUDE_DIR} ${LOG4CXX_INCLUDE_DIR}
-  ${PCREPP_INCLUDE_DIR} ${SQUAWK_INCLUDES} ${LAME_INCLUDE_DIR} includes)
-link_directories(${Boost_LIBRARY_DIR})
+include_directories(${ROOT} ${SQUAWK_INCLUDES} includes)
+#include_directories(${ROOT} ${SQLITE3_INCLUDE_DIR}
+#  ${FLAC++_INCLUDE_DIR} ${TINYXML_INCLUDE_DIR} ${LIBXML2_INCLUDE_DIR} ${LOG4CXX_INCLUDE_DIR}
+#  ${PCREPP_INCLUDE_DIR} ${SQUAWK_INCLUDES} ${LAME_INCLUDE_DIR} includes)
+#link_directories(${Boost_LIBRARY_DIR})
 
-set(SQUAWK src/squawkconfig.cpp)
+set(SQUAWK src/squawkconfig.cpp src/loggereventlistener.cpp)
 set(DATABASE src/db/sqlite3statement.cpp src/db/sqlite3database.cpp)
 set(MEDIA src/media/mediadao.cpp src/media/fileparser.cpp)
 set(API src/api/apibrowseservlet.cpp src/api/apialbumlistservlet.cpp src/api/apialbumsletterservlet.cpp src/api/apialbumitemservlet.cpp
@@ -31,6 +32,7 @@ set(API src/api/apibrowseservlet.cpp src/api/apialbumlistservlet.cpp src/api/api
 set(SERVLET src/servlet/apistatisticservlet.cpp src/servlet/imageservlet.cpp src/servlet/songservlet.cpp )
 set(UPNP src/upnp/upnpconnectionmanager.cpp src/upnp/upnpmediaservlet.cpp src/upnp/upnpxmldescription.cpp src/upnp/upnpcontentdirectory.cpp
          src/upnp/upnpmusicdirectorymodule.cpp src/upnp/upnpvideodirectory.cpp src/upnp/upnpfiledirectory.cpp src/upnp/upnpimagedirectory.cpp )
+#         src/upnp/upnpwriter.cpp )
 
 set(SOURCES ${SQUAWK} ${DATABASE} ${MEDIA} ${HTTP_SERVER} ${API} ${SERVLET} ${UPNP})
 
@@ -55,7 +57,7 @@ if (build_tests)
         ${SOURCES})
     target_link_libraries(testmain_server pthread)
     target_link_libraries(testmain_server
-        ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
+        ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} ${LIBS})
     add_test(squawk-server testmain_server)
 endif()
 

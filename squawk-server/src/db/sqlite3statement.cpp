@@ -1,6 +1,7 @@
 /*
-    <one line to give the library's name and an idea of what it does.>
-    Copyright (C) <year>  <name of author>
+    SQLite3 Prepared Statement
+    
+    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -18,33 +19,27 @@
 */
 
 #include "sqlite3statement.h"
-#include "squawk.h"
-#include "database.h"
-
-#include <string>
-
-#include "sqlite3.h"
 
 namespace squawk {
 namespace db {
   
-void Sqlite3Statement::bind_int(int index, int value) {
+void Sqlite3Statement::bind_int(const int & index, const int & value) {
     int res = sqlite3_bind_int(stmt, index, value);
     if (res != SQLITE_OK) {
-      throw new ::db::DbException(res, std::string(sqlite3_errmsg(db)));
+      throw DbException(res, std::string(sqlite3_errmsg(db)));
     }
 }
-void Sqlite3Statement::bind_text(int index, std::string text) {
+void Sqlite3Statement::bind_text(const int & index, const std::string & text) {
     int res = sqlite3_bind_text(stmt, index, text.c_str(), text.length(), SQLITE_STATIC);
     if (res != SQLITE_OK) {
-      throw new ::db::DbException(res, std::string(sqlite3_errmsg(db)));
+      throw DbException(res, std::string(sqlite3_errmsg(db)));
     }
 }
-int Sqlite3Statement::get_int(int position) {
+int Sqlite3Statement::get_int(const int & position) {
   sqlite3_value* sql3_msgid = sqlite3_column_value(stmt,position);
   return sqlite3_value_int(sql3_msgid);
 }
-std::string Sqlite3Statement::get_string(int position) {
+std::string Sqlite3Statement::get_string(const int & position) {
   return std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt,position)));
 }
 bool Sqlite3Statement::step() {
@@ -54,21 +49,21 @@ bool Sqlite3Statement::step() {
   } else if( step == SQLITE_ROW) {
     return true;
   }
-  throw new ::db::DbException(step, std::string(sqlite3_errmsg(db)));
+  throw DbException(step, std::string(sqlite3_errmsg(db)));
 }
 int Sqlite3Statement::update() {
   int step = sqlite3_step(stmt);
   if(step == SQLITE_DONE) {
     return step;
   }
-  throw new ::db::DbException(step, std::string(sqlite3_errmsg(db)));
+  throw DbException(step, std::string(sqlite3_errmsg(db)));
 }
 int Sqlite3Statement::insert() {
   int step = sqlite3_step(stmt);
   if(step == SQLITE_DONE) {
     return step;
   }
-  throw new ::db::DbException(step, std::string(sqlite3_errmsg(db)));
+  throw DbException(step, std::string(sqlite3_errmsg(db)));
 }
 void Sqlite3Statement::reset() {
   sqlite3_reset(stmt);

@@ -20,8 +20,7 @@
 
 #include "squawk.h"
 #include "../squawkconfig.h"
-#include "../db/sqlite3database.h" //TODO use generic header
-#include "../db/database.h"
+#include "../db/sqlite3database.h"
 #include <upnp.h>
 
 #include <functional>
@@ -57,8 +56,8 @@ private:
             }
             db->release_statement( stmt_artists_count );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get artist_count, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get artist_count, Exception:" << e.code() << "-> " << e.what());
             if( stmt_artists_count != NULL ) db->release_statement( stmt_artists_count );
             throw;
         } catch( ... ) {
@@ -81,8 +80,8 @@ private:
             }
             db->release_statement( stmt_albums_count );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get albums_count, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get albums_count, Exception:" << e.code() << "-> " << e.what());
             if( stmt_albums_count != NULL ) db->release_statement( stmt_albums_count );
             throw;
         } catch( ... ) {
@@ -108,8 +107,8 @@ private:
             }
             db->release_statement( stmt_albums_artist_count );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get albums_artist_count, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get albums_artist_count, Exception:" << e.code() << "-> " << e.what());
             if( stmt_albums_artist_count != NULL ) db->release_statement( stmt_albums_artist_count );
             throw;
         } catch( ... ) {
@@ -134,8 +133,8 @@ private:
             }
             db->release_statement( stmt_song_album_count );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get song_album_count, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get song_album_count, Exception:" << e.code() << "-> " << e.what());
             if( stmt_song_album_count != NULL ) db->release_statement( stmt_song_album_count );
             throw;
         } catch( ... ) {
@@ -160,8 +159,8 @@ private:
             }
             db->release_statement( stmt_artists );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get artist, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get artist, Exception:" << e.code() << "-> " << e.what());
             if( stmt_artists != NULL ) db->release_statement( stmt_artists );
             throw;
         } catch( ... ) {
@@ -188,8 +187,8 @@ private:
             std::cout << "endt stmt:albums" << std::endl;
             db->release_statement( stmt_albums );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e.code() << "-> " << e.what());
             if( stmt_albums != NULL ) db->release_statement( stmt_albums );
             throw;
         } catch( ... ) {
@@ -217,8 +216,8 @@ private:
             }
             db->release_statement( stmt_artist_albums );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get albums by artist, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get albums by artist, Exception:" << e.code() << "-> " << e.what());
             if( stmt_artist_albums != NULL ) db->release_statement( stmt_artist_albums );
             throw;
         } catch( ... ) {
@@ -242,8 +241,8 @@ private:
             }
             db->release_statement( stmt_album );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get album, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get album, Exception:" << e.code() << "-> " << e.what());
             if( stmt_album != NULL ) db->release_statement( stmt_album );
             throw;
         } catch( ... ) {
@@ -266,8 +265,8 @@ private:
             }
             db->release_statement( stmt_album_artist );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get artists for album, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get artists for album, Exception:" << e.code() << "-> " << e.what());
             if( stmt_album_artist != NULL ) db->release_statement( stmt_album_artist );
             throw;
         } catch( ... ) {
@@ -298,8 +297,8 @@ private:
             }
             db->release_statement( stmt_album_song );
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get songs for album, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get songs for album, Exception:" << e.code() << "-> " << e.what());
             if( stmt_album_song != NULL ) db->release_statement( stmt_album_song );
             throw;
         } catch( ... ) {

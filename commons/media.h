@@ -28,10 +28,399 @@ namespace commons {
  */
 namespace media {
 
-enum Codec {
+enum class CODEC {
+    MPEG1 = 0,
+    MPEG2 = 1,
+    MPEG3 = 2,
+    FLAC = 3,
+    APE = 4,
+    VORBIS = 5,
+    AAC = 6,
+    AC3 = 7,
+    MPC = 8,
+    
+    MJPEGB = 9,
+    H264 = 10,
+    UNKNOWN = 11
+};
 
-    MJPEGB = 1,
-    H264 = 2
+static std::string codec_names[] = {
+  "MPEG1", "MPEG2", "MPEG3", "FLAC", "APE", "VORBIS", "AAC", "AC3", "MPC",
+  "MPFPEGB", "H264", 
+  "UNKNOWN"
+};
+
+enum class DLNA_PROFILE {
+  JPEG_SM, 
+  JPEG_MED,
+  JPEG_LRG,
+  JPEG_RES_,
+  JPEG_TN,
+  JPEG_SM_ICO,
+  JPEG_LRG_ICO,
+  
+  PNG_TN,
+  PNG_SM_ICO,
+  PNG_LRG_ICO,
+  PNG_LRG,
+  
+  AC3,
+
+  AMR_3GPP,
+  AMR_WBplus,
+  
+  ATRAC3plus,
+  
+  LPCM,
+  LPCM_low,
+  LPCM_MPS,
+  
+  MP3,
+  MP3X,
+  
+  AAC_ADTS,
+  AAC_ADTS_192,
+  AAC_ADTS_320,
+  AAC_ISO,
+  AAC_ISO_192,
+  AAC_ISO_320,
+  AAC_LTP_ISO,
+  AAC_LTP_MULT5_ISO,
+  AAC_LTP_MULT7_ISO,
+  AAC_MULT5_ADTS,
+  HEAAC_L2_ADTS,
+  HEAAC_L2_ISO,
+  HEAACv2_L2_128,
+  HEAAC_L2_ISO_128,
+  HEAAC_L3_ADTS,
+  HEAAC_L3_ISO,
+  HEAAC_MULT5_ADTS,
+  HEAAC_MULT5_ISO,
+  HEAAC_L2_ADTS_320,
+  HEAAC_L2_ISO_320,
+  BSAC_ISO,
+  BSAC_MULT5_ISO,
+  AAC_MPS,
+  ALS_ISO,
+  ALS_MULT5_ISO,
+  HEAAC_L4,
+  HEAAC_MPS,
+  HEAAC_MULT7,
+  HEAACv2_L2,
+  HEAACv2_L2_320,
+  HEAACv2_L2_MPS_DAB,
+  HEAACv2_L3,
+  HEAACv2_L4,
+  HEAACv2_MULT5,
+  HEAACv2_MULT7,
+  MPEG2_AAC_MPS,
+  WMABASE,
+  WMAFULL,
+  WMAPRO,
+  WMALSL,
+  WMALSL_MULT5,
+  
+  MPEG1,
+  
+  MPEG_PS_NTSC,
+  MPEG_PS_NTSC_XAC3,
+  MPEG_PS_PAL,
+  MPEG_PS_PAL_XAC3,
+  MPEG_TS_SD_NA,
+  MPEG_TS_SD_NA_T,
+  MPEG_TS_SD_NA_ISO,
+  MPEG_TS_HD_NA,
+  MPEG_TS_HD_NA_T,
+  MPEG_TS_HD_NA_ISO,
+  MPEG_TS_SD_EU,
+  MPEG_TS_SD_EU_T,
+  MPEG_TS_SD_EU_ISO,
+  MPEG_TS_SD_KO,
+  MPEG_TS_SD_KO_T,
+  MPEG_TS_SD_KO_ISO,
+  MPEG_TS_HD_KO,
+  MPEG_TS_HD_KO_T,
+  MPEG_TS_HD_KO_ISO,
+  MPEG_TS_HD_KO_XAC3,
+  MPEG_TS_HD_KO_XAC3_T,
+  MPEG_TS_HD_KO_XAC3_ISO,
+  MPEG_TS_HD_NA_XAC3,
+  MPEG_TS_HD_NA_XAC3_T,
+  MPEG_TS_HD_NA_XAC3_ISO,
+  MPEG_TS_SD_KO_XAC3,
+  MPEG_TS_SD_KO_XAC3_T,
+  MPEG_TS_SD_KO_XAC3_ISO,
+  MPEG_TS_SD_NA_XAC3,
+  MPEG_TS_SD_NA_XAC3_T,
+  MPEG_TS_SD_NA_XAC3_ISO,
+  MPEG_TS_MP_LL_AAC,
+  MPEG_TS_MP_LL_AAC_T,
+  MPEG_TS_MP_LL_AAC_ISO,
+  MPEG_ES_PAL,
+  MPEG_ES_NTSC,
+  MPEG_ES_PAL_XAC3,
+  MPEG_ES_NTSC_XAC3,
+  DIRECTV_TS_SD,
+  MPEG_PS_HD_DTS,
+  MPEG_PS_HD_DTSHD,
+  MPEG_PS_HD_DTSHD_HRA,
+  MPEG_PS_HD_DTSHD_MA,
+  MPEG_PS_SD_DTS,
+  MPEG_TS_DTS_ISO,
+  MPEG_TS_DTS_T,
+  MPEG_TS_DTSHD_HRA_ISO,
+  MPEG_TS_DTSHD_HRA_T,
+  MPEG_TS_DTSHD_MA_ISO,
+  MPEG_TS_DTSHD_MA_T,
+  MPEG_TS_HD_50_L2_ISO,
+  MPEG_TS_HD_50_L2_T,
+  MPEG_TS_HD_X_50_L2_T,
+  MPEG_TS_HD_X_50_L2_ISO,
+  MPEG_TS_HD_60_L2_ISO,
+  MPEG_TS_HD_60_L2_T,
+  MPEG_TS_HD_X_60_L2_T,
+  MPEG_TS_HD_X_60_L2_ISO,
+  MPEG_TS_HD_NA_MPEG1_L2_ISO,
+  MPEG_TS_HD_NA_MPEG1_L2_T,
+  MPEG_TS_JP_T,
+  MPEG_TS_SD_50_AC3_T,
+  MPEG_TS_SD_50_L2_T,
+  MPEG_TS_SD_60_AC3_T,
+  MPEG_TS_SD_60_L2_T,
+  MPEG_TS_SD_EU_AC3_ISO,
+  MPEG_TS_SD_EU_AC3_T,
+  MPEG_TS_SD_JP_MPEG1_L2_T,
+  MPEG_TS_SD_NA_MPEG1_L2_ISO,
+  MPEG_TS_SD_NA_MPEG1_L2_T,
+  MPEG_DIRECTV_SD_MPEG1_L2,
+  MPEG_DIRECTV_SD_MPEG1_L2_T,
+  MPEG_TS_NA_ISO,
+  MPEG_TS_SD_DTS_ISO,
+  MPEG_TS_HD_DTS_ISO,
+  MPEG_TS_SD_EU_DTS_ISO,
+  MPEG_TS_NA_3DFC_ISO,
+  
+  MPEG4_P2_MP4_SP_AAC,
+  MPEG4_P2_MP4_SP_HEAAC,
+  MPEG4_P2_MP4_SP_ATRAC3plus,
+  MPEG4_P2_MP4_SP_AAC_LTP,
+  MPEG4_P2_MP4_SP_L2_AAC,
+  MPEG4_P2_MP4_SP_L2_AMR,
+  MPEG4_P2_TS_SP_AAC,
+  MPEG4_P2_TS_SP_AAC_T,
+  MPEG4_P2_TS_SP_AAC_ISO,
+  MPEG4_P2_TS_SP_MPEG1_L3,
+  MPEG4_P2_TS_SP_MPEG1_L3_T,
+  MPEG4_P2_TS_SP_MPEG1_L3_ISO,
+  MPEG4_P2_TS_SP_AC3,
+  MPEG4_P2_TS_SP_AC3_T,
+  MPEG4_P2_TS_SP_AC3_ISO,
+  MPEG4_P2_TS_SP_MPEG2_L2,
+  MPEG4_P2_TS_SP_MPEG2_L2_T,
+  MPEG4_P2_TS_SP_MPEG2_L2_ISO,
+  MPEG4_P2_ASF_SP_G726,
+  MPEG4_P2_MP4_SP_VGA_AAC,
+  MPEG4_P2_MP4_SP_VGA_HEAAC,
+  MPEG4_P2_MP4_ASP_AAC,
+  MPEG4_P2_MP4_ASP_HEAAC,
+  MPEG4_P2_MP4_ASP_HEAAC_MULT5,
+  MPEG4_P2_MP4_ASP_ATRAC3plus,
+  MPEG4_P2_TS_ASP_AAC,
+  MPEG4_P2_TS_ASP_AAC_T,
+  MPEG4_P2_TS_ASP_AAC_ISO,
+  MPEG4_P2_TS_ASP_MPEG1_L3,
+  MPEG4_P2_TS_ASP_MPEG1_L3_T,
+  MPEG4_P2_TS_ASP_MPEG1_L3_ISO,
+  MPEG4_P2_TS_ASP_AC3,
+  MPEG4_P2_TS_ASP_AC3_T,
+  MPEG4_P2_TS_ASP_AC3_ISO,
+  MPEG4_P2_MP4_ASP_L5_SO_AAC,
+  MPEG4_P2_MP4_ASP_L5_SO_HEAAC,
+  MPEG4_P2_MP4_ASP_L5_SO_HEAAC_MULT5,
+  MPEG4_P2_ASF_ASP_L5_SO_G726,
+  MPEG4_P2_MP4_ASP_L4_SO_AAC,
+  MPEG4_P2_MP4_ASP_L4_SO_HEAAC,
+  MPEG4_P2_MP4_ASP_L4_SO_HEAAC_MULT5,
+  MPEG4_P2_ASF_ASP_L4_SO_G726,
+  MPEG4_H263_MP4_P0_L10_AAC,
+  MPEG4_H263_MP4_P0_L10_AAC_LTP,
+  MPEG4_H263_3GPP_P0_L10_AMR_WBplus,
+  MPEG4_P2_TS_CO_AC3,
+  MPEG4_P2_TS_CO_AC3_T,
+  MPEG4_P2_TS_CO_AC3_ISO,
+  MPEG4_P2_TS_CO_MPEG2_L2,
+  MPEG4_P2_TS_CO_MPEG2_L2_T,
+  MPEG4_P2_TS_CO_MPEG2_L2_ISO,
+  MPEG4_P2_3GPP_SP_L0B_AAC,
+  MPEG4_P2_3GPP_SP_L0B_AMR,
+  MPEG4_H263_3GPP_P3_L10_AMR,
+  MPEG4_H263_3GPP_P0_L10_AMR,
+  MPEG4_H263_3GPP_P0_L45_AMR,
+  MPEG4_H263_3GPP_P0_L45_AMR_WBplus,
+  MPEG4_H263_MP4_P0_L45_HEAACv2_L2,
+  MPEG4_P2_3GPP_SP_L0B_AMR_WBplus,
+  MPEG4_P2_3GPP_SP_L3_AMR_WBplus,
+  MPEG4_P2_MP4_NDSD,
+  MPEG4_P2_MP4_SP_L0B_HEAACv2_L2,
+  MPEG4_P2_MP4_SP_L3_HEAACv2_L2,
+  MPEG4_P2_MP4_SP_L5_AAC,
+  MPEG4_P2_MP4_SP_L6_AAC,
+  MPEG4_P2_MP4_SP_L6_AAC_LTP,
+  MPEG4_P2_MP4_SP_L6_HEAAC_L2,
+  MPEG4_P2_MP4_SP_VGA_AAC_res,
+  MPEG4_P2_MP4_SP_VGA_HEAAC_res,
+  
+  AVC_TS_MP_SD_AAC_MULT5,
+  AVC_TS_MP_SD_AAC_MULT5_T,
+  AVC_TS_MP_SD_AAC_MULT5_ISO,
+  AVC_TS_MP_SD_HEAAC_L2,
+  AVC_TS_MP_SD_HEAAC_L2_T,
+  AVC_TS_MP_SD_HEAAC_L2_ISO,
+  AVC_TS_MP_SD_MPEG1_L3,
+  AVC_TS_MP_SD_MPEG1_L3_T,
+  AVC_TS_MP_SD_MPEG1_L3_ISO,
+  AVC_TS_MP_SD_AC3,
+  AVC_TS_MP_SD_AC3_T,
+  AVC_TS_MP_SD_AC3_ISO,
+  AVC_TS_MP_SD_AAC_LTP,
+  AVC_TS_MP_SD_AAC_LTP_T,
+  AVC_TS_MP_SD_AAC_LTP_ISO,
+  AVC_TS_MP_SD_AAC_LTP_MULT5,
+  AVC_TS_MP_SD_AAC_LTP_MULT5_T,
+  AVC_TS_MP_SD_AAC_LTP_MULT5_ISO,
+  AVC_TS_MP_SD_AAC_LTP_MULT7,
+  AVC_TS_MP_SD_AAC_LTP_MULT7_T,
+  AVC_TS_MP_SD_AAC_LTP_MULT7_ISO,
+  AVC_TS_MP_SD_BSAC,
+  AVC_TS_MP_SD_BSAC_T,
+  AVC_TS_MP_SD_BSAC_ISO,
+  AVC_MP4_MP_SD_AAC_MULT5,
+  AVC_MP4_MP_SD_HEAAC_L2,
+  AVC_MP4_MP_SD_MPEG1_L3,
+  AVC_MP4_MP_SD_AC3,
+  AVC_MP4_MP_SD_AAC_LTP,
+  AVC_MP4_MP_SD_AAC_LTP_MULT5,
+  AVC_MP4_MP_SD_AAC_LTP_MULT7,
+  AVC_MP4_MP_SD_ATRAC3plus,
+  AVC_MP4_BL_L3L_SD_AAC,
+  AVC_MP4_BL_L3L_SD_HEAAC,
+  AVC_MP4_BL_L3_SD_AAC,
+  AVC_MP4_MP_SD_BSAC,
+  AVC_TS_BL_CIF30_AAC_MULT5,
+  AVC_TS_BL_CIF30_AAC_MULT5_T,
+  AVC_TS_BL_CIF30_AAC_MULT5_ISO,
+  AVC_TS_BL_CIF30_HEAAC_L2,
+  AVC_TS_BL_CIF30_HEAAC_L2_T,
+  AVC_TS_BL_CIF30_HEAAC_L2_ISO,
+  AVC_TS_BL_CIF30_MPEG1_L3,
+  AVC_TS_BL_CIF30_MPEG1_L3_T,
+  AVC_TS_BL_CIF30_MPEG1_L3_ISO,
+  AVC_TS_BL_CIF30_AC3,
+  AVC_TS_BL_CIF30_AC3_T,
+  AVC_TS_BL_CIF30_AC3_ISO,
+  AVC_TS_BL_CIF30_AAC_LTP,
+  AVC_TS_BL_CIF30_AAC_LTP_T,
+  AVC_TS_BL_CIF30_AAC_LTP_ISO,
+  AVC_TS_BL_CIF30_AAC_LTP_MULT5,
+  AVC_TS_BL_CIF30_AAC_LTP_MULT5_T,
+  AVC_TS_BL_CIF30_AAC_LTP_MULT5_ISO,
+  AVC_TS_BL_CIF30_AAC_940,
+  AVC_TS_BL_CIF30_AAC_940_T,
+  AVC_TS_BL_CIF30_AAC_940_ISO,
+  AVC_MP4_BL_CIF30_AAC_MULT5,
+  AVC_MP4_BL_CIF30_HEAAC_L2,
+  AVC_MP4_BL_CIF30_MPEG1_L3,
+  AVC_MP4_BL_CIF30_AC3,
+  AVC_MP4_BL_CIF30_AAC_LTP,
+  AVC_MP4_BL_CIF30_AAC_LTP_MULT5,
+  AVC_MP4_BL_L2_CIF30_AAC,
+  AVC_MP4_BL_CIF30_BSAC,
+  AVC_MP4_BL_CIF30_BSAC_MULT5,
+  AVC_MP4_BL_CIF15_HEAAC,
+  AVC_MP4_BL_CIF15_AMR,
+  AVC_TS_MP_HD_AAC_MULT5,
+  AVC_TS_MP_HD_AAC_MULT5_T,
+  AVC_TS_MP_HD_AAC_MULT5_ISO,
+  AVC_TS_MP_HD_HEAAC_L2,
+  AVC_TS_MP_HD_HEAAC_L2_T,
+  AVC_TS_MP_HD_HEAAC_L2_ISO,
+  AVC_TS_MP_HD_MPEG1_L3,
+  AVC_TS_MP_HD_MPEG1_L3_T,
+  AVC_TS_MP_HD_MPEG1_L3_ISO,
+  AVC_TS_MP_HD_AC3,
+  AVC_TS_MP_HD_AC3_T,
+  AVC_TS_MP_HD_AC3_ISO,
+  AVC_TS_MP_HD_AAC,
+  AVC_TS_MP_HD_AAC_T,
+  AVC_TS_MP_HD_AAC_ISO,
+  AVC_TS_MP_HD_AAC_LTP,
+  AVC_TS_MP_HD_AAC_LTP_T,
+  AVC_TS_MP_HD_AAC_LTP_ISO,
+  AVC_TS_MP_HD_AAC_LTP_MULT5,
+  AVC_TS_MP_HD_AAC_LTP_MULT5_T,
+  AVC_TS_MP_HD_AAC_LTP_MULT5_ISO,
+  AVC_TS_MP_HD_AAC_LTP_MULT7,
+  AVC_TS_MP_HD_AAC_LTP_MULT7_T,
+  AVC_TS_MP_HD_AAC_LTP_MULT7_ISO,
+  AVC_TS_BL_CIF15_AAC,
+  AVC_TS_BL_CIF15_AAC_T,
+  AVC_TS_BL_CIF15_AAC_ISO,
+  AVC_TS_BL_CIF15_AAC_540,
+  AVC_TS_BL_CIF15_AAC_540_T,
+  AVC_TS_BL_CIF15_AAC_540_ISO,
+  AVC_TS_BL_CIF15_AAC_LTP,
+  AVC_TS_BL_CIF15_AAC_LTP_T,
+  AVC_TS_BL_CIF15_AAC_LTP_ISO,
+  AVC_TS_BL_CIF15_BSAC,
+  AVC_TS_BL_CIF15_BSAC_T,
+  AVC_TS_BL_CIF15_BSAC_ISO,
+  AVC_MP4_BL_CIF15_AAC,
+  AVC_MP4_BL_CIF15_AAC_520,
+  AVC_MP4_BL_CIF15_AAC_LTP,
+  AVC_MP4_BL_CIF15_AAC_LTP_520,
+  AVC_MP4_BL_CIF15_BSAC,
+  AVC_MP4_BL_L12_CIF15_HEAAC,
+  AVC_MP4_BL_L1B_QCIF15_HEAAC,
+  AVC_3GPP_BL_CIF30_AMR_WBplus,
+  AVC_3GPP_BL_CIF15_AMR_WBplus,
+  AVC_3GPP_BL_QCIF15_AAC,
+  AVC_3GPP_BL_QCIF15_AAC_LTP,
+  AVC_3GPP_BL_QCIF15_HEAAC,
+  AVC_3GPP_BL_QCIF15_AMR_WBplus,
+  AVC_3GPP_BL_QCIF15_AMR,
+  AVC_3GPP_BL_CIF15_AMR_WBplus_res,
+  AVC_3GPP_BL_CIF30_AMR_WBplus_res,
+  AVC_3GPP_BL_L1B_QCIF15_AMR,
+  AVC_3GPP_BL_L1B_QCIF15_AMR_WBplus,
+  AVC_MP4_BL_CIF15_HEAACv2_L2,
+  AVC_MP4_BL_CIF30_HEAACv2_L2,
+  AVC_MP4_HP_HD_HEAACv2_L4,
+  AVC_MP4_HP_SD_HEAACv2_L4,
+  AVC_TS_HP_HD_HEAACv2_L4_ISO,
+  AVC_TS_HP_HD_HEAACv2_L4_T,
+  AVC_TS_HP_SD_HEAACv2_L4_ISO,
+  AVC_TS_HP_SD_HEAACv2_L4_T,
+  AVC_TS_HD_60_AC3,
+  AVC_TS_HD_60_AC3_T,
+  AVC_TS_HD_60_AC3_ISO,
+  AVC_TS_HD_50_AC3,
+  AVC_TS_HD_50_AC3_T,
+  AVC_TS_HD_50_AC3_ISO,
+  /* TODO */
+
+  /*
+  MP3 = 0,
+  AAC_ISO_320 = 1,
+  AAC_ISO = 2,
+  AAC_MULT5_ISO = 3,
+  MPEG1 = 4, */
+  UNKNOWN
+};
+
+static std::string dlna_profile_names[] = {
+  "JPEG_SM", 
+  "MP3", "AAC_ISO_320", "AAC_ISO", "AAC_MULT5_ISO", "MPEG1",
+  "UNKNOWN"
 };
 
 /**
@@ -65,7 +454,8 @@ public:
     /**
      * @brief AudioStream
      */
-    AudioStream() : _bitrate(0), _bits_per_sample(0), _channels(0), _sample_frequency(0) {}
+    AudioStream() : _bitrate(0), _bits_per_sample(0), _channels(0), _sample_frequency(0), 
+		    _codec(CODEC::UNKNOWN), _dlna_profile(DLNA_PROFILE::UNKNOWN) {}
     /**
      * @brief bitrate
      * @return
@@ -100,12 +490,12 @@ public:
      * @brief codec id
      * @return
      */
-    int codec() { return _codec; }
+    CODEC codec() { return _codec; }
     /**
      * @brief codec id
      * @param codec
      */
-    void codec( int codec ) { _bitrate = codec; }
+    void codec( CODEC codec ) { _codec = codec; }
     /**
      * @brief sampleFrequency
      * @return
@@ -116,25 +506,41 @@ public:
      * @param sample_frequency
      */
     void sampleFrequency( int sample_frequency ) { _sample_frequency = sample_frequency; }
+    /**
+     * @brief dlna profile
+     * @return
+     */
+    DLNA_PROFILE dlnaProfile() { return _dlna_profile; }
+    /**
+     * @brief dlna profile
+     * @param dlna profile
+     */
+    void dlnaProfile( DLNA_PROFILE dlna_profile ) { _dlna_profile = dlna_profile; }
 
     /**
      * @brief operator write the object to the ostream.
      */
     friend std::ostream& operator <<(std::ostream &os,const AudioStream &obj) {
-        os <<  "AudioStream::" << std::endl;
-        os << " codec id: " << obj._codec << std::endl;
+        os <<  "AudioStream (DLNA: " << dlna_profile_names[(int)obj._dlna_profile] << ")" << std::endl;
+        os << " codec id: " << codec_names[(int)obj._codec] << std::endl;
         os << " channels: " << obj._channels << ", bitrate: " << obj._bitrate << ", bits_per_sample: " <<
               obj._bits_per_sample << ", frequency: " << obj._sample_frequency << std::endl;
         return os;
     }
 private:
-    int _bitrate, _bits_per_sample, _channels, _sample_frequency, _codec;
+    int _bitrate, _bits_per_sample, _channels, _sample_frequency;
+    CODEC _codec;
+    DLNA_PROFILE _dlna_profile;
 };
 /**
  * @brief The VideoStream class
  */
 class VideoStream {
 public:
+    /**
+     * @brief VideoStream
+     */
+    VideoStream() : _width(0), _height(0), _bitrate(0), _codec(CODEC::UNKNOWN) {}
     /**
      * @brief bitrate
      * @return
@@ -146,19 +552,15 @@ public:
      */
     void bitrate( int bitrate ) { _bitrate = bitrate; }
     /**
-     * @brief VideoStream
-     */
-    VideoStream() : _width(0), _height(0), _codec(0) {}
-    /**
      * @brief codec type
      * @return
      */
-    int codec() { return _codec; }
+    CODEC codec() { return _codec; }
     /**
      * @brief codec type
      * @param codec
      */
-    void codec( int codec ) {  _codec = codec; }
+    void codec( CODEC codec ) {  _codec = codec; }
     /**
      * @brief height
      * @return
@@ -185,12 +587,13 @@ public:
      */
     friend std::ostream& operator <<(std::ostream &os,const VideoStream &obj) {
         os <<  "VideoStream::" << std::endl;
-        os << " codec id: " << obj._codec << std::endl;
+        os << " codec id: " << codec_names[(int)obj._codec] << std::endl;
         os << " bitrate: " << obj._bitrate << ", width: " << obj._width << ", height: " << obj._height << std::endl;
         return os;
     }
 private:
-    int _width, _height, _codec, _bitrate;
+    int _width, _height, _bitrate;
+    CODEC _codec;
 };
 /**
  * @brief The MediaFile class
@@ -328,37 +731,97 @@ public:
         av_register_all();
 
         open_input_file(filename.c_str(), &fmt_ctx, &input_codec_context);
-
+	
         /** Make sure that there is only one stream in the input file. */
         if ( fmt_ctx->nb_streams > 0 ) {
             media_file.duration( fmt_ctx->duration / AV_TIME_BASE ); //set the playlength
             for( unsigned int i=0; i<fmt_ctx->nb_streams; i++ ) { //TODO remove output
-                std::cout << "input stream " << i << ", type: " << fmt_ctx->streams[i]->codec->codec_type << ": ";
+                std::cout << "input stream " << i << ", type: " << fmt_ctx->streams[i]->codec->codec_type << std::endl;
                 switch( fmt_ctx->streams[i]->codec->codec_type ) {
                     case AVMEDIA_TYPE_UNKNOWN: std::cout << "AVMEDIA_TYPE_UNKNOWN" << std::endl; break;
                     case AVMEDIA_TYPE_VIDEO: {
-                        std::cout << "AVMEDIA_TYPE_VIDEO" << std::endl;
-                        open_input_decoder(i, &fmt_ctx, &input_codec_context);
+			input_codec_context = fmt_ctx->streams[i]->codec;
+			
+			switch( input_codec_context->codec_id ) {
+			  case AV_CODEC_ID_MPEG1VIDEO:
+			    std::cout << "AV_CODEC_ID_MPEG1VIDEO" << std::endl;
+			    break;
+			case AV_CODEC_ID_MPEG2VIDEO:
+			  std::cout << "AV_CODEC_ID_MPEG2VIDEO" << std::endl;
+			  break;
+			case AV_CODEC_ID_MPEG2TS:
+			  std::cout << "AV_CODEC_ID_MPEG2TS" << std::endl;
+			  break;
+			case AV_CODEC_ID_MPEG4:
+			  std::cout << "AV_CODEC_ID_MPEG4" << std::endl;
+			  break;
+			case AV_CODEC_ID_MPEG4SYSTEMS:
+			  std::cout << "AV_CODEC_ID_MPEG4SYSTEMS" << std::endl;
+			  break;
+			case AV_CODEC_ID_H264:
+			  std::cout << "AV_CODEC_ID_H264" << fmt_ctx->iformat->name << std::endl;
+			  break;
+			default: 
+			  std::cout << "CODEC id not found:" << input_codec_context->codec_id << ", " << input_codec_context->codec_name << std::endl;
+			};
+			
+			
+			
                         VideoStream videofile;
                         videofile.width( input_codec_context->width );
                         videofile.height( input_codec_context->height );
-                        videofile.codec( input_codec_context->codec_id );
+                        videofile.codec( convertCodec(input_codec_context->codec_id) );
+                        videofile.bitrate( input_codec_context->bit_rate );
                         media_file.addVideoStream( std::move( videofile ) );
                         avcodec_close(input_codec_context);
                         break;
                     }
                     case AVMEDIA_TYPE_AUDIO: {
-                        open_input_decoder(i, &fmt_ctx, &input_codec_context);
-                        std::cout << "AVMEDIA_TYPE_AUDIO, codec_id:" << input_codec_context->codec_id << std::endl;
-                        if( input_codec_context->codec_id == AV_CODEC_ID_MP3 ) {
-                            std::cout << "code is mp3:" << std::endl;
-                        }
+			input_codec_context = fmt_ctx->streams[i]->codec;
                         AudioStream audiofile;
+			switch( input_codec_context->codec_id ) {
+			  case AV_CODEC_ID_MP3:
+			    audiofile.dlnaProfile( DLNA_PROFILE::MP3 );
+			    audiofile.codec( CODEC::MPEG3 );
+			    break;
+			  case AV_CODEC_ID_AAC:
+			    if( input_codec_context->channels <= 2 && input_codec_context->bit_rate <= 320000 ) {
+			      audiofile.dlnaProfile( DLNA_PROFILE::AAC_ISO_320 );
+			      audiofile.codec( CODEC::AAC );
+			    } else if( input_codec_context->channels <= 2 && input_codec_context->bit_rate <= 576000 ) {
+			      audiofile.dlnaProfile( DLNA_PROFILE::AAC_ISO );
+			      audiofile.codec( CODEC::AAC );
+			    } else if( input_codec_context->channels <= 6 && input_codec_context->bit_rate <= 1440000 ) {
+			      //TODO set profile audiofile.dlnaProfile( DLNA_PROFILE::AAC_MULT5_ISO );
+			      audiofile.codec( CODEC::AAC );
+			    } else {
+			      std::cout << "UNKNOWN AAC CODEC: " << std::endl;
+			    }			      
+			    break;
+
+		  
+			    /* TODO
+			    audiofile.dlnaProfile( DLNA_PROFILE::MP3 );
+			    audiofile.codec( CODEC::MPEG3 );
+			    break; */
+			    
+/*			  case CODEC_ID_AC3: 
+			  case CODEC_ID_DTS:
+			  case CODEC_ID_WMAV1:
+			  case CODEC_ID_WMAV2:
+			  case CODEC_ID_WMAPRO:
+			  case CODEC_ID_MP2: 
+			  case CODEC_ID_AMR_NB: */
+			  default:
+			    std::cout << "Unkown Codec:" << input_codec_context->codec_id << ":" << input_codec_context->codec_name << 
+					 ", " << input_codec_context->codec_tag << ", " << input_codec_context->codec_type << std::endl;
+			}
+			
                         audiofile.bitrate( input_codec_context->bit_rate );
                         audiofile.bitsPerSample( input_codec_context->bits_per_raw_sample );
                         audiofile.channels( input_codec_context->channels );
                         audiofile.sampleFrequency( input_codec_context->sample_rate );
-                        audiofile.codec( input_codec_context->codec_id );
+                        audiofile.codec( convertCodec(input_codec_context->codec_id) );
                         media_file.addAudioStream( std::move( audiofile ) );
                         avcodec_close(input_codec_context);
                         break;
@@ -464,6 +927,34 @@ private:
 
     }
 
+    static CODEC convertCodec( const AVCodecID & codec_id ) {
+      if( codec_id == AV_CODEC_ID_MP1 )
+	return CODEC::MPEG1; 
+      if( codec_id == AV_CODEC_ID_MP2 )
+	return CODEC::MPEG2; 
+      if( codec_id == AV_CODEC_ID_MP3 )
+	return CODEC::MPEG3; 
+      if( codec_id == AV_CODEC_ID_FLAC )
+	return CODEC::FLAC; 
+      if( codec_id == AV_CODEC_ID_AAC )
+	return CODEC::AAC; 
+      if( codec_id == AV_CODEC_ID_AC3 )
+	return CODEC::AC3; 
+      if( codec_id == AV_CODEC_ID_APE )
+	return CODEC::APE; 
+      if( codec_id == AV_CODEC_ID_MUSEPACK7 ||
+	  codec_id == AV_CODEC_ID_MUSEPACK8 )
+	return CODEC::MPC; 
+      if( codec_id == AV_CODEC_ID_VORBIS )
+	return CODEC::VORBIS; 
+      
+      if( codec_id == AV_CODEC_ID_H264 )
+	return CODEC::H264; 
+
+      std::cerr << "unknown codec id:" << codec_id;
+      return CODEC::UNKNOWN;
+    }
+    
     /** Open an input file and the required decoder. */
     static void open_input_file(const char *filename,
                                AVFormatContext **input_format_context,
@@ -484,7 +975,7 @@ private:
     }
 
 
-    /** Open an input file and the required decoder. */
+    /** TODO remove! Open an input file and the required decoder. */
     static void open_input_decoder(int stream_index,
                                AVFormatContext **input_format_context,
                                AVCodecContext **input_codec_context ) {

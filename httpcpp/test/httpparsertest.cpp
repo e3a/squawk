@@ -64,14 +64,14 @@ TEST(HttpRequestParser, ParseWithBody) {
     "<?xml version=\"1.0\" encoding=\"utf-8\"?><s:Envelope xmlns:ns0=\"urn:schemas-upnp-org:service:ContentDirectory:1\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><ns0:Browse><ObjectID>0</ObjectID><BrowseFlag>BrowseMetadata</BrowseFlag><Filter>*</Filter><StartingIndex>0</StartingIndex><RequestedCount>0</RequestedCount><SortCriteria /></ns0:Browse></s:Body></s:Envelope>";
 
     std::array<char, 8192> request;
-    for(int i=0; i<strlen(_request); i++) {
+    for(size_t i=0; i<strlen(_request); i++) {
         request[i] = _request[i];
     }
     char const * response = "<?xml version=\"1.0\" encoding=\"utf-8\"?><s:Envelope xmlns:ns0=\"urn:schemas-upnp-org:service:ContentDirectory:1\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><ns0:Browse><ObjectID>0</ObjectID><BrowseFlag>BrowseMetadata</BrowseFlag><Filter>*</Filter><StartingIndex>0</StartingIndex><RequestedCount>0</RequestedCount><SortCriteria /></ns0:Browse></s:Body></s:Envelope>";
 
-    char body[strlen(response)];
     http::HttpRequest http_request;
     http::PARSE_STATE state = http::HttpParser::parse_http_request(http_request, request, strlen(_request));
+    EXPECT_EQ(http::PARSE_STATE::TRUE, state);
     EXPECT_EQ(std::string("POST"), http_request.request_method);
     EXPECT_EQ(std::string("/ctl/ContentDir"), http_request.uri);
     EXPECT_EQ(std::string("HTTP"), http_request.protocol);
@@ -99,12 +99,13 @@ TEST(HttpRequestParser, ParseSSDPNotify) {
     "\r\n";
 
   std::array<char, 8192> request;
-  for(int i=0; i<strlen(_request); i++) {
+  for(size_t i=0; i<strlen(_request); i++) {
       request[i] = _request[i];
   }
 
   http::HttpRequest http_request;
   http::PARSE_STATE state = http::HttpParser::parse_http_request(http_request, request, strlen(_request));
+    EXPECT_EQ(http::PARSE_STATE::TRUE, state);
     EXPECT_EQ(std::string("NOTIFY"), http_request.request_method);
     EXPECT_EQ(std::string("*"), http_request.uri);
     EXPECT_EQ(std::string("HTTP"), http_request.protocol);
@@ -189,12 +190,13 @@ TEST(HttpRequestParser, ParseGetParameter) {
     0x30, 0x31, 0x37, 0x34, 0x0d, 0x0a, 0x0d, 0x0a };      
 
     std::array<char, 8192> request;
-    for(int i=0; i<sizeof(_request); i++) {
+    for(size_t i=0; i<sizeof(_request); i++) {
         request[i] = _request[i];
     }
 
     http::HttpRequest http_request;
-    http::PARSE_STATE state = http::HttpParser::parse_http_request(http_request, request, sizeof(_request));
+    http::PARSE_STATE state = http::HttpParser::parse_http_request(http_request, request, sizeof(_request));    
+    EXPECT_EQ(http::PARSE_STATE::TRUE, state);
     EXPECT_EQ(std::string("GET"), http_request.request_method);
     EXPECT_EQ(std::string("/suche/"), http_request.uri);
     EXPECT_EQ(std::string("HTTP"), http_request.protocol);
@@ -240,12 +242,13 @@ TEST(HttpRequestParser, ParseSSDPSearch) {
     0x6c, 0x6c, 0x0d, 0x0a, 0x0d, 0x0a };
 
     std::array<char, 8192> request;
-    for(int i=0; i<sizeof(_request); i++) {
+    for(size_t i=0; i<sizeof(_request); i++) {
         request[i] = _request[i];
     }
 
     http::HttpRequest http_request;
     http::PARSE_STATE state = http::HttpParser::parse_http_request(http_request, request, sizeof(_request));
+    EXPECT_EQ(http::PARSE_STATE::TRUE, state);
     EXPECT_EQ(std::string("M-SEARCH"), http_request.request_method);
     EXPECT_EQ(std::string("*"), http_request.uri);
     EXPECT_EQ(std::string("HTTP"), http_request.protocol);
@@ -285,12 +288,13 @@ TEST(HttpRequestParser, ParseSSDPSearchSamsung) {
     };
 
     std::array<char, 8192> request;
-    for(int i=0; i<sizeof(_request); i++) {
+    for(size_t i=0; i<sizeof(_request); i++) {
         request[i] = _request[i];
     }
 
     http::HttpRequest http_request;
     http::PARSE_STATE state = http::HttpParser::parse_http_request(http_request, request, sizeof(_request));
+    EXPECT_EQ(http::PARSE_STATE::TRUE, state);
     EXPECT_EQ(std::string("M-SEARCH"), http_request.request_method);
     EXPECT_EQ(std::string("*"), http_request.uri);
     EXPECT_EQ(std::string("HTTP"), http_request.protocol);
@@ -332,7 +336,7 @@ TEST(HttpRequestParser, ParseIncompleteHeader) {
     "\r\n"; */
 
   std::array<char, 8192> request;
-  for(int i=0; i<strlen(_request); i++) {
+  for(size_t i=0; i<strlen(_request); i++) {
       request[i] = _request[i];
   }
 

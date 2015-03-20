@@ -18,9 +18,9 @@
 */
 
 #include "apibrowseservlet.h"
-#include "../db/database.h"
 
 #include "commons.h"
+#include "squawk.h"
 
 #define QUERY_ALBUMS_COUNT "select count(*) from tbl_cds_albums"
 #define QUERY_ITEM "select ROWID, type, name, mime_type from tbl_cds_files where parent = ? and type in (0, ?)"
@@ -71,8 +71,8 @@ void ApiBrowseServlet::do_get( http::HttpRequest & request, ::http::HttpResponse
             stmt_items->reset();
             db->release_statement(stmt_items);
 
-        } catch( ::db::DbException * e ) {
-            LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e->code() << "-> " << e->what());
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e.code() << "-> " << e.what());
             if(stmt_items != NULL) db->release_statement(stmt_items);
             throw http::http_status::INTERNAL_SERVER_ERROR;
         } catch( ... ) {

@@ -93,7 +93,7 @@ void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpRe
             xmlWriter.attribute(image_node, "", "id", "image");
             xmlWriter.attribute(image_node, "", "type", "object.item.imageItem");
 
-            commons::xml::Node result_node = xmlWriter.element(response_node, "", "FeatureList", didlWriter.str() );
+            xmlWriter.element(response_node, "", "FeatureList", didlWriter.str() );
 
             std::cout << xmlWriter.str() << std::endl;
 

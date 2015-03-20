@@ -19,15 +19,17 @@
 #ifndef SSDPCONNECTION_H
 #define SSDPCONNECTION_H
 
+#include <chrono>
 #include <string>
 #include <map>
 #include <memory>
+#include <thread>
 
 #include <commons.h>
 #include <http.h>
 
 #include "log4cxx/logger.h"
-#include "asio.hpp"
+// #include "asio.hpp"
 
 /**
  * \brief SSDP Server Implementation.
@@ -82,6 +84,10 @@ namespace ssdp {
 
 /** hot many times the SSDP M-SEARCH and NOTIFY messages are sent. */
 static const size_t NETWORK_COUNT = 3;
+/** hot many times the SSDP M-SEARCH and NOTIFY messages are sent. */
+static const size_t ANNOUNCE_INTERVAL = 1800;
+
+static const std::string USER_AGENT = "DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0";
 
 static const std::string NS_ROOT_DEVICE = "upnp:rootdevice";
 static const std::string NS_MEDIASERVER = "urn:schemas-upnp-org:device:MediaServer:1";
@@ -90,10 +96,39 @@ static const std::string NS_CONNECTION_MANAGER = "urn:schemas-upnp-org:service:C
 static const std::string NS_MEDIA_RECEIVER_REGISTRAR = "urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:1";
 
 static const std::string HEADER_DATE = "Date";
+
+/**  Specified by UPnP vendor. String. Field value MUST begin with the following “product tokens” (defined by
+     HTTP/1.1). The first product token identifes the operating system in the form OS name/OS version, the second token
+     represents the UPnP version and MUST be UPnP/1.1, and the third token identifes the product using the form
+     product name/product version. For example, “SERVER: unix/5.1 UPnP/1.1 MyProduct/1.0”. Control points MUST be
+     prepared to accept a higher minor version number of the UPnP version than the control point itself implements. For
+     example, control points implementing UDA version 1.0 will be able to interoperate with devices implementing
+     UDA version 1.1. */
+static const std::string UPNP_HEADER_SERVER = "Server";
+static const std::string UPNP_HEADER_DATE = "Date";
+static const std::string UPNP_HEADER_ST = "St";
+/**  Field value contains Notification Sub Type. MUST be ssdp:alive. Single URI. */
+static const std::string UPNP_HEADER_NTS = "Nts";
+/**  Field value contains Unique Service Name. */
+static const std::string UPNP_HEADER_USN = "Usn";
+/**  Field value contains a URL to the UPnP description of the root device. */
+static const std::string UPNP_HEADER_LOCATION = "Location";
+/**  Field value contains Notification Type. */
+static const std::string UPNP_HEADER_NT = "Nt";
+static const std::string UPNP_HEADER_EXT = "Ext";
+static const std::string UPNP_OPTION_MAX_AGE = "max-age=";
+
 static const std::string HTTP_REQUEST_LINE_OK = "HTTP/1.1 200 OK";
 
 static const std::string UPNP_STATUS_ALIVE	= std::string("ssdp:alive");
 static const std::string UPNP_STATUS_BYE	= std::string("ssdp:byebye");
+
+static const std::string UPNP_NS_ALL = "ssdp:all";
+
+static const std::string  REQUEST_METHOD_MSEARCH = "M-SEARCH";
+static const std::string  REQUEST_METHOD_NOTIFY = "NOTIFY";
+
+static const std::string SSDP_HEADER_REQUEST_LINE = "NOTIFY * HTTP/1.1";
 
 /**
  * @brief UPNP device item.
@@ -122,6 +157,21 @@ struct UpnpDevice {
 	   "\"last_seen\":" << upnp_device.last_seen << ",\"cache_control\":" << upnp_device.cache_control << "}";
     return out;
   };
+};
+
+/**
+ * \brief Interface for the SSDP event listener
+ */
+class SSDPEventListener {
+public:
+  enum EVENT_TYPE { ANNOUNCE, BYE };
+  
+  SSDPEventListener() {};
+  virtual ~SSDPEventListener() {};
+  /**
+   * \brief event method
+   */
+  virtual void ssdpEvent( SSDPEventListener::EVENT_TYPE type, std::string  client_ip, UpnpDevice device ) = 0;
 };
 
 /**
@@ -159,6 +209,9 @@ struct Response {
  */
 class SSDPCallback {
 public:  
+  SSDPCallback() {};
+  virtual ~SSDPCallback() {};
+  
 /**
  * The SSDP Callback method.
  * \param headers the http request
@@ -173,8 +226,20 @@ public:
  */
 class SSDPConnection {
 public:
+
+  SSDPConnection() {}
+  virtual ~SSDPConnection() {}
+  
 /**
- * Send a message to the network..
+ * Start the server.
+ */
+  virtual void start() = 0;
+/**
+ * Stop the server.
+ */
+  virtual void stop() = 0;
+/**
+ * Send a message to the network.
  * \param headers the messsage headers
  */
   virtual void send(std::string request_line, std::map< std::string, std::string > headers) = 0;
@@ -200,7 +265,7 @@ public:
     */
     explicit SSDPServerImpl(const std::string & uuid, const std::string & local_listen_address,
                             const std::string & multicast_address, const int & multicast_port);
-    ~SSDPServerImpl() {}
+    virtual ~SSDPServerImpl() {}
     /**
      * Announce the services in the network.
      */
@@ -216,10 +281,7 @@ public:
     /**
     * Stop the server.
     */
-    void stop() {
-      std::cout << "server stop" << std::endl;
-      io_service.stop();
-    }
+    void stop();
     /**
     * Register an UPNP Service.
     * \param ns the Service namespace
@@ -240,7 +302,13 @@ public:
     std::map< std::string, UpnpDevice > get_upnp_devices() {
         return upnp_devices;
     }
-
+    /**
+     * \brief Subscribe for events.
+     */
+    void subscribe( SSDPEventListener * listener ) {
+	listeners.push_back( listener );
+    }
+    
 private:
     static log4cxx::LoggerPtr logger;
     std::string uuid, local_listen_address, multicast_address;
@@ -251,7 +319,14 @@ private:
     std::map< std::string, std::string > create_response(size_t bytes_recvd, std::string nt, std::string location);
     std::map< std::string, std::string > namespaces;
     std::map< std::string, UpnpDevice > upnp_devices;
-    asio::io_service io_service;
+
+    std::vector< SSDPEventListener * > listeners;
+    void fireEvent( SSDPEventListener::EVENT_TYPE type, std::string client_ip, UpnpDevice device );
+    
+    bool announce_thread_run = true;
+    std::unique_ptr<std::thread> annouceThreadRunner;
+    std::chrono::high_resolution_clock::time_point start_time;
+    void annouceThread();
 };
 }
 #endif // SSDPCONNECTION_H
