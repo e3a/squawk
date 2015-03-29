@@ -38,7 +38,7 @@ namespace servlet {
 void FileServlet::do_get(HttpRequest & request, HttpResponse & response) {
 
     if (request.uri.empty() || request.uri[0] != '/' || request.uri.find("..") != std::string::npos) {
-      throw http_status::BAD_REQUEST;
+      throw http::http_status::BAD_REQUEST;
     }
 
     std::string full_path = docroot + request.uri;

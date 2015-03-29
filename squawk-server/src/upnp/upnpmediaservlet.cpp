@@ -21,6 +21,7 @@
 #include <sstream>
 
 #include "commons.h"
+#include "mimetypes.h"
 #include "squawk.h"
 
 #define QUERY_SONG
@@ -33,7 +34,66 @@ log4cxx::LoggerPtr UpnpMediaServlet::logger(log4cxx::Logger::getLogger("squawk.u
 void UpnpMediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & response ) {
     try {
         getFile( request, response );
-        FileServlet::do_get(request, response);
+
+        if (request.uri.empty() || request.uri[0] != '/' || request.uri.find("..") != std::string::npos) {
+          throw http::http_status::BAD_REQUEST;
+        }
+
+        std::string full_path = request.uri;
+
+        struct stat filestatus;
+        stat( full_path.c_str(), &filestatus );
+        if(S_ISDIR(filestatus.st_mode)) {
+            full_path += std::string("/index.html");
+            stat( full_path.c_str(), &filestatus );
+        }
+        std::cout << "FileServlet Full Path:" << full_path << std::endl;
+
+        // Determine the filename and extension.
+        std::size_t last_slash_pos = full_path.find_last_of("/");
+        std::size_t last_dot_pos = full_path.find_last_of(".");
+        std::string extension, filename;
+        if (last_dot_pos != std::string::npos && last_dot_pos > last_slash_pos) {
+          extension = full_path.substr(last_dot_pos + 1);
+        }
+        if (last_slash_pos != std::string::npos && last_slash_pos < full_path.size() ) {
+          filename = full_path.substr(last_slash_pos + 1 );
+        }
+
+        // Open the file to send back.
+        std::ifstream * is = new std::ifstream(full_path.c_str(), std::ios::in | std::ios::binary); //TODO remove new
+        if ( !is->is_open() ) {
+            std::cout << "can not open file:" << full_path << std::endl;
+            throw http::http_status::NOT_FOUND;
+        }
+
+        // Fill out the reply to be sent to the client.
+        if( request.request_lines.find( "Range" ) != request.request_lines.end() ) {
+            std::cout << "get Range" << std::endl;
+            response.set_status( http::http_status::PARTIAL_CONTENT );
+            std::tuple<int, int> range = http::parseRange( request.request_lines["Range"] );
+            std::cout << "get range: " << std::get<0>(range) << "-" << std::get<1>(range) << std::endl;
+            response.add_header( "Content-Range", "bytes " + std::to_string( std::get<0>(range) ) + "-" +
+                                 ( std::get<1>(range) == -1 ? std::to_string( filestatus.st_size - 1 ) :
+                                                              std::to_string( std::get<1>(range) - 1 ) ) +
+                                   "/" + std::to_string( filestatus.st_size ) );
+            response.add_header( HTTP_HEADER_CONTENT_LENGTH, ( std::get<1>(range) == -1 ? std::to_string( filestatus.st_size - std::get<0>(range) ) :
+                                                                                          std::to_string( std::get<1>(range) - std::get<0>(range) ) ) );
+            is->seekg( std::get<0>( range ), std::ios_base::beg ); //TODO check if range is available
+
+        } else {
+            response.add_header( HTTP_HEADER_CONTENT_LENGTH, std::to_string( filestatus.st_size ) );
+            response.set_status( http::http_status::OK );
+        }
+    //    response.add_header( HTTP_HEADER_CONTENT_DISPOSITION, "inline; filename= \"" + filename + "\"" );
+        if( ::http::mime::mime_type(extension )== http::mime::AVI || ::http::mime::mime_type(extension) == http::mime::MKV )
+            response.set_mime_type( http::mime::VIDEOMPEG );
+        else
+            response.set_mime_type( ::http::mime::mime_type( extension ) );
+
+    //    response.set_last_modified( filestatus.st_mtime );
+    //    response.set_expires( 3600 * 24 );
+        response.set_istream( is );
 
     } catch( ... ) {
         throw;
@@ -42,7 +102,52 @@ void UpnpMediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpRespon
 void UpnpMediaServlet::do_head( ::http::HttpRequest & request, ::http::HttpResponse & response ) {
     try {
         getFile( request, response );
-        FileServlet::do_head(request, response);
+
+        if (request.uri.empty() || request.uri[0] != '/' || request.uri.find("..") != std::string::npos) {
+          throw http::http_status::BAD_REQUEST;
+        }
+
+        std::string full_path = request.uri;
+
+        struct stat filestatus;
+        stat( full_path.c_str(), &filestatus );
+        if(S_ISDIR(filestatus.st_mode)) {
+            full_path += std::string("/index.html");
+            stat( full_path.c_str(), &filestatus );
+        }
+        std::cout << "FileServlet Full Path:" << full_path << std::endl;
+
+        // Determine the filename and extension.
+        std::size_t last_slash_pos = full_path.find_last_of("/");
+        std::size_t last_dot_pos = full_path.find_last_of(".");
+        std::string extension, filename;
+        if (last_dot_pos != std::string::npos && last_dot_pos > last_slash_pos) {
+          extension = full_path.substr(last_dot_pos + 1);
+        }
+        if (last_slash_pos != std::string::npos && last_slash_pos < full_path.size() ) {
+          filename = full_path.substr(last_slash_pos + 1 );
+        }
+
+        // Open the file to send back.
+        std::ifstream * is = new std::ifstream(full_path.c_str(), std::ios::in | std::ios::binary); //TODO remove new
+        if ( !is->is_open() ) {
+            std::cout << "can not open file:" << full_path << std::endl;
+            throw http::http_status::NOT_FOUND;
+        }
+        delete is;
+
+        // Fill out the reply to be sent to the client.
+        response.add_header( HTTP_HEADER_CONTENT_LENGTH, std::to_string( filestatus.st_size ) );
+    //    response.add_header( HTTP_HEADER_CONTENT_DISPOSITION, "inline; filename= \"" + filename + "\"" );
+        response.set_status( http::http_status::OK );
+
+        if( ::http::mime::mime_type(extension )== http::mime::AVI || ::http::mime::mime_type(extension) == http::mime::MKV )
+            response.set_mime_type( http::mime::VIDEOMPEG );
+        else
+            response.set_mime_type( ::http::mime::mime_type( extension ) );
+
+        response.set_last_modified( filestatus.st_mtime );
+    //    response.set_expires( 3600 * 24 );
 
     } catch( ... ) {
         throw;
@@ -99,9 +204,9 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
                request.request_lines["Getcontentfeatures.dlna.org"] == "1") {
                 response.add_header("transferMode.dlna.org", "Streaming");
                 response.add_header("Accept-Ranges", "bytes");
-                response.add_header("realTimeInfo.dlna.org", "DLNA.ORG_TLAG=*");
-                response.add_header("contentFeatures.dlna.org", "AVC_MP4_HP_HD_AAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000" ); //DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000");
-                response.add_header("Connection", "close");
+                // response.add_header("realTimeInfo.dlna.org", "DLNA.ORG_TLAG=*");
+                response.add_header("contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000");
+                // response.add_header("Connection", "close");
                 response.add_header("EXT", "");
             }
             response.add_header("Server", "Debian/wheezy/sid DLNADOC/1.50 UPnP/1.0 Squawk/0.1");

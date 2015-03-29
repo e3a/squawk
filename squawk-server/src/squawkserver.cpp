@@ -155,7 +155,6 @@ void SquawkServer::start() {
     //Setup and start the SSDP server
     ssdp_server = new ssdp::SSDPServerImpl(
     squawk_config->uuid(),
-    squawk_config->localListenAddress(),
     squawk_config->multicastAddress(),
     squawk_config->multicastPort() );
 
@@ -185,6 +184,7 @@ void SquawkServer::start() {
     std::cout << "server started and library rescanned" << std::endl;
 
     ssdp_server->announce();
+    ssdp_server->search();
 }
 void SquawkServer::stop() {
     ssdp_server->stop();

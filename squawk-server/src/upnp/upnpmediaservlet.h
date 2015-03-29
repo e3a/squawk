@@ -29,15 +29,16 @@
 namespace squawk {
 namespace upnp {
 
-class UpnpMediaServlet : public ::http::servlet::FileServlet {
+class UpnpMediaServlet : public http::HttpServlet {
 public:
     explicit UpnpMediaServlet( const std::string path, squawk::db::Sqlite3Database * db ) :
-        FileServlet( path, std::string("") ), db( db ) {}
+        HttpServlet(path), db( db ) {}
     virtual void do_get( ::http::HttpRequest & request, ::http::HttpResponse & response );
     virtual void do_head( ::http::HttpRequest & request, ::http::HttpResponse & response );
 private:
-    void getFile( ::http::HttpRequest & request, ::http::HttpResponse & response );
     static log4cxx::LoggerPtr logger;
+    std::string path;
+    void getFile( ::http::HttpRequest & request, ::http::HttpResponse & response );
     squawk::db::Sqlite3Database * db;
 };
 }}

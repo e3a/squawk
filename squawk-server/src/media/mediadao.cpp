@@ -40,10 +40,10 @@ const char *SQL_INSERT_ALBUM_ARTIST_MAPPING = "insert into tbl_cds_artists_album
 const char *SQL_GET_ARTIST_ID = "select ROWID from tbl_cds_artists where clean_name = ?";
 const char *SQL_INSERT_ARTIST = "insert into tbl_cds_artists(name, clean_name, letter) values (?,?,?)";
 const char *SQL_INSERT_AUDIOFILE = "insert into tbl_cds_audiofiles(" \
-                                   "filename, filesize, mtime, timestamp, album_id, title, bitrate, bits_per_sample, " \
-                                   "channels, track, mime_type, length, disc) values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                                   "filename, filesize, mtime, timestamp, album_id, title, bitrate, bits_per_sample, sample_rate, " \
+                                   "channels, track, mime_type, length, disc) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 const char *SQL_UPDATE_AUDIOFILE = "update tbl_cds_audiofiles SET " \
-                                   "filesize=?, mtime=?, timestamp=?, album_id=?, title=?, bitrate=?, bits_per_sample=?, " \
+                                   "filesize=?, mtime=?, timestamp=?, album_id=?, title=?, bitrate=?, bits_per_sample=?, sample_rate=?," \
                                    "channels=?, track=?, mime_type=?, length=?, disc=? where filename = ?";
 const char *SQL_INSERT_IMAGE = "insert into tbl_cds_images(album, filename, mtime, timestamp, filesize, type, mime_type, width, height) " \
                                "values (?,?,?,?,?,?,?,?,?)";
@@ -429,12 +429,13 @@ void MediaDao::save_audiofile(std::string filename, long mtime, long size, unsig
             stmt->bind_text(5, audiofile->title);
             stmt->bind_int(6, audiofile->bitrate);
             stmt->bind_int(7, audiofile->bits_per_sample);
-            stmt->bind_int(8, audiofile->channels);
-            stmt->bind_int(9, audiofile->track);
-            stmt->bind_text(10, audiofile->mime_type);
-            stmt->bind_int(11, audiofile->playLength);
-            stmt->bind_int(12, audiofile->disc);
-            stmt->bind_text(13, filename);
+            stmt->bind_int(8, audiofile->sampleFrequency);
+            stmt->bind_int(9, audiofile->channels);
+            stmt->bind_int(10, audiofile->track);
+            stmt->bind_text(11, audiofile->mime_type);
+            stmt->bind_int(12, audiofile->playLength);
+            stmt->bind_int(13, audiofile->disc);
+            stmt->bind_text(14, filename);
             stmt->insert();
             stmt->reset();
 
@@ -449,11 +450,12 @@ void MediaDao::save_audiofile(std::string filename, long mtime, long size, unsig
             stmt->bind_text(6, audiofile->title);
             stmt->bind_int(7, audiofile->bitrate);
             stmt->bind_int(8, audiofile->bits_per_sample);
-            stmt->bind_int(9, audiofile->channels);
-            stmt->bind_int(10, audiofile->track);
-            stmt->bind_text(11, audiofile->mime_type);
-            stmt->bind_int(12, audiofile->playLength);
-            stmt->bind_int(13, audiofile->disc);
+            stmt->bind_int(9, audiofile->sampleFrequency);
+            stmt->bind_int(10, audiofile->channels);
+            stmt->bind_int(11, audiofile->track);
+            stmt->bind_text(12, audiofile->mime_type);
+            stmt->bind_int(13, audiofile->playLength);
+            stmt->bind_int(14, audiofile->disc);
             stmt->insert();
             stmt->reset();
         }

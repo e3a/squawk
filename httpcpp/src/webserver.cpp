@@ -47,6 +47,7 @@ void WebServer::handle_request(HttpRequest & request, HttpResponse & response, s
                     servlet->do_subscribe(request, response);
                 } else {
                     std::cerr << "unknow request method: " << request.request_method << std::endl;
+                    throw http_status::NOT_IMPLEMENTED;
                 }
                 /* TODO handle all http methods */
 

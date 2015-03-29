@@ -31,11 +31,11 @@ void SSDPAsioConnection::set_handler(SSDPCallback * _handler) {
   handler = _handler;
 }
 
-SSDPAsioConnection::SSDPAsioConnection( std::string listen_address, std::string multicast_address, int multicast_port )
+SSDPAsioConnection::SSDPAsioConnection( const std::string & multicast_address, const int & multicast_port )
   : io_service(), strand_(io_service), socket(io_service), multicast_address(multicast_address), multicast_port(multicast_port) {
   
   ::asio::ip::address _multicast_address = ::asio::ip::address::from_string(multicast_address);
-  ::asio::ip::address _listen_address = ::asio::ip::address::from_string(listen_address);
+  ::asio::ip::address _listen_address = ::asio::ip::address::from_string("0.0.0.0");
 
   // Create the socket so that multiple may be bound to the same address.
   ::asio::ip::udp::endpoint listen_endpoint(_listen_address, multicast_port);
@@ -73,7 +73,7 @@ inline std::string create_header(std::string request_line, std::map< std::string
   }
   os << "\r\n";
   return os.str();
-};
+}
 
 void SSDPAsioConnection::send(std::string request_line, std::map< std::string, std::string > headers) {
 

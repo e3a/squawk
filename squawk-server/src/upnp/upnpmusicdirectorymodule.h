@@ -116,6 +116,7 @@ private:
             if( stmt_albums_artist_count != NULL ) db->release_statement( stmt_albums_artist_count );
             throw;
         }
+        std::cout << "album by artist count: " << album_count << std::endl;
         return album_count;
     }
 
@@ -281,7 +282,7 @@ private:
             "songs.length, songs.bitrate, songs.sample_rate, songs.bits_per_sample, songs.channels, " \
             "songs.mime_type, songs.disc, songs.mtime, songs.filesize " \
             "from tbl_cds_audiofiles songs, tbl_cds_albums album where album.ROWID = ? and " \
-            "album.ROWID = songs.album_id order by songs.track, songs.disc";
+            "album.ROWID = songs.album_id order by songs.disc, songs.track";
     void songs( const int album_id, std::function<void(const int, const int, const std::string, const std::string, const std::string,
                                                        const std::string, const int, const int, const int, const int, const int)> callback ) {
 

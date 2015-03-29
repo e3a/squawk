@@ -25,6 +25,6 @@ namespace squawk {
 log4cxx::LoggerPtr LoggerEventListener::logger(log4cxx::Logger::getLogger("squawk.LoggerEventListener"));
   
 void LoggerEventListener::ssdpEvent( ssdp::SSDPEventListener::EVENT_TYPE type, std::string  client_ip, ssdp::UpnpDevice device ) {
-  LOG4CXX_INFO(logger, "SSDP:" << (type==ssdp::SSDPEventListener::ANNOUNCE ? "ANNOUNCE:" : "BYE:") << client_ip << ":" << device.nt );
+  LOG4CXX_INFO(logger, "SSDP:" << (type==ssdp::SSDPEventListener::ANNOUNCE ? "ANNOUNCE:" : "BYE:") << client_ip << ":" << device.usn );
 }
 }

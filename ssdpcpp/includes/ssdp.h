@@ -28,7 +28,7 @@
 #include <commons.h>
 #include <http.h>
 
-#include "log4cxx/logger.h"
+// #include "log4cxx/logger.h"
 // #include "asio.hpp"
 
 /**
@@ -115,11 +115,14 @@ static const std::string UPNP_HEADER_USN = "Usn";
 static const std::string UPNP_HEADER_LOCATION = "Location";
 /**  Field value contains Notification Type. */
 static const std::string UPNP_HEADER_NT = "Nt";
+static const std::string UPNP_HEADER_MX = "Mx";
+static const std::string UPNP_HEADER_MAN = "Man";
 static const std::string UPNP_HEADER_EXT = "Ext";
 static const std::string UPNP_OPTION_MAX_AGE = "max-age=";
 
 static const std::string HTTP_REQUEST_LINE_OK = "HTTP/1.1 200 OK";
 
+static const std::string UPNP_STATUS_DISCOVER	= std::string("ssdp:discover");
 static const std::string UPNP_STATUS_ALIVE	= std::string("ssdp:alive");
 static const std::string UPNP_STATUS_BYE	= std::string("ssdp:byebye");
 
@@ -129,6 +132,7 @@ static const std::string  REQUEST_METHOD_MSEARCH = "M-SEARCH";
 static const std::string  REQUEST_METHOD_NOTIFY = "NOTIFY";
 
 static const std::string SSDP_HEADER_REQUEST_LINE = "NOTIFY * HTTP/1.1";
+static const std::string SSDP_HEADER_SEARCH_REQUEST_LINE = "M-SEARCH * HTTP/1.1";
 
 /**
  * @brief UPNP device item.
@@ -166,8 +170,9 @@ class SSDPEventListener {
 public:
   enum EVENT_TYPE { ANNOUNCE, BYE };
   
-  SSDPEventListener() {};
-  virtual ~SSDPEventListener() {};
+  SSDPEventListener() {}
+  virtual ~SSDPEventListener() {}
+
   /**
    * \brief event method
    */
@@ -209,8 +214,8 @@ struct Response {
  */
 class SSDPCallback {
 public:  
-  SSDPCallback() {};
-  virtual ~SSDPCallback() {};
+  SSDPCallback() {}
+  virtual ~SSDPCallback() {}
   
 /**
  * The SSDP Callback method.
@@ -263,8 +268,7 @@ public:
    /**
     * Create a new SSDPServer.
     */
-    explicit SSDPServerImpl(const std::string & uuid, const std::string & local_listen_address,
-                            const std::string & multicast_address, const int & multicast_port);
+    explicit SSDPServerImpl(const std::string & uuid, const std::string & multicast_address, const int & multicast_port);
     virtual ~SSDPServerImpl() {}
     /**
      * Announce the services in the network.
@@ -274,6 +278,12 @@ public:
      * Suppress the services in the network.
      */
     void suppress();
+    /**
+     * Search for services in the network. The call is asynchronous, the services are notified.
+     * @brief Search Services
+     * @param service the service, default ssdp:all
+     */
+    void search(const std::string service = UPNP_NS_ALL );
     /**
     * Start the server.
     */
@@ -310,13 +320,15 @@ public:
     }
     
 private:
-    static log4cxx::LoggerPtr logger;
+//    static log4cxx::LoggerPtr logger;
     std::string uuid, local_listen_address, multicast_address;
     int multicast_port;
     std::unique_ptr<SSDPConnection> connection;
-    void send_anounce(std::string nt, std::string location);
-    void send_suppress(std::string nt, std::string location);
-    std::map< std::string, std::string > create_response(size_t bytes_recvd, std::string nt, std::string location);
+
+    UpnpDevice parseRequest( http::HttpRequest request );
+    void send_anounce( const std::string & nt, const std::string & location );
+    void send_suppress( const std::string & nt );
+    std::map< std::string, std::string > create_response( const std::string & nt, const std::string & location);
     std::map< std::string, std::string > namespaces;
     std::map< std::string, UpnpDevice > upnp_devices;
 

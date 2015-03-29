@@ -39,8 +39,8 @@ public:
  /**
   * Create a new SSDPAsioConnection.
   */
-  SSDPAsioConnection( std::string listen_address, std::string multicast_address, int port );  
-  virtual ~SSDPAsioConnection() {};
+  SSDPAsioConnection( const std::string & multicast_address, const int & port );
+  virtual ~SSDPAsioConnection() {}
   
  /**
   * Start the server.

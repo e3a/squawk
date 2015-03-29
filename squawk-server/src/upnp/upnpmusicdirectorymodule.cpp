@@ -119,6 +119,7 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
                     request->getValue( commons::upnp::OBJECT_ID ).substr(request->getValue( commons::upnp::OBJECT_ID ).find(":")+1,
                                                           request->getValue( commons::upnp::OBJECT_ID ).length()));
 
+        int return_count = 0;
         albums( id, start_index, request_count,
                 [&] (const int album_id, const std::string & name, const std::string & genre, const std::string & year) {
                     commons::xml::Node artist_element = xmlWriter->element( didl_element, "", "container", "" );
@@ -142,10 +143,11 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
                         "/album/" + std::to_string( album_id ) + "/cover.jpg" );
                     xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
                     xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
+                    return_count++;
                 });
 
         int album_count = albumByArtistCount( id );
-        cds_result->number_returned( album_count );
+        cds_result->number_returned( return_count );
         cds_result->total_matches( album_count );
 
     /* ----------- Albums ----------- */

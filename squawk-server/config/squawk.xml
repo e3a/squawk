@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <squawk>
-  <config-file>/etc/squawk.xml</config-file>
-  <database-file>/var/lib/squawk/squawk.db</database-file>
-  <http-docroot>../docroot</http-docroot>
+  <config-file>/usr/local/etc/squawk.xml</config-file>
+  <database-file>/usr/local/var/lib/squawk/squawk.db</database-file>
+  <http-docroot>/usr/local/var/lib/squawk/www</http-docroot>
   <media-directories>
     <media-directory>/home/media</media-directory>
   </media-directories>
