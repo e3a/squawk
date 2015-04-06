@@ -34,10 +34,10 @@ log4cxx::LoggerPtr UpnpMediaServlet::logger(log4cxx::Logger::getLogger("squawk.u
 void UpnpMediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & response ) {
     try {
         getFile( request, response );
-
+/* TODO some double dots might also be in file name.
         if (request.uri.empty() || request.uri[0] != '/' || request.uri.find("..") != std::string::npos) {
           throw http::http_status::BAD_REQUEST;
-        }
+        } */
 
         std::string full_path = request.uri;
 

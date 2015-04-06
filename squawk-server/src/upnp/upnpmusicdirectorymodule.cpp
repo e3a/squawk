@@ -38,18 +38,7 @@ bool UpnpMusicDirectoryModule::match( commons::upnp::UpnpContentDirectoryRequest
 }
 void UpnpMusicDirectoryModule::getRootNode( commons::xml::XMLWriter * xmlWriter, commons::xml::Node * element, commons::upnp::CdsResult * cds_result ) {
 
-    commons::xml::Node container_element = xmlWriter->element( (*element), "", "container", "" );
-    xmlWriter->attribute(container_element, "id", "music");
-    xmlWriter->attribute(container_element, "parentID", "0");
-    xmlWriter->attribute(container_element, "restricted", "1");
-    xmlWriter->attribute(container_element, "childCount", "2");
-
-    xmlWriter->element(container_element, commons::upnp::XML_NS_PURL, "title", "Music");
-    xmlWriter->element(container_element, commons::upnp::XML_NS_UPNP, "class", commons::upnp::UPNP_CLASS_CONTAINER );
-    xmlWriter->element(container_element, commons::upnp::XML_NS_UPNP, "storageUsed", "-1");
-
-    cds_result->number_returned( cds_result->number_returned()+1 );
-    cds_result->total_matches( cds_result->total_matches()+1 );
+    ::upnp::didl::node( xmlWriter, (*element), "music", "0", "3", "Music", commons::upnp::UPNP_CLASS_CONTAINER );
 }
 void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, commons::upnp::CdsResult * cds_result,
                                           commons::upnp::UpnpContentDirectoryRequest * request ) {
@@ -63,54 +52,48 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
 
     int start_index = commons::string::parse_string<int>( request->getValue( commons::upnp::START_INDEX ) );
     int request_count = commons::string::parse_string<int>( request->getValue( commons::upnp::REQUESTED_COUNT ) );
-    if( request_count == 0 || request_count > 12 ) request_count = 12;
+    if( request_count == 0 ) request_count = 128;
 
     /* ----------- Root Node ----------- */
     if( request->contains( commons::upnp::OBJECT_ID ) &&
         request->getValue( commons::upnp::OBJECT_ID ) == "music" ) {
 
-        commons::xml::Node albums_element = xmlWriter->element(didl_element, "", "container", "");
-        xmlWriter->attribute(albums_element, "id", "music.albums");
-        xmlWriter->attribute(albums_element, "parentID", "music");
-        xmlWriter->attribute(albums_element, "restricted", "1");
-        xmlWriter->attribute(albums_element, "childCount", commons::string::to_string( albumCount() ));
-        xmlWriter->element(albums_element, commons::upnp::XML_NS_PURL, "title", "Albums");
-        xmlWriter->element(albums_element, commons::upnp::XML_NS_UPNP, "class", commons::upnp::UPNP_CLASS_CONTAINER );
-        xmlWriter->element(albums_element, commons::upnp::XML_NS_UPNP, "storageUsed", "-1");
-
-        commons::xml::Node artist_element = xmlWriter->element(didl_element, "", "container", "");
-        xmlWriter->attribute(artist_element, "id", "music.artists");
-        xmlWriter->attribute(artist_element, "parentID", "music");
-        xmlWriter->attribute(artist_element, "restricted", "1");
-        xmlWriter->attribute(artist_element, "childCount", commons::string::to_string( artistCount() ));
-        xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "title", "Artists");
-        xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "class", commons::upnp::UPNP_CLASS_CONTAINER );
-        xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "storageUsed", "-1");
-
-        cds_result->number_returned( 2 );
-        cds_result->total_matches( 2 );
+        ::upnp::didl::node( xmlWriter, didl_element, "music.albums", "music", commons::string::to_string( albumCount() ), "Albums", commons::upnp::UPNP_CLASS_CONTAINER );
+        ::upnp::didl::node( xmlWriter, didl_element, "music.artists", "music", commons::string::to_string( artistCount() ), "Artists", commons::upnp::UPNP_CLASS_CONTAINER );
+        ::upnp::didl::node( xmlWriter, didl_element, "music.new", "music", "100", "New Albums", commons::upnp::UPNP_CLASS_CONTAINER );
+        cds_result->number_returned( 3 );
+        cds_result->total_matches( 3 );
 
     /* ----------- Artists ----------- */
     } else if( request->contains( commons::upnp::OBJECT_ID ) &&
                request->getValue( commons::upnp::OBJECT_ID ) == "music.artists" ) {
 
         int number_returned = 0;
-        artists( start_index, request_count, [&] (const int id, const std::string & name) {
-                commons::xml::Node artist_element = xmlWriter->element( didl_element, "", "container", "" );
-                xmlWriter->attribute(artist_element, "id", "music.artists:" + std::to_string( id ) );
-        xmlWriter->attribute(artist_element, "parentID", "music");
-        xmlWriter->attribute(artist_element, "restricted", "1");
-        xmlWriter->attribute(artist_element, "childCount", std::to_string( albumByArtistCount( id ) ) );
+        squawk::db::Sqlite3Statement * stmt_artists = NULL;
+        try {
+            stmt_artists = db->prepare_statement( SQL_ARTIST );
+            stmt_artists->bind_int( 1, start_index );
+            stmt_artists->bind_int( 2, request_count );
+            while( stmt_artists->step() ) {
+                ::upnp::didl::node( xmlWriter, didl_element, "music.artists:" + std::to_string( stmt_artists->get_int( 0 ) ), "music",
+                                    std::to_string( albumByArtistCount( stmt_artists->get_int( 0 ) ) ), stmt_artists->get_string( 1 ),
+                                    commons::upnp::UPNP_CLASS_MUSIC_ARTIST );
+                ++number_returned;
+            }
+            db->release_statement( stmt_artists );
 
-        xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "title", name );
-        xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "class", commons::upnp::UPNP_CLASS_MUSIC_ARTIST );
-        xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "storageUsed", "-1" );
-        number_returned++;
-
-    });
-    int artist_count = artistCount();
-    cds_result->number_returned( number_returned );
-    cds_result->total_matches( artist_count );
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get artist, Exception:" << e.code() << "-> " << e.what());
+            if( stmt_artists != NULL ) db->release_statement( stmt_artists );
+            throw;
+        } catch( ... ) {
+            LOG4CXX_FATAL(logger, "Other Excpeption in artist.");
+            if( stmt_artists != NULL ) db->release_statement( stmt_artists );
+            throw;
+        }
+        int artist_count = artistCount();
+        cds_result->number_returned( number_returned );
+        cds_result->total_matches( artist_count );
 
     /* ----------- Albums by Artist ----------- */
     } else if( request->contains( commons::upnp::OBJECT_ID) &&
@@ -120,32 +103,29 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
                                                           request->getValue( commons::upnp::OBJECT_ID ).length()));
 
         int return_count = 0;
-        albums( id, start_index, request_count,
-                [&] (const int album_id, const std::string & name, const std::string & genre, const std::string & year) {
-                    commons::xml::Node artist_element = xmlWriter->element( didl_element, "", "container", "" );
-                    xmlWriter->attribute( artist_element, "id", "music.albums:" + std::to_string( album_id ) );
-                    xmlWriter->attribute( artist_element, "parentID", "music.artists" );
-                    xmlWriter->attribute( artist_element, "restricted", "1" );
-                    xmlWriter->attribute( artist_element, "childCount", std::to_string( songByAlbumCount( album_id ) ) );
-                    xmlWriter->element( artist_element, commons::upnp::XML_NS_PURL, "title", name );
-                    xmlWriter->element( artist_element, commons::upnp::XML_NS_UPNP, "class", commons::upnp::UPNP_CLASS_MUSIC_ALBUM );
-                    xmlWriter->element( artist_element, commons::upnp::XML_NS_UPNP, "storageUsed", "-1" );
+        squawk::db::Sqlite3Statement * stmt_artist_albums = NULL;
+        try {
+            const std::string uri_prefix = "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() );
+            stmt_artist_albums = db->prepare_statement( SQL_ARTIST_ALBUM );
+            stmt_artist_albums->bind_int( 1, id );
+            stmt_artist_albums->bind_int( 2, start_index );
+            stmt_artist_albums->bind_int( 3, request_count );
+            while( stmt_artist_albums->step() ) {
+                ::upnp::didl::item(xmlWriter, didl_element, stmt_artist_albums->get_int( 2 ), stmt_artist_albums->get_string( 0 ), stmt_artist_albums->get_string( 1 ),
+                                 artist( stmt_artist_albums->get_int( 2 ) ), uri_prefix);
+                ++return_count;
+            }
+            db->release_statement( stmt_artist_albums );
 
-                    artist( album_id,
-                            [&] (const int id, const std::string & artist_name ) {
-                                // add the artists
-                                xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "artits", artist_name );
-                    });
-
-                    xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "date", year + "-01-01" );
-                    commons::xml::Node dlna_album_art_node = xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "albumArtURI",
-                        "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) +
-                        "/album/" + std::to_string( album_id ) + "/cover.jpg" );
-                    xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
-                    xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
-                    return_count++;
-                });
-
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get albums by artist, Exception:" << e.code() << "-> " << e.what());
+            if( stmt_artist_albums != NULL ) db->release_statement( stmt_artist_albums );
+            throw;
+        } catch( ... ) {
+            LOG4CXX_FATAL(logger, "Other Excpeption in albums by artist.");
+            if( stmt_artist_albums != NULL ) db->release_statement( stmt_artist_albums );
+            throw;
+        }
         int album_count = albumByArtistCount( id );
         cds_result->number_returned( return_count );
         cds_result->total_matches( album_count );
@@ -154,33 +134,61 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
     } else if( request->contains( commons::upnp::OBJECT_ID) && request->getValue( commons::upnp::OBJECT_ID ) == "music.albums" ) {
 
         int albums_returned = 0;
-        albums( start_index, request_count, [&xmlWriter, &didl_element, &albums_returned, this]
-                (const int id, const std::string & name, const std::string & genre, const std::string & year) {
-                commons::xml::Node artist_element = xmlWriter->element( didl_element, "", "container", "" );
-                xmlWriter->attribute(artist_element, "id", "music.albums:" + std::to_string( id ) );
-        xmlWriter->attribute(artist_element, "parentID", "music.artists");
-        xmlWriter->attribute(artist_element, "restricted", "1");
-        //TODO xmlWriter->attribute(artist_element, "childCount", std::to_string( songByAlbumCount( id ) ) );
-        xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "title", name );
-        xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "class", commons::upnp::UPNP_CLASS_MUSIC_ALBUM );
-        // TODO xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "storageUsed", "-1");
-        artist( id, [&xmlWriter, &artist_element] (const int artist_id, const std::string & artist_name ) {
-                // add the artists
-                xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "artits", artist_name );
-                xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "creator", artist_name );
-        });
-        xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "date", year + "-01-01" );
-        commons::xml::Node dlna_album_art_node = xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "albumArtURI",
-            "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) +
-            "/album/" + std::to_string( id ) + "/cover.jpg" );
-        xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
-        xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
+        squawk::db::Sqlite3Statement * stmt_albums = NULL;
+        try {
+            const std::string uri_prefix = "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() );
+            stmt_albums = db->prepare_statement( SQL_ALBUM );
+            stmt_albums->bind_int( 1, start_index );
+            stmt_albums->bind_int( 2, request_count );
+            std::cout << "start stmt:albums" << request_count  << std::endl;
+            while( stmt_albums->step() ) {
+                ::upnp::didl::item(xmlWriter, didl_element, stmt_albums->get_int( 2 ), stmt_albums->get_string( 0 ), stmt_albums->get_string( 1 ),
+                                 artist( stmt_albums->get_int( 2 ) ), uri_prefix);
+                ++albums_returned;
+            }
+            std::cout << "endt stmt:albums" << albums_returned << std::endl;
+            db->release_statement( stmt_albums );
 
-        albums_returned++;
-    });
-    int album_count = albumCount();
-    cds_result->number_returned( albums_returned );
-    cds_result->total_matches( album_count );
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e.code() << "-> " << e.what());
+            if( stmt_albums != NULL ) db->release_statement( stmt_albums );
+            throw;
+        } catch( ... ) {
+            LOG4CXX_FATAL(logger, "Other Excpeption in albums.");
+            if( stmt_albums != NULL ) db->release_statement( stmt_albums );
+            throw;
+        }
+        int album_count = albumCount();
+        cds_result->number_returned( albums_returned );
+        cds_result->total_matches( album_count );
+
+    /* ----------- New Albums ----------- */
+    } else if( request->contains( commons::upnp::OBJECT_ID) && request->getValue( commons::upnp::OBJECT_ID ) == "music.new" ) {
+
+        int albums_returned = 0;
+        squawk::db::Sqlite3Statement * stmt_albums = NULL;
+        try {
+            const std::string uri_prefix = "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() );
+            stmt_albums = db->prepare_statement( SQL_ALBUM_NEW );
+            while( stmt_albums->step() ) {
+                ::upnp::didl::item(xmlWriter, didl_element, stmt_albums->get_int( 2 ), stmt_albums->get_string( 0 ), stmt_albums->get_string( 1 ),
+                                 artist( stmt_albums->get_int( 2 ) ), uri_prefix);
+                ++albums_returned;
+            }
+            db->release_statement( stmt_albums );
+
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get new albums, Exception:" << e.code() << "-> " << e.what());
+            if( stmt_albums != NULL ) db->release_statement( stmt_albums );
+            throw;
+        } catch( ... ) {
+            LOG4CXX_FATAL(logger, "Other Excpeption in new albums.");
+            if( stmt_albums != NULL ) db->release_statement( stmt_albums );
+            throw;
+        }
+        int album_count = 100;
+        cds_result->number_returned( albums_returned );
+        cds_result->total_matches( album_count );
 
     /* ----------- Songs ----------- */
     } else if( request->contains( commons::upnp::OBJECT_ID) && commons::string::starts_with( request->getValue( commons::upnp::OBJECT_ID ), "music.albums:" ) ) {

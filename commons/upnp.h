@@ -255,4 +255,43 @@ class ContentDirectoryModule {
 
 }}
 
+namespace upnp {
+namespace didl {
+inline void node( commons::xml::XMLWriter * xmlWriter, commons::xml::Node & didl_element,
+                  const std::string & id, const std::string & parent_id, const std::string & child_count,
+                  const std::string & title, const std::string & class_name ) {
+
+    commons::xml::Node container_element = xmlWriter->element( didl_element, "", "container", "" );
+    xmlWriter->attribute(container_element, "id", id );
+    xmlWriter->attribute(container_element, "parentID", parent_id );
+    xmlWriter->attribute(container_element, "restricted", "1");
+    xmlWriter->attribute(container_element, "childCount", child_count );
+
+    xmlWriter->element(container_element, commons::upnp::XML_NS_PURL, "title", title );
+    xmlWriter->element(container_element, commons::upnp::XML_NS_UPNP, "class", class_name );
+}
+inline void item( commons::xml::XMLWriter * xmlWriter, commons::xml::Node & didl_element,
+                  const int id, const std::string & name, const std::string & year,
+                  const std::string & artist, const std::string & uri_prefix )  {
+    commons::xml::Node artist_element = xmlWriter->element( didl_element, "", "container", "" );
+    xmlWriter->attribute(artist_element, "id", "music.albums:" + std::to_string( id ) );
+    xmlWriter->attribute(artist_element, "parentID", "music.artists");
+    xmlWriter->attribute(artist_element, "restricted", "1");
+    xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "title", name );
+    xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "class", commons::upnp::UPNP_CLASS_MUSIC_ALBUM );
+
+    // add the artists
+    xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "artits", artist );
+    xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "creator", artist );
+
+    xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "date", year + "-01-01" );
+    commons::xml::Node dlna_album_art_node = xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "albumArtURI",
+//    "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) +
+    uri_prefix + "/album/" + std::to_string( id ) + "/cover.jpg" );
+    xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
+    xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
+
+//    albums_returned++;
+}
+}}
 #endif // UPNP_H

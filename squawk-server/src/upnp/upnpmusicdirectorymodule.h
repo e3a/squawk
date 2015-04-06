@@ -148,86 +148,15 @@ private:
     }
 
     /* get artists */
-    static constexpr const char * SQL_ARTIST = "select ROWID, name from tbl_cds_artists order by name LIMIT ?, ?";
-    void artists( const int & start_index, const int & request_count, std::function<void(const int, const std::string)> callback ) {
-        squawk::db::Sqlite3Statement * stmt_artists = NULL;
-        try {
-            stmt_artists = db->prepare_statement( SQL_ARTIST );
-            stmt_artists->bind_int( 1, start_index );
-            stmt_artists->bind_int( 2, request_count );
-            while( stmt_artists->step() ) {
-                callback( stmt_artists->get_int( 0 ), stmt_artists->get_string(1) );
-            }
-            db->release_statement( stmt_artists );
-
-        } catch( squawk::db::DbException & e ) {
-            LOG4CXX_FATAL(logger, "Can not get artist, Exception:" << e.code() << "-> " << e.what());
-            if( stmt_artists != NULL ) db->release_statement( stmt_artists );
-            throw;
-        } catch( ... ) {
-            LOG4CXX_FATAL(logger, "Other Excpeption in artist.");
-            if( stmt_artists != NULL ) db->release_statement( stmt_artists );
-            throw;
-        }
-    }
-
+    static constexpr const char * SQL_ARTIST = "select ROWID, name from tbl_cds_artists order by clean_name LIMIT ?, ?";
     /* get albums */
-    static constexpr const char * SQL_ALBUM = "select name, genre, year, ROWID from tbl_cds_albums ORDER BY name LIMIT ?, ?";
-    void albums( const int & index, const int result_count,
-                 std::function<void(const int, const std::string, const std::string, const std::string)> callback ) {
-        squawk::db::Sqlite3Statement * stmt_albums = NULL;
-        try {
-            stmt_albums = db->prepare_statement( SQL_ALBUM );
-            stmt_albums->bind_int( 1, index );
-            stmt_albums->bind_int( 2, result_count );
-            std::cout << "start stmt:albums" << std::endl;
-            while( stmt_albums->step() ) {
-                callback( stmt_albums->get_int( 3 ), stmt_albums->get_string(0),
-                          stmt_albums->get_string(1), stmt_albums->get_string(2) );
-            }
-            std::cout << "endt stmt:albums" << std::endl;
-            db->release_statement( stmt_albums );
-
-        } catch( squawk::db::DbException & e ) {
-            LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e.code() << "-> " << e.what());
-            if( stmt_albums != NULL ) db->release_statement( stmt_albums );
-            throw;
-        } catch( ... ) {
-            LOG4CXX_FATAL(logger, "Other Excpeption in albums.");
-            if( stmt_albums != NULL ) db->release_statement( stmt_albums );
-            throw;
-        }
-    }
-
+    static constexpr const char * SQL_ALBUM = "select name, year, ROWID from tbl_cds_albums ORDER BY name LIMIT ?, ?";
+    /* get new albums */
+    static constexpr const char * SQL_ALBUM_NEW = "select DISTINCT album.name, album.year, album.ROWID from tbl_cds_albums album, tbl_cds_audiofiles song where album.ROWID = song.album_id ORDER BY song.mtime desc LIMIT 0, 100";
     /* get albums by artists */
-    static constexpr const char * SQL_ARTIST_ALBUM = "select album.name, album.genre, album.year, album.ROWID " \
+    static constexpr const char * SQL_ARTIST_ALBUM = "select album.name, album.year, album.ROWID " \
             "from tbl_cds_albums album, tbl_cds_artists_albums m, tbl_cds_artists artist " \
             "where artist.ROWID = ? and album.ROWID = m.album_id and artist.ROWID = m.artist_id LIMIT ?,?";
-    void albums( const int & artist_id, const int & start_index, const int & request_count,
-                 std::function<void(const int, const std::string, const std::string, const std::string)> callback ) {
-        squawk::db::Sqlite3Statement * stmt_artist_albums = NULL;
-        try {
-            stmt_artist_albums = db->prepare_statement( SQL_ARTIST_ALBUM );
-            stmt_artist_albums->bind_int( 1, artist_id );
-            stmt_artist_albums->bind_int( 2, start_index );
-            stmt_artist_albums->bind_int( 3, request_count );
-            while( stmt_artist_albums->step() ) {
-                callback( stmt_artist_albums->get_int( 3 ), stmt_artist_albums->get_string(0),
-                          stmt_artist_albums->get_string(1), stmt_artist_albums->get_string(2) );
-            }
-            db->release_statement( stmt_artist_albums );
-
-        } catch( squawk::db::DbException & e ) {
-            LOG4CXX_FATAL(logger, "Can not get albums by artist, Exception:" << e.code() << "-> " << e.what());
-            if( stmt_artist_albums != NULL ) db->release_statement( stmt_artist_albums );
-            throw;
-        } catch( ... ) {
-            LOG4CXX_FATAL(logger, "Other Excpeption in albums by artist.");
-            if( stmt_artist_albums != NULL ) db->release_statement( stmt_artist_albums );
-            throw;
-        }
-    }
-
     /* get album */
     static constexpr const char * SQL_ALBUM_ID = "select album.name, album.genre, album.year, album.ROWID " \
             "from tbl_cds_albums album where album.ROWID = ?";
@@ -256,6 +185,33 @@ private:
     /* get artists for album */
     static constexpr const char * SQL_ALBUM_ARTIST = "select artist.ROWID, artist.name from tbl_cds_artists artist " \
             "JOIN tbl_cds_artists_albums m ON artist.ROWID = m.artist_id where m.album_id=?";
+    std::string artist( const int album_id ) const {
+        std::string return_value;
+        bool isFirst = true;
+        squawk::db::Sqlite3Statement * stmt_album_artist = NULL;
+        try {
+            stmt_album_artist = db->prepare_statement( SQL_ALBUM_ARTIST );
+            stmt_album_artist->bind_int( 1, album_id );
+            while( stmt_album_artist->step() ) {
+                if( ! isFirst ) {
+                    return_value += ", ";
+                } else isFirst = false;
+                return_value += stmt_album_artist->get_string( 1 );
+            }
+            db->release_statement( stmt_album_artist );
+
+        } catch( squawk::db::DbException & e ) {
+            LOG4CXX_FATAL(logger, "Can not get artists for album, Exception:" << e.code() << "-> " << e.what());
+            if( stmt_album_artist != NULL ) db->release_statement( stmt_album_artist );
+            throw;
+        } catch( ... ) {
+            LOG4CXX_FATAL(logger, "Other Excpeption in artists for album.");
+            if( stmt_album_artist != NULL ) db->release_statement( stmt_album_artist );
+            throw;
+        }
+        return return_value;
+    }
+    /* TODO remove */
     void artist( const int album_id, std::function<void(const int, const std::string)> callback ) {
         squawk::db::Sqlite3Statement * stmt_album_artist = NULL;
         try {
