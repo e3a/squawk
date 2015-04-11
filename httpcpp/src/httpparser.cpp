@@ -44,6 +44,23 @@ parser_type HttpParser::next(parser_type t) {
         return parser_type::REQUEST_BODY;
     }
 }
+parser_type HttpParser::nextResponseType(parser_type t) {
+    switch (t) {
+    case parser_type::REQUEST_PROTOCOL:
+        return parser_type::REQUEST_VERSION_MAJOR;
+    case parser_type::REQUEST_VERSION_MAJOR:
+        return parser_type::REQUEST_VERSION_MINOR;
+    case parser_type::REQUEST_VERSION_MINOR:
+        return parser_type::RESPONSE_STATUS;
+    case parser_type::RESPONSE_STATUS:
+        return parser_type::RESPONSE_STATUS_TEXT;
+    case parser_type::RESPONSE_STATUS_TEXT:
+        return parser_type::REQUEST_KEY;
+
+    default:
+        return parser_type::REQUEST_BODY;
+    }
+}
 std::ostream& operator<<(std::ostream& out, const parser_type & type) {
     switch( type ) {
     case parser_type::METHOD: out << "METHOD"; break;
@@ -133,7 +150,7 @@ PARSE_STATE HttpParser::parse_http_request( http::HttpRequest & request, const s
                     request.protocol = ss_buffer.str();
                     ss_buffer.str(std::string());
                     ss_buffer.clear();
-                    type = http::HttpParser::next(type); //TODO ++
+                    type = http::HttpParser::next(type);
                 } else {
                     ss_buffer << input[i];
                 }
@@ -144,7 +161,7 @@ PARSE_STATE HttpParser::parse_http_request( http::HttpRequest & request, const s
                     ss_buffer >> request.http_version_major;
                     ss_buffer.str(std::string());
                     ss_buffer.clear();
-                    type = http::HttpParser::next(type); //TODO ++
+                    type = http::HttpParser::next(type);
                 } else {
                     ss_buffer << input[i];
                 }
@@ -180,5 +197,108 @@ PARSE_STATE HttpParser::parse_http_request( http::HttpRequest & request, const s
     } else {
         return PARSE_STATE::CONTINUE;
     }
-};
+}
+PARSE_STATE HttpParser::parse_http_response( http::HttpResponse & response, const std::array<char, 8192> input, size_t size ) {
+    parser_type type = parser_type::REQUEST_PROTOCOL;
+    std::stringstream ss_buffer;
+    std::string request_key;
+
+    for( size_t i=0; i<size; i++ ) { //search line break and configure the parser
+
+        if( type != parser_type::REQUEST_BODY && input[i] == '\r' ) {
+            break_type = CR;
+
+        } else if( type != parser_type::REQUEST_BODY && input[i] == '\n' ) { //found a real new line
+            if( break_type == CR ) {
+                if( type == parser_type::RESPONSE_STATUS_TEXT ) {
+                    std::cout << "RESPONSE TEXT" << ss_buffer.str() << std::endl;
+                    ss_buffer.str(std::string());
+                    ss_buffer.clear();
+                    type = http::HttpParser::nextResponseType(type);
+
+                } else if( type == parser_type::REQUEST_VALUE ) {
+                    response.add_header( commons::string::trim(request_key), commons::string::trim(ss_buffer.str()) );
+                    ss_buffer.str(std::string());
+                    ss_buffer.clear();
+                    type = parser_type::REQUEST_KEY;
+
+                } else if( type == parser_type::REQUEST_KEY ) {
+                    type = parser_type::REQUEST_BODY;
+
+                } else {
+                    std::cout << "unknown type at end of line:" /* << type */ << std::endl;
+                }
+            } else {
+                std::cout << "LF without CR" << std::endl;
+            }
+        } else { //parse the characters
+
+            switch(type) {
+
+            case parser_type::REQUEST_PROTOCOL: {
+                if(input[i] == '/' ) {
+                    response.protocol = ss_buffer.str();
+                    ss_buffer.str(std::string());
+                    ss_buffer.clear();
+                    type = http::HttpParser::nextResponseType(type);
+                } else {
+                    ss_buffer << input[i];
+                }
+                break;
+            }
+            case parser_type::REQUEST_VERSION_MAJOR: {
+                if(input[i] == '.' ) {
+                    ss_buffer >> response.http_version_major;
+                    ss_buffer.str(std::string());
+                    ss_buffer.clear();
+                    type = http::HttpParser::nextResponseType(type);
+                } else {
+                    ss_buffer << input[i];
+                }
+                break;
+            }
+            case parser_type::REQUEST_VERSION_MINOR: {
+                if(input[i] == ' ' ) {
+                    ss_buffer >> response.http_version_minor;
+                    ss_buffer.str(std::string());
+                    ss_buffer.clear();
+                    type = http::HttpParser::nextResponseType(type);
+                } else {
+                    ss_buffer << input[i];
+                }
+                break;
+            }
+            case parser_type::RESPONSE_STATUS: {
+                if(input[i] == ' ' ) {
+                    response.status = parse_status( commons::string::parse_string<int>( ss_buffer.str() ) );
+                    ss_buffer.str(std::string());
+                    ss_buffer.clear();
+                    type = http::HttpParser::nextResponseType(type);
+                } else {
+                    ss_buffer << input[i];
+                }
+                break;
+            }
+            case parser_type::REQUEST_KEY: {
+                if(input[i] == ':' ) {
+                    type = parser_type::REQUEST_VALUE;
+                    request_key = utils::normalize_key(ss_buffer.str());
+                    ss_buffer.str(std::string());
+                    ss_buffer.clear();
+                } else {
+                    ss_buffer << input[i];
+                }
+                break;
+            }
+            default: ss_buffer << input[i];
+        }
+    }
+    }
+    //TODO handle states
+    if( type == parser_type::REQUEST_BODY ) {
+        return PARSE_STATE::TRUE;
+    } else {
+        return PARSE_STATE::CONTINUE;
+    }
+}
 }

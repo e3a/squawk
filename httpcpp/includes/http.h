@@ -71,7 +71,50 @@ namespace http {
         BAD_GATEWAY = 502,
         SERVICE_UNAVAILABLE = 503
   };
-
+inline http_status parse_status(const int & status) {
+    switch( status ) {
+    case 200: return http_status::OK;
+    case 201: return http_status::CREATED;
+    case 202: return http_status::ACCEPTED;
+    case 204: return http_status::NO_CONTENT;
+    case 206: return http_status::PARTIAL_CONTENT;
+    case 300: return http_status::MULTIPLE_CHOICES;
+    case 301: return http_status::MOVED_PERMANENTLY;
+    case 302: return http_status::MOVED_TEMPORARILY;
+    case 304: return http_status::NOT_MODIFIED;
+    case 400: return http_status::BAD_REQUEST;
+    case 401: return http_status::UNAUTHORIZED;
+    case 403: return http_status::FORBIDDEN;
+    case 404: return http_status::NOT_FOUND;
+    case 500: return http_status::INTERNAL_SERVER_ERROR;
+    case 501: return http_status::NOT_IMPLEMENTED;
+    case 502: return http_status::BAD_GATEWAY;
+    case 503: return http_status::SERVICE_UNAVAILABLE;
+    default: return http_status::BAD_REQUEST;
+    }
+}
+inline int parse_status(const http_status & status) {
+    switch( status ) {
+    case http_status::OK: return 200;
+    case http_status::CREATED: return 201;
+    case http_status::ACCEPTED: return 202;
+    case http_status::NO_CONTENT: return 204;
+    case http_status::PARTIAL_CONTENT: return 206;
+    case http_status::MULTIPLE_CHOICES: return 300;
+    case http_status::MOVED_PERMANENTLY: return 301;
+    case http_status::MOVED_TEMPORARILY: return 302;
+    case http_status::NOT_MODIFIED: return 304;
+    case http_status::BAD_REQUEST: return 400;
+    case http_status::UNAUTHORIZED: return 401;
+    case http_status::FORBIDDEN: return 403;
+    case http_status::NOT_FOUND: return 404;
+    case http_status::INTERNAL_SERVER_ERROR: return 500;
+    case http_status::NOT_IMPLEMENTED: return 501;
+    case http_status::BAD_GATEWAY: return 502;
+    case http_status::SERVICE_UNAVAILABLE: return 503;
+    default: return 400;
+    }
+}
     inline std::tuple<int, int> parseRange( const std::string & range ) {
         std::string clean_range = commons::string::trim( range );
         if( commons::string::starts_with( clean_range, "bytes=") ) {
@@ -124,7 +167,7 @@ namespace http {
                 }
             }
             return out;
-        };
+        }
     };
 
   /**
@@ -147,10 +190,13 @@ namespace http {
       }
       void add_header(std::string key, std::string value) {
           headers[key] = value;
-      };
+      }
       std::string get_header(std::string key) {
           return headers[key];
-      };
+      }
+      bool hasHeader(const std::string & key) {
+          return( headers.find( key ) != headers.end() );
+      }
       /**
        * @brief reset the HttpResponse.
        * Delete the Stream and Header Map.
@@ -175,6 +221,10 @@ namespace http {
       void set_mime_type(mime::MIME_TYPE type);
 
       http_status status;
+      std::string protocol;
+      short http_version_major;
+      short http_version_minor;
+      std::string remote_ip;
 
       void set_content( std::istream & is );
       void produce( std::array< char, 8192 > buffer, size_t size );
@@ -187,6 +237,15 @@ namespace http {
 
       HttpResponse & operator<<( const std::string & str );
 
+      friend std::ostream& operator<<(std::ostream& out, const http::HttpResponse & response) {
+          out << response.protocol << "/" << response.http_version_major << "." << response.http_version_minor << " " << parse_status( response.status ) << "\n";
+          out << "ResponseLines:\n";
+          for( auto response_line : response.headers ) {
+              out << "\t" << response_line.first << ": " << response_line.second << "\n";
+          }
+          return out;
+      }
+
   private:
       std::map<std::string, std::string> headers;
       size_t size = 0;
@@ -196,6 +255,18 @@ namespace http {
       mime::MIME_TYPE type = mime::MIME_TYPE::TEXT; //TODO octed bla bla
       static std::string to_string(http_status status);
       std::istream * body_istream = nullptr;
+  };
+
+  class HttpClient {
+    public:
+        HttpClient(const std::string & ip, const int & port, const std::string & uri);
+        ~HttpClient();
+
+        void connect();
+
+    private:
+  //      asio::io_service & io_service_;
+  //      tcp::socket socket_;
   };
 
   /**
@@ -337,7 +408,8 @@ namespace http {
     enum class PARSE_STATE { TRUE, FALSE, CONTINUE };
 
     enum class parser_type { METHOD, REQUEST_URI, REQUEST_PROTOCOL, REQUEST_VERSION_MAJOR,
-                       REQUEST_VERSION_MINOR, REQUEST_KEY, REQUEST_VALUE, REQUEST_BODY };
+                       REQUEST_VERSION_MINOR, REQUEST_KEY, REQUEST_VALUE, REQUEST_BODY,
+                       RESPONSE_STATUS, RESPONSE_STATUS_TEXT };
 
     class HttpParser {
     public:
@@ -350,6 +422,11 @@ namespace http {
          */
         static PARSE_STATE parse_http_request( http::HttpRequest & request, const std::array<char, 8192> input, size_t size );
         static parser_type next(parser_type type);
+        static parser_type nextResponseType(parser_type type);
+        /**
+         * @brief Static function to parse a HTTP response.
+         */
+        static PARSE_STATE parse_http_response( http::HttpResponse & response, const std::array<char, 8192> input, size_t size );
     };
 
 

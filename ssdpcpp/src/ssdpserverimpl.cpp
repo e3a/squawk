@@ -19,46 +19,54 @@
 */
 
 #include <ctime>
+#include <future>
 #include <iostream>
 #include <sstream>
 #include <string>
 
 #include "ssdp.h"
 #include "asio/ssdpasioconnection.h"
+#include "asio/ssdpclientconnection.h"
 
 namespace ssdp {
 
-// log4cxx::LoggerPtr SSDPServerImpl::logger(log4cxx::Logger::getLogger("ssdp.SSDPServer")); //TODO remove
-
 SSDPServerImpl::SSDPServerImpl(const std::string & uuid, const std::string & multicast_address, const int & multicast_port) :
-  uuid(uuid), multicast_address(multicast_address), multicast_port(multicast_port) {
+    uuid(uuid), multicast_address(multicast_address), multicast_port(multicast_port) {
 }
 
 void SSDPServerImpl::start() {
-  //start the server
-    connection = std::unique_ptr<asio::SSDPAsioConnection>( 
-      new ssdp::asio::SSDPAsioConnection( multicast_address, multicast_port) );
+    //start the server
+    connection = std::unique_ptr<asio::SSDPAsioConnection>(
+                new ssdp::asio::SSDPAsioConnection( multicast_address, multicast_port) );
     connection->set_handler(this);
     connection->start();
 
-  //start reannounce thread
-   announce_thread_run = true;  
-   annouceThreadRunner = std::unique_ptr<std::thread>(
-    new std::thread( &SSDPServerImpl::annouceThread, this ) );
+    //start reannounce thread
+    announce_thread_run = true;
+    annouceThreadRunner = std::unique_ptr<std::thread>(
+                new std::thread( &SSDPServerImpl::annouceThread, this ) );
 }
 /**
  * Stop the server.
  */
 void SSDPServerImpl::stop() {
-  //stop reannounce thread
-  suppress();
-  announce_thread_run = false;      
-  annouceThreadRunner->join();
-  
-  //stop the server
-  connection->stop();
+    //stop reannounce thread
+    suppress();
+    announce_thread_run = false;
+    annouceThreadRunner->join();
+
+    //stop the server
+    connection->stop();
 }
-void SSDPServerImpl::handle_receive(::http::HttpRequest request) {
+void SSDPServerImpl::handle_response(::http::HttpResponse & response) {
+    if( response.status == http::http_status::OK ) {
+        if( response.get_header(UPNP_HEADER_USN ).find( uuid ) == string::npos ) {
+            upnp_devices[response.get_header(UPNP_HEADER_USN )] = parseResponse( response );
+            fireEvent(SSDPEventListener::ANNOUNCE, response.remote_ip, parseResponse( response ) );
+        }
+    }
+}
+void SSDPServerImpl::handle_receive(::http::HttpRequest & request) {
     if( request.request_method == REQUEST_METHOD_MSEARCH ) {
         if( request.request_lines[UPNP_HEADER_ST] == NS_ROOT_DEVICE || request.request_lines[UPNP_HEADER_ST] == UPNP_NS_ALL ) {
             for(auto & iter : namespaces) {
@@ -67,8 +75,8 @@ void SSDPServerImpl::handle_receive(::http::HttpRequest request) {
             }
         } else if(namespaces.find(request.request_lines[UPNP_HEADER_ST]) != namespaces.end()) {
             connection->send(Response(Response::ok, HTTP_REQUEST_LINE_OK,
-                      create_response( request.request_lines[UPNP_HEADER_ST],
-						      namespaces[request.request_lines[UPNP_HEADER_ST]])));
+                                      create_response( request.request_lines[UPNP_HEADER_ST],
+                                                       namespaces[request.request_lines[UPNP_HEADER_ST]])));
         }
 
     } else if( request.request_method == REQUEST_METHOD_NOTIFY ) {
@@ -77,7 +85,6 @@ void SSDPServerImpl::handle_receive(::http::HttpRequest request) {
             // do not process own messages received over other interface
             if( request.request_lines[UPNP_HEADER_USN ].find( uuid ) == string::npos ) {
                 upnp_devices[request.request_lines[UPNP_HEADER_USN ]] = parseRequest( request );
-                std::cout << "new device" << upnp_devices.size() << std::endl;
                 fireEvent(SSDPEventListener::ANNOUNCE, request.client_ip, parseRequest( request ) );
             }
         } else {
@@ -95,12 +102,23 @@ UpnpDevice SSDPServerImpl::parseRequest( http::HttpRequest request ) {
     time_t cache_control = 0;
     if( request.request_lines.find( HTTP_HEADER_CACHE_CONTROL ) != request.request_lines.end() )
         cache_control = ( commons::string::starts_with(request.request_lines[HTTP_HEADER_CACHE_CONTROL], UPNP_OPTION_MAX_AGE) ?
-            commons::string::parse_string<time_t>(request.request_lines[HTTP_HEADER_CACHE_CONTROL].substr(UPNP_OPTION_MAX_AGE.size() ) ) : 0 );
+                              commons::string::parse_string<time_t>(request.request_lines[HTTP_HEADER_CACHE_CONTROL].substr(UPNP_OPTION_MAX_AGE.size() ) ) : 0 );
 
     return UpnpDevice(request.request_lines[HTTP_HEADER_HOST], request.request_lines[UPNP_HEADER_LOCATION],
-        request.request_lines[UPNP_HEADER_NT], request.request_lines[UPNP_HEADER_NTS],
-        request.request_lines[UPNP_HEADER_SERVER], request.request_lines[UPNP_HEADER_USN],
-        std::time(0), cache_control );
+                      request.request_lines[UPNP_HEADER_NT], request.request_lines[UPNP_HEADER_NTS],
+                      request.request_lines[UPNP_HEADER_SERVER], request.request_lines[UPNP_HEADER_USN],
+                      std::time(0), cache_control );
+}
+UpnpDevice SSDPServerImpl::parseResponse( http::HttpResponse & response ) {
+    time_t cache_control = 0;
+    if( response.hasHeader( HTTP_HEADER_CACHE_CONTROL ) )
+        cache_control = ( commons::string::starts_with(response.get_header(HTTP_HEADER_CACHE_CONTROL), UPNP_OPTION_MAX_AGE) ?
+                              commons::string::parse_string<time_t>(response.get_header(HTTP_HEADER_CACHE_CONTROL).substr(UPNP_OPTION_MAX_AGE.size() ) ) : 0 );
+
+    return UpnpDevice(response.get_header(HTTP_HEADER_HOST), response.get_header(UPNP_HEADER_LOCATION),
+                      response.get_header(UPNP_HEADER_NT), response.get_header(UPNP_HEADER_NTS),
+                      response.get_header(UPNP_HEADER_SERVER), response.get_header(UPNP_HEADER_USN),
+                      std::time(0), cache_control );
 }
 void SSDPServerImpl::announce() {
     suppress();
@@ -117,17 +135,21 @@ void SSDPServerImpl::suppress() {
         }
     }
 }
-//TODO resposes are not received correctly
-void SSDPServerImpl::search(const std::string service ) {
+void SSDPServerImpl::search(const std::string & service ) {
 
-    std::map< std::string, std::string > map;
-    map[HTTP_HEADER_HOST] = multicast_address + std::string(":") + commons::string::to_string<int>(multicast_port);
-    map[commons::string::to_upper( UPNP_HEADER_ST )] = service;
-    map[commons::string::to_upper( UPNP_HEADER_MX )] = "2";
-    map[commons::string::to_upper( UPNP_HEADER_MAN )] = UPNP_STATUS_DISCOVER;
-    map[HTTP_HEADER_CONTENT_LENGTH] = std::string("0");
+    std::async(std::launch::async, [this, &service]() {
 
-    connection->send(SSDP_HEADER_SEARCH_REQUEST_LINE, map);
+        std::map< std::string, std::string > map;
+        map[HTTP_HEADER_HOST] = multicast_address + std::string(":") + commons::string::to_string<int>(multicast_port);
+        map[commons::string::to_upper( UPNP_HEADER_ST )] = service;
+        map[commons::string::to_upper( UPNP_HEADER_MX )] = "2";
+        map[commons::string::to_upper( UPNP_HEADER_MAN )] = UPNP_STATUS_DISCOVER;
+        map[HTTP_HEADER_CONTENT_LENGTH] = std::string("0");
+
+        SSDPClientConnection connection( this, multicast_address, multicast_port );
+        connection.send(SSDP_HEADER_SEARCH_REQUEST_LINE, map);
+        std::this_thread::sleep_for(std::chrono::seconds(20));
+    });
 }
 std::map< std::string, std::string > SSDPServerImpl::create_response( const std::string & nt, const std::string & location ) {
 
@@ -174,31 +196,31 @@ void SSDPServerImpl::send_suppress( const std::string & nt ) {
     connection->send(SSDP_HEADER_REQUEST_LINE, map);
 }
 void SSDPServerImpl::annouceThread() {
-  start_time = std::chrono::high_resolution_clock::now();
-  while( announce_thread_run ) {
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto dur = end_time - start_time;
-    auto f_secs = std::chrono::duration_cast<std::chrono::duration<int>>(dur);
-    if( f_secs.count() >= (ANNOUNCE_INTERVAL / 3) ) {  
-      //TODO announement refreshs shall be distrubuted over time.
-      for(size_t i=0; i<NETWORK_COUNT; i++) {
-          for(auto & iter : namespaces ) {
-              send_anounce(iter.first, iter.second);
-          }
-      }
-      for( auto device : upnp_devices ) {
-          if( device.second.last_seen + device.second.cache_control >= std::time(0) ) {
-              // TODO cracshes upnp_devices.erase( device.first );
-          }
-      }
-      start_time = std::chrono::high_resolution_clock::now();
+    start_time = std::chrono::high_resolution_clock::now();
+    while( announce_thread_run ) {
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto dur = end_time - start_time;
+        auto f_secs = std::chrono::duration_cast<std::chrono::duration<unsigned int>>(dur);
+        if( f_secs.count() >= (ANNOUNCE_INTERVAL / 3) ) {
+            for(size_t i=0; i<NETWORK_COUNT; i++) {
+                for(auto & iter : namespaces ) {
+                    send_anounce(iter.first, iter.second);
+                }
+            }
+            for( auto device : upnp_devices ) {
+                if( device.second.last_seen + device.second.cache_control >= std::time(0) ) {
+                    std::cerr << "remove device: " << device.first << std::endl;
+                    // upnp_devices.erase( device.first ); //TODO still crashes?
+                }
+            }
+            start_time = std::chrono::high_resolution_clock::now();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-  }
 }
 void SSDPServerImpl::fireEvent( SSDPEventListener::EVENT_TYPE type, std::string  client_ip, UpnpDevice device ) {
-  for( auto & listener : listeners ) {
-    listener->ssdpEvent( type, client_ip, device );
-  }
+    for( auto & listener : listeners ) {
+        listener->ssdpEvent( type, client_ip, device );
+    }
 }
 }

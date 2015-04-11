@@ -17,6 +17,7 @@ if (build_tests)
    add_executable(testmain_httpcpp test/testmain.cpp
                   test/mimetypetest.cpp
                   test/httpparsertest.cpp
+                  test/httpresponseparsertest.cpp
                   test/httpservlettest.cpp
                   ${SOURCES})
 #   target_link_libraries(testmain_httpcpp pthread)

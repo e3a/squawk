@@ -160,7 +160,7 @@ struct UpnpDevice {
        "\"nts\":\"" << commons::string::escape_json(upnp_device.nts) << "\",\"server\":\"" << commons::string::escape_json(upnp_device.server) << "\",\"usn\":\"" << commons::string::escape_json(upnp_device.usn) << "\"," <<
 	   "\"last_seen\":" << upnp_device.last_seen << ",\"cache_control\":" << upnp_device.cache_control << "}";
     return out;
-  };
+  }
 };
 
 /**
@@ -220,10 +220,14 @@ public:
 /**
  * The SSDP Callback method.
  * \param headers the http request
- * \returns the response headers
  */
-  virtual void handle_receive(::http::HttpRequest request) = 0;
-};  
+  virtual void handle_receive(::http::HttpRequest & request) = 0;
+  /**
+   * The SSDP Callback method.
+   * \param headers the http response
+   */
+    virtual void handle_response(::http::HttpResponse & response) = 0;
+};
 /**
  * The SSDP Connection..
  * \param headers the request headers
@@ -283,7 +287,7 @@ public:
      * @brief Search Services
      * @param service the service, default ssdp:all
      */
-    void search(const std::string service = UPNP_NS_ALL );
+    void search(const std::string & service = UPNP_NS_ALL );
     /**
     * Start the server.
     */
@@ -301,10 +305,15 @@ public:
         namespaces[ns] = location;
     }
     /**
+    * Handle response callback method..
+    * \param headers the responset headers
+    */
+    virtual void handle_response(::http::HttpResponse & response);
+    /**
     * Handle receive callback method..
     * \param headers the request headers
     */
-    virtual void handle_receive(::http::HttpRequest request);
+    virtual void handle_receive(::http::HttpRequest & request);
     /**
     * Register an UPNP Service.
     * \return map with the upnp devices, the map key is the service UUID
@@ -326,6 +335,8 @@ private:
     std::unique_ptr<SSDPConnection> connection;
 
     UpnpDevice parseRequest( http::HttpRequest request );
+    UpnpDevice parseResponse( http::HttpResponse & response );
+
     void send_anounce( const std::string & nt, const std::string & location );
     void send_suppress( const std::string & nt );
     std::map< std::string, std::string > create_response( const std::string & nt, const std::string & location);
@@ -340,5 +351,15 @@ private:
     std::chrono::high_resolution_clock::time_point start_time;
     void annouceThread();
 };
+inline std::string create_header(std::string request_line, std::map< std::string, std::string > headers) {
+  std::ostringstream os;
+  os << request_line + std::string("\r\n");
+
+  for(auto & iter : headers) {
+    os << iter.first << ": " << iter.second << "\r\n";
+  }
+  os << "\r\n";
+  return os.str();
+}
 }
 #endif // SSDPCONNECTION_H

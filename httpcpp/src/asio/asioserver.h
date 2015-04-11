@@ -72,10 +72,6 @@ private:
   http::HttpRequestHandler * httpRequestHandler;
 
   connection_ptr new_connection_;
-
 };
-
-} // namespace server
-} // namespace http
-
+}}
 #endif // HTTP_SERVER_HPP

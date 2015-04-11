@@ -29,11 +29,13 @@
 #include "ssdp.h"
 
 namespace ssdp {
+//TODO rename to asio_impl inline namespace
 namespace asio {
 
 /**
  * ASIO implmentation of the SSDPConnection.
  */
+//TODO rename to SSDPServerConnection
 class SSDPAsioConnection : public SSDPConnection {
 public:
  /**

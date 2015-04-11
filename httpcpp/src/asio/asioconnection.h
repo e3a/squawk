@@ -30,13 +30,10 @@
 namespace http {
 namespace asio_impl {
 /// Represents a single connection from a client.
-class connection
-  : public std::enable_shared_from_this<connection> /*,
-    private std::noncopyable */ {
+class connection : public std::enable_shared_from_this<connection> {
 public:
   /// Construct a connection with the given io_service.
-  explicit connection(asio::io_service& io_service,
-      http::HttpRequestHandler * httpRequestHandler);
+  explicit connection(asio::io_service& io_service, http::HttpRequestHandler * httpRequestHandler);
   ~connection();
   /// Get the socket associated with the connection.
   asio::ip::tcp::socket& socket();

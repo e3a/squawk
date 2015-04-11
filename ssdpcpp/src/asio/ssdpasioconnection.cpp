@@ -64,20 +64,9 @@ void SSDPAsioConnection::stop() {
   ssdp_runner->join();
 }
 
-inline std::string create_header(std::string request_line, std::map< std::string, std::string > headers) {
-  std::ostringstream os;
-  os << request_line + std::string("\r\n");
-
-  for(auto & iter : headers) {
-    os << iter.first << ": " << iter.second << "\r\n";
-  }
-  os << "\r\n";
-  return os.str();
-}
-
 void SSDPAsioConnection::send(std::string request_line, std::map< std::string, std::string > headers) {
 
-  std::string message = create_header(request_line, headers);
+  std::string message = ssdp::create_header(request_line, headers);
 
   ::asio::io_service io_service_;
   ::asio::ip::udp::endpoint endpoint(::asio::ip::address::from_string(multicast_address.c_str()), multicast_port);
@@ -87,7 +76,7 @@ void SSDPAsioConnection::send(std::string request_line, std::map< std::string, s
 }
 
 void SSDPAsioConnection::send(Response response) {
-  std::string buffer = create_header(response.request_line, response.headers);
+  std::string buffer = ssdp::create_header(response.request_line, response.headers);
   socket.send_to(
       ::asio::buffer(buffer, buffer.length()), sender_endpoint);
 }
