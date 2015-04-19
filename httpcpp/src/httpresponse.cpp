@@ -42,45 +42,49 @@
 
 namespace http {
 
-HttpResponse & HttpResponse::operator<<( const std::string & str ) {
-    body_stream << str;
-    size += str.length();
-    return *this;
+HttpResponse & HttpResponse::operator<< ( const std::string & str ) {
+	body_stream << str;
+	size += str.length();
+	return *this;
 }
 
-void HttpResponse::set_istream( std::istream * is ) {
-    std::cout << "set stream im response" << std::endl;
-    if( body_istream ) {
-        std::cerr << "body input stream can only be set once." << std::endl;
-    } else {
-        body_istream = is;
-    }
-/*    char buffer[512];
-     size_t total_size = 0;
-     std::streamsize read_size = 0;
-     do {
-         read_size = is.readsome( buffer, 512 );
-         total_size+= read_size;
-         body_stream.write(buffer, read_size);
-     } while(read_size != 0);
+void HttpResponse::set_istream ( std::istream * is ) {
+	std::cout << "set stream im response" << std::endl;
 
-     size += total_size; */
+	if ( body_istream ) {
+		std::cerr << "body input stream can only be set once." << std::endl;
+
+	} else {
+		body_istream = is;
+	}
+
+	/*    char buffer[512];
+	     size_t total_size = 0;
+	     std::streamsize read_size = 0;
+	     do {
+	         read_size = is.readsome( buffer, 512 );
+	         total_size+= read_size;
+	         body_stream.write(buffer, read_size);
+	     } while(read_size != 0);
+
+	     size += total_size; */
 }
 
-inline std::string time_to_string( struct tm * time ) {
-    char * _time = asctime( time );
-    _time[(strlen(_time)-1)] = '\0';
-    return std::string( _time );
+inline std::string time_to_string ( struct tm * time ) {
+	char * _time = asctime ( time );
+	_time[ ( strlen ( _time ) - 1 )] = '\0';
+	return std::string ( _time );
 }
 
-size_t HttpResponse::fill_buffer( char * buffer, size_t buffer_size ) {
-    if( body_istream ) {
-        //read body from input stream
-        return body_istream->readsome(buffer, buffer_size-1);
-    } else {
-        // read body from string stream
-        return body_stream.readsome(buffer, buffer_size-1);
-    }
+size_t HttpResponse::fill_buffer ( char * buffer, size_t buffer_size ) {
+	if ( body_istream ) {
+		//read body from input stream
+		return body_istream->readsome ( buffer, buffer_size - 1 );
+
+	} else {
+		// read body from string stream
+		return body_stream.readsome ( buffer, buffer_size - 1 );
+	}
 }
 
 /* std::string HttpResponse::get_message_body() {
@@ -88,116 +92,138 @@ size_t HttpResponse::fill_buffer( char * buffer, size_t buffer_size ) {
 } */
 
 std::string HttpResponse::get_message_header() {
-    std::stringstream ss;
-    switch (status) {
-    case http_status::OK:
-        ss << RESPONSE_LINE_OK;
-        break;
-    case http_status::PARTIAL_CONTENT:
-        ss << RESPONSE_LINE_PARTIAL_CONTENT;
-        break;
-    case http_status::CREATED:
-        ss << RESPONSE_LINE_CREATED;
-        break;
-    case http_status::ACCEPTED:
-        ss << RESPONSE_LINE_ACCEPTED;
-        break;
-    case http_status::NO_CONTENT:
-        ss << RESPONSE_LINE_NO_CONTENT;
-        break;
-    case http_status::MULTIPLE_CHOICES:
-        ss << RESPONSE_LINE_MULTIPLE_CHOICES;
-        break;
-    case http_status::MOVED_PERMANENTLY:
-        ss << RESPONSE_LINE_MOVED_PERMANENTLY;
-        break;
-    case http_status::MOVED_TEMPORARILY:
-        ss << RESPONSE_LINE_MOVED_TEMPORARILY;
-        break;
-    case http_status::NOT_MODIFIED:
-        ss << RESPONSE_LINE_NOT_MODIFIED;
-        break;
-    case http_status::BAD_REQUEST:
-        ss << RESPONSE_LINE_BAD_REQUEST;
-        break;
-    case http_status::UNAUTHORIZED:
-        ss << RESPONSE_LINE_UNAUTHORIZED;
-        break;
-    case http_status::FORBIDDEN:
-        ss << RESPONSE_LINE_FORBIDDEN;
-        break;
-    case http_status::NOT_FOUND:
-        ss << RESPONSE_LINE_NOT_FOUND;
-        break;
-    case http_status::INTERNAL_SERVER_ERROR:
-        ss << RESPONSE_LINE_INTERNAL_SERVER_ERROR;
-        break;
-    case http_status::NOT_IMPLEMENTED:
-        ss << RESPONSE_LINE_NOT_IMPLEMENTED;
-        break;
-    case http_status::BAD_GATEWAY:
-        ss << RESPONSE_LINE_BAD_GATEWAY;
-        break;
-    case http_status::SERVICE_UNAVAILABLE:
-        ss << RESPONSE_LINE_SERVICE_UNAVAILABLE;
-        break;
-    default:
-        ss << RESPONSE_LINE_INTERNAL_SERVER_ERROR;
-    }
+	std::stringstream ss;
 
-    if( size > 0 ) {
-        std::cout << "set size:" << size << std::endl;
-        ss << HTTP_HEADER_CONTENT_LENGTH << std::string(": ") << std::to_string(size) << LINE_BREAK;
-    }
-    for(auto & header : headers) {
-        ss << header.first << std::string(": ") << header.second << LINE_BREAK;
-    }
+	switch ( status ) {
+	case http_status::OK:
+		ss << RESPONSE_LINE_OK;
+		break;
 
-    //add expiration date
-    if ( seconds ) {
-        time_t now = time( nullptr );
-        struct tm then_tm = *gmtime( &now );
-        then_tm.tm_sec += seconds;
-        mktime( &then_tm );
-        ss << HTTP_HEADER_EXPIRES << std::string(": ") << time_to_string( &then_tm ) << LINE_BREAK;
-    }
-    //add last Modified Date
-    if( last_modified ){
-        //TODO ss << HTTP_HEADER_LAST_MODIFIED << std::string(": ") << time_to_string( gmtime( &last_modified ) ) << LINE_BREAK;
-    }
-    //add now
-    time_t now = time( nullptr );
-    struct tm now_tm = *gmtime( &now);
-    mktime( &now_tm);
-    ss << HTTP_HEADER_DATE << std::string(": ") << time_to_string( &now_tm ) << LINE_BREAK;
+	case http_status::PARTIAL_CONTENT:
+		ss << RESPONSE_LINE_PARTIAL_CONTENT;
+		break;
 
-    //add mime-type
-    ss <<HTTP_HEADER_CONTENT_TYPE << std::string(": ") << ::http::mime::mime_type(type) << LINE_BREAK;
+	case http_status::CREATED:
+		ss << RESPONSE_LINE_CREATED;
+		break;
 
-    ss << LINE_BREAK;
-    ss.flush();
-    return ss.str();
+	case http_status::ACCEPTED:
+		ss << RESPONSE_LINE_ACCEPTED;
+		break;
+
+	case http_status::NO_CONTENT:
+		ss << RESPONSE_LINE_NO_CONTENT;
+		break;
+
+	case http_status::MULTIPLE_CHOICES:
+		ss << RESPONSE_LINE_MULTIPLE_CHOICES;
+		break;
+
+	case http_status::MOVED_PERMANENTLY:
+		ss << RESPONSE_LINE_MOVED_PERMANENTLY;
+		break;
+
+	case http_status::MOVED_TEMPORARILY:
+		ss << RESPONSE_LINE_MOVED_TEMPORARILY;
+		break;
+
+	case http_status::NOT_MODIFIED:
+		ss << RESPONSE_LINE_NOT_MODIFIED;
+		break;
+
+	case http_status::BAD_REQUEST:
+		ss << RESPONSE_LINE_BAD_REQUEST;
+		break;
+
+	case http_status::UNAUTHORIZED:
+		ss << RESPONSE_LINE_UNAUTHORIZED;
+		break;
+
+	case http_status::FORBIDDEN:
+		ss << RESPONSE_LINE_FORBIDDEN;
+		break;
+
+	case http_status::NOT_FOUND:
+		ss << RESPONSE_LINE_NOT_FOUND;
+		break;
+
+	case http_status::INTERNAL_SERVER_ERROR:
+		ss << RESPONSE_LINE_INTERNAL_SERVER_ERROR;
+		break;
+
+	case http_status::NOT_IMPLEMENTED:
+		ss << RESPONSE_LINE_NOT_IMPLEMENTED;
+		break;
+
+	case http_status::BAD_GATEWAY:
+		ss << RESPONSE_LINE_BAD_GATEWAY;
+		break;
+
+	case http_status::SERVICE_UNAVAILABLE:
+		ss << RESPONSE_LINE_SERVICE_UNAVAILABLE;
+		break;
+
+	default:
+		ss << RESPONSE_LINE_INTERNAL_SERVER_ERROR;
+	}
+
+	if ( size > 0 ) {
+		std::cout << "set size:" << size << std::endl;
+		ss << HTTP_HEADER_CONTENT_LENGTH << std::string ( ": " ) << std::to_string ( size ) << LINE_BREAK;
+	}
+
+	for ( auto & header : headers ) {
+		ss << header.first << std::string ( ": " ) << header.second << LINE_BREAK;
+	}
+
+	//add expiration date
+	if ( seconds ) {
+		time_t now = time ( nullptr );
+		struct tm then_tm = *gmtime ( &now );
+		then_tm.tm_sec += seconds;
+		mktime ( &then_tm );
+		ss << HTTP_HEADER_EXPIRES << std::string ( ": " ) << time_to_string ( &then_tm ) << LINE_BREAK;
+	}
+
+	//add last Modified Date
+	if ( last_modified ) {
+		//TODO ss << HTTP_HEADER_LAST_MODIFIED << std::string(": ") << time_to_string( gmtime( &last_modified ) ) << LINE_BREAK;
+	}
+
+	//add now
+	time_t now = time ( nullptr );
+	struct tm now_tm = *gmtime ( &now );
+	mktime ( &now_tm );
+	ss << HTTP_HEADER_DATE << std::string ( ": " ) << time_to_string ( &now_tm ) << LINE_BREAK;
+
+	//add mime-type
+	ss << HTTP_HEADER_CONTENT_TYPE << std::string ( ": " ) << ::http::mime::mime_type ( type ) << LINE_BREAK;
+
+	ss << LINE_BREAK;
+	ss.flush();
+	return ss.str();
 }
 
-void HttpResponse::set_expires(int seconds) {
-    this->seconds = seconds;
+void HttpResponse::set_expires ( int seconds ) {
+	this->seconds = seconds;
 }
 
-void HttpResponse::set_last_modified(time_t last_modified) {
-    this->last_modified = last_modified;
+void HttpResponse::set_last_modified ( time_t last_modified ) {
+	this->last_modified = last_modified;
 }
 
-void HttpResponse::set_mime_type(mime::MIME_TYPE type) {
-    this->type = type;
+void HttpResponse::set_mime_type ( mime::MIME_TYPE type ) {
+	this->type = type;
 }
 
 void HttpResponse::reset() {
-    if( body_istream ) {
-        delete body_istream; //TODO unique pointer
-    }
-    body_istream = nullptr;
-    body_stream.str( string( "" ) );
-    headers.clear();
-    size = 0;
+	if ( body_istream ) {
+		delete body_istream; //TODO unique pointer
+	}
+
+	body_istream = nullptr;
+	body_stream.str ( string ( "" ) );
+	headers.clear();
+	size = 0;
 }
 }

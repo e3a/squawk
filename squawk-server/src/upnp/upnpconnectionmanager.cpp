@@ -29,10 +29,10 @@ log4cxx::LoggerPtr UpnpConnectionManager::logger(log4cxx::Logger::getLogger("squ
 
 void UpnpConnectionManager::do_post(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
-    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, request.body )
+    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, request.requestBody() )
 
     try {
-        commons::upnp::UpnpContentDirectoryRequest upnp_command = commons::upnp::parseRequest( request.body );
+        commons::upnp::UpnpContentDirectoryRequest upnp_command = commons::upnp::parseRequest( request.requestBody() );
         LOG4CXX_DEBUG(logger, upnp_command )
 
         if( upnp_command.type == commons::upnp::UpnpContentDirectoryRequest::PROTOCOL_INFO ) {

@@ -1,7 +1,9 @@
 *~
+*.orig
 build
 build/**/* 
 .kdev4/
 squawk-server.git.kdev4
 CMakeLists.txt.user
 squawk.git.kdev4
+CMakeLists.txt.user.3.2-pre1

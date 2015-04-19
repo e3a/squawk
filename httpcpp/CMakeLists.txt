@@ -3,13 +3,19 @@ cmake_minimum_required(VERSION 2.8.9)
 
 project(httpcpp)
 
-include_directories(${SQUAWK_INCLUDES} ${LOG4CXX_INCLUDE_DIR} ${PCREPP_INCLUDE_DIR} src/asio)
+message( ${PROJECT_SOURCE_DIR}/src/asio )
+include_directories(${SQUAWK_INCLUDES} ${LOG4CXX_INCLUDE_DIR} ${PCREPP_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/src/asio)
 
 set(SOURCES src/httpparser.cpp src/httpservlet.cpp src/webserver.cpp src/httpresponse.cpp
+            src/httprequest.cpp
             src/asio/asioconnection.cpp src/asio/asioserver.cpp src/asio/httpserverfactory.cpp
-            src/servlet/fileservlet.cpp)
+            src/servlet/fileservlet.cpp
+            src/httpclient.cpp src/asio/httpclientconnection.cpp)
 
 add_library(httpcpp ${SOURCES})
+
+add_executable(http src/httpmain.cpp ${SOURCES})
+target_link_libraries(http ${LIBS})
 
 if (build_tests)
    enable_testing()
@@ -19,6 +25,7 @@ if (build_tests)
                   test/httpparsertest.cpp
                   test/httpresponseparsertest.cpp
                   test/httpservlettest.cpp
+                  test/httpclienttest.cpp
                   ${SOURCES})
 #   target_link_libraries(testmain_httpcpp pthread)
    target_link_libraries(testmain_httpcpp ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})

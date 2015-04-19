@@ -31,32 +31,33 @@ inline namespace asio_impl {
 
 class SSDPClientConnection {
 public:
-    SSDPClientConnection( SSDPCallback * handler, const std::string & multicast_address, const int & multicast_port )
-      : handler(handler), io_service_(), strand_(io_service_), socket(io_service_), multicast_address(multicast_address), multicast_port(multicast_port) {
-    }
+	SSDPClientConnection ( SSDPCallback * handler, const std::string & multicast_address, const int & multicast_port )
+		: handler ( handler ), io_service_(), strand_ ( io_service_ ), socket ( io_service_ ), multicast_address ( multicast_address ), multicast_port ( multicast_port ) {
+	}
 
-    ~SSDPClientConnection() {
-        io_service_.stop();
-        ssdp_runner->join();
-    }
+	~SSDPClientConnection() {
+		io_service_.stop();
+		ssdp_runner->join();
+	}
 
-    void send(const std::string & request_line, const std::map< std::string, std::string > & headers);
-    void handle_receive_from(const ::asio::error_code&, size_t bytes_recvd);
+	void send ( const std::string & request_line, const std::map< std::string, std::string > & headers );
+	void handle_receive_from ( const asio::error_code&, size_t bytes_recvd );
 
 private:
-    SSDPCallback * handler;
-    ::asio::io_service io_service_;
-    ::asio::io_service::strand strand_;
-    ::asio::ip::udp::socket socket;
-    std::string multicast_address;
-    int multicast_port;
-    ::asio::ip::udp::endpoint sender_endpoint;
+	SSDPCallback * handler;
+	asio::io_service io_service_;
+	asio::io_service::strand strand_;
+	asio::ip::udp::socket socket;
+	std::string multicast_address;
+	int multicast_port;
+	asio::ip::udp::endpoint sender_endpoint;
 
-    enum { max_length = 8192 };
-    std::array< char, max_length > data;
+	enum { max_length = 8192 };
+	std::array< char, max_length > data;
 
-    /* the runner thread */
-    std::unique_ptr<std::thread> ssdp_runner;
+	/* the runner thread */
+	std::unique_ptr<std::thread> ssdp_runner;
 };
-}}
+}
+}
 #endif // SSDPCLIENTCONNECTION_H

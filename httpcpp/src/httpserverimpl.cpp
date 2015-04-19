@@ -25,8 +25,8 @@ void HttpServerImpl::start() {
 }
 void HttpServerImpl::stop() {
 }
-void HttpServerImpl::register_servlet(){
+void HttpServerImpl::register_servlet() {
 }
-void HttpServerImpl::handle_request(const HttpRequest & request, HttpRequest & response) {
+void HttpServerImpl::handle_request ( const HttpRequest & request, HttpRequest & response ) {
 }
 }

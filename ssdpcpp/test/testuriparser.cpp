@@ -24,12 +24,12 @@
 
 #include  "ssdpclientconnection.h"
 
-TEST( UriParser, IP ) {
+TEST ( UriParser, IP ) {
 
 }
-TEST( UriParser, Port ) {
+TEST ( UriParser, Port ) {
 
 }
-TEST( UriParser, Path ) {
+TEST ( UriParser, Path ) {
 
 }

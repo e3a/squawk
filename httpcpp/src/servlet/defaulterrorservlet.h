@@ -22,7 +22,7 @@
 
 class DefaultErrorServlet {
 public:
-    DefaultErrorServlet();
+	DefaultErrorServlet();
 };
 
 #endif // DEFAULTERRORSERVLET_H

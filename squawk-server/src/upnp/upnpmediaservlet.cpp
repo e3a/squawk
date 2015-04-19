@@ -39,7 +39,7 @@ void UpnpMediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpRespon
           throw http::http_status::BAD_REQUEST;
         } */
 
-        std::string full_path = request.uri;
+        std::string full_path = request.uri();
 
         struct stat filestatus;
         stat( full_path.c_str(), &filestatus );
@@ -103,11 +103,11 @@ void UpnpMediaServlet::do_head( ::http::HttpRequest & request, ::http::HttpRespo
     try {
         getFile( request, response );
 
-        if (request.uri.empty() || request.uri[0] != '/' || request.uri.find("..") != std::string::npos) {
+        if (request.uri().empty() || request.uri()[0] != '/' || request.uri().find("..") != std::string::npos) {
           throw http::http_status::BAD_REQUEST;
         }
 
-        std::string full_path = request.uri;
+        std::string full_path = request.uri();
 
         struct stat filestatus;
         stat( full_path.c_str(), &filestatus );
@@ -176,7 +176,7 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
         }
     }
     std::string type; int song_id;
-    bool result = match(request.uri, &type, &song_id);
+    bool result = match(request.uri(), &type, &song_id);
     if(result && song_id > 0) {
 
         try {
@@ -191,7 +191,7 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
 
             stmt_song->bind_int( 1, song_id );
             if( stmt_song->step() ) {
-                request.uri = stmt_song->get_string(0);
+                request.uri( stmt_song->get_string(0) );
 
             } else {
                 LOG4CXX_TRACE( logger, "file not found: " << song_id )

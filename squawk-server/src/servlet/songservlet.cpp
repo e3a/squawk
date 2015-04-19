@@ -34,7 +34,7 @@ void SongServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & 
     squawk::db::Sqlite3Statement * stmt_song = NULL;
 
     int song_id = 0;
-    bool result = match(request.uri, &song_id);
+    bool result = match(request.uri(), &song_id);
     if(result && song_id > 0) {
 
         try {
@@ -44,7 +44,7 @@ void SongServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & 
             stmt_song = db->prepare_statement( QUERY_SONG );
             stmt_song->bind_int( 1, song_id );
             if( stmt_song->step() ) {
-                request.uri = stmt_song->get_string(0);
+                request.uri( stmt_song->get_string(0) );
 
             } else {
                 LOG4CXX_TRACE( logger, "file not found: " << song_id )

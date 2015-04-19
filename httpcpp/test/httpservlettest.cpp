@@ -24,49 +24,49 @@
 
 class HttpServerImpl : public ::http::HttpServlet {
 public:
-    HttpServerImpl(std::string path) : HttpServlet(path) {};
+	HttpServerImpl ( std::string path ) : HttpServlet ( path ) {};
 };
 
-TEST(HttpServlet, ParsePath) {
-    HttpServerImpl servlet("/.*");
-    EXPECT_TRUE(servlet.match("/foo/bar"));
+TEST ( HttpServlet, ParsePath ) {
+	HttpServerImpl servlet ( "/.*" );
+	EXPECT_TRUE ( servlet.match ( "/foo/bar" ) );
 }
-TEST(HttpServlet, ParsePathWithElement) {
-    HttpServerImpl servlet("/foo/bar/(\\d+)/file.txt");
+TEST ( HttpServlet, ParsePathWithElement ) {
+	HttpServerImpl servlet ( "/foo/bar/(\\d+)/file.txt" );
 
-    int result = 0;
-    EXPECT_FALSE(servlet.match("/foo/bar/false/file.txt", &result));
-    EXPECT_TRUE(servlet.match("/foo/bar/123/file.txt", &result));
-    EXPECT_EQ(123, result);
+	int result = 0;
+	EXPECT_FALSE ( servlet.match ( "/foo/bar/false/file.txt", &result ) );
+	EXPECT_TRUE ( servlet.match ( "/foo/bar/123/file.txt", &result ) );
+	EXPECT_EQ ( 123, result );
 }
-TEST(HttpServlet, ParsePathWithNumber) {
-    HttpServerImpl servlet("/(video|image|book)/?([0-9]+)?");
+TEST ( HttpServlet, ParsePathWithNumber ) {
+	HttpServerImpl servlet ( "/(video|image|book)/?([0-9]+)?" );
 
-    std::string result;
-    std::string type;
-    EXPECT_TRUE(servlet.match("/video/123", &type, &result));
-    EXPECT_STREQ("123", result.c_str());
-    EXPECT_STREQ("video", type.c_str());
+	std::string result;
+	std::string type;
+	EXPECT_TRUE ( servlet.match ( "/video/123", &type, &result ) );
+	EXPECT_STREQ ( "123", result.c_str() );
+	EXPECT_STREQ ( "video", type.c_str() );
 
-    result = "0";
-    EXPECT_TRUE(servlet.match("/image/", &type, &result));
-    EXPECT_STREQ("", result.c_str());
-    EXPECT_STREQ("image", type.c_str());
+	result = "0";
+	EXPECT_TRUE ( servlet.match ( "/image/", &type, &result ) );
+	EXPECT_STREQ ( "", result.c_str() );
+	EXPECT_STREQ ( "image", type.c_str() );
 
-    result = "0";
-    EXPECT_TRUE(servlet.match("/image", &type, &result));
-    EXPECT_STREQ("", result.c_str());
-    EXPECT_STREQ("image", type.c_str());
+	result = "0";
+	EXPECT_TRUE ( servlet.match ( "/image", &type, &result ) );
+	EXPECT_STREQ ( "", result.c_str() );
+	EXPECT_STREQ ( "image", type.c_str() );
 
-    EXPECT_FALSE(servlet.match("/image/u", &type, &result));
+	EXPECT_FALSE ( servlet.match ( "/image/u", &type, &result ) );
 }
-TEST(HttpServlet, ParsePathWithTwoElement) {
-    HttpServerImpl servlet("/(foo|bar)/(\\d+)/file.txt");
+TEST ( HttpServlet, ParsePathWithTwoElement ) {
+	HttpServerImpl servlet ( "/(foo|bar)/(\\d+)/file.txt" );
 
-    std::string path;
-    int result = 0; //new char[1024];
-    EXPECT_TRUE(servlet.match("/bar/123/file.txt", &path, &result));
+	std::string path;
+	int result = 0; //new char[1024];
+	EXPECT_TRUE ( servlet.match ( "/bar/123/file.txt", &path, &result ) );
 
-    EXPECT_EQ("bar", path );
-    EXPECT_EQ(123, result );
+	EXPECT_EQ ( "bar", path );
+	EXPECT_EQ ( 123, result );
 }

@@ -37,7 +37,7 @@ void ApiBrowseServlet::do_get( http::HttpRequest & request, ::http::HttpResponse
     std::string strType, strId;
     int type = 0;
     int id = 0;
-    bool result = match(request.uri, &strType, &strId);
+    bool result = match(request.uri(), &strType, &strId);
     if( result ) {
         id = (strId.length()==0 ? 0 : commons::string::parse_string<int>(strId));
         if( strType == "image" ){

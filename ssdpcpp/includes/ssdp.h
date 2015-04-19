@@ -28,9 +28,6 @@
 #include <commons.h>
 #include <http.h>
 
-// #include "log4cxx/logger.h"
-// #include "asio.hpp"
-
 /**
  * \brief SSDP Server Implementation.
  *
@@ -122,9 +119,9 @@ static const std::string UPNP_OPTION_MAX_AGE = "max-age=";
 
 static const std::string HTTP_REQUEST_LINE_OK = "HTTP/1.1 200 OK";
 
-static const std::string UPNP_STATUS_DISCOVER	= std::string("ssdp:discover");
-static const std::string UPNP_STATUS_ALIVE	= std::string("ssdp:alive");
-static const std::string UPNP_STATUS_BYE	= std::string("ssdp:byebye");
+static const std::string UPNP_STATUS_DISCOVER	= std::string ( "ssdp:discover" );
+static const std::string UPNP_STATUS_ALIVE	= std::string ( "ssdp:alive" );
+static const std::string UPNP_STATUS_BYE	= std::string ( "ssdp:byebye" );
 
 static const std::string UPNP_NS_ALL = "ssdp:all";
 
@@ -138,29 +135,29 @@ static const std::string SSDP_HEADER_SEARCH_REQUEST_LINE = "M-SEARCH * HTTP/1.1"
  * @brief UPNP device item.
  */
 struct UpnpDevice {
-  UpnpDevice() {}
-  UpnpDevice(std::string host, std::string location, std::string nt, std::string nts, std::string server, std::string usn, time_t last_seen, time_t cache_control) : 
-    host(host), location(location), nt(nt), nts(nts), server(server), usn(usn), last_seen(last_seen), cache_control(cache_control) {}
-  
-  std::string host;
-  std::string location;
-  std::string nt;
-  std::string nts;
-  std::string server;
-  std::string usn;
-  
-  time_t last_seen;
-  time_t cache_control;
-  
-  /**
-    * Create the json stream.
-    */
-  friend std::ostream& operator<<(std::ostream& out, const ssdp::UpnpDevice & upnp_device) {
-    out << "{\"host\":\"" << commons::string::escape_json(upnp_device.host) << "\",\"location\":\"" << commons::string::escape_json(upnp_device.location) << "\",\"nt\":\"" << commons::string::escape_json(upnp_device.nt) << "\"," <<
-       "\"nts\":\"" << commons::string::escape_json(upnp_device.nts) << "\",\"server\":\"" << commons::string::escape_json(upnp_device.server) << "\",\"usn\":\"" << commons::string::escape_json(upnp_device.usn) << "\"," <<
-	   "\"last_seen\":" << upnp_device.last_seen << ",\"cache_control\":" << upnp_device.cache_control << "}";
-    return out;
-  }
+	UpnpDevice() {}
+	UpnpDevice ( std::string host, std::string location, std::string nt, std::string nts, std::string server, std::string usn, time_t last_seen, time_t cache_control ) :
+		host ( host ), location ( location ), nt ( nt ), nts ( nts ), server ( server ), usn ( usn ), last_seen ( last_seen ), cache_control ( cache_control ) {}
+
+	std::string host;
+	std::string location;
+	std::string nt;
+	std::string nts;
+	std::string server;
+	std::string usn;
+
+	time_t last_seen;
+	time_t cache_control;
+
+	/**
+	  * Create the json stream.
+	  */
+	friend std::ostream& operator<< ( std::ostream& out, const ssdp::UpnpDevice & upnp_device ) {
+		out << "{\"host\":\"" << commons::string::escape_json ( upnp_device.host ) << "\",\"location\":\"" << commons::string::escape_json ( upnp_device.location ) << "\",\"nt\":\"" << commons::string::escape_json ( upnp_device.nt ) << "\"," <<
+			"\"nts\":\"" << commons::string::escape_json ( upnp_device.nts ) << "\",\"server\":\"" << commons::string::escape_json ( upnp_device.server ) << "\",\"usn\":\"" << commons::string::escape_json ( upnp_device.usn ) << "\"," <<
+			"\"last_seen\":" << upnp_device.last_seen << ",\"cache_control\":" << upnp_device.cache_control << "}";
+		return out;
+	}
 };
 
 /**
@@ -168,43 +165,43 @@ struct UpnpDevice {
  */
 class SSDPEventListener {
 public:
-  enum EVENT_TYPE { ANNOUNCE, BYE };
-  
-  SSDPEventListener() {}
-  virtual ~SSDPEventListener() {}
+	enum EVENT_TYPE { ANNOUNCE, BYE };
 
-  /**
-   * \brief event method
-   */
-  virtual void ssdpEvent( SSDPEventListener::EVENT_TYPE type, std::string  client_ip, UpnpDevice device ) = 0;
+	SSDPEventListener() {}
+	virtual ~SSDPEventListener() {}
+
+	/**
+	 * \brief event method
+	 */
+	virtual void ssdpEvent ( SSDPEventListener::EVENT_TYPE type, std::string  client_ip, UpnpDevice device ) = 0;
 };
 
 /**
  * @brief The SSDP Response
  */
 struct Response {
-  /** Response types */
-  enum status_type {
-    ok = 200,
-    created = 201,
-    accepted = 202,
-    no_content = 204,
-    multiple_choices = 300,
-    moved_permanently = 301,
-    moved_temporarily = 302,
-    not_modified = 304,
-    bad_request = 400,
-    unauthorized = 401,
-    forbidden = 403,
-    not_found = 404,
-    internal_server_error = 500,
-    not_implemented = 501,
-    bad_gateway = 502,
-    service_unavailable = 503
-  } status;
-  Response(status_type status, std::string request_line, std::map< std::string, std::string > headers) : status(status), request_line(request_line), headers(headers) {}
-  std::string request_line;
-  std::map< std::string, std::string > headers;
+	/** Response types */
+	enum status_type {
+		ok = 200,
+		created = 201,
+		accepted = 202,
+		no_content = 204,
+		multiple_choices = 300,
+		moved_permanently = 301,
+		moved_temporarily = 302,
+		not_modified = 304,
+		bad_request = 400,
+		unauthorized = 401,
+		forbidden = 403,
+		not_found = 404,
+		internal_server_error = 500,
+		not_implemented = 501,
+		bad_gateway = 502,
+		service_unavailable = 503
+	} status;
+	Response ( status_type status, std::string request_line, std::map< std::string, std::string > headers ) : status ( status ), request_line ( request_line ), headers ( headers ) {}
+	std::string request_line;
+	std::map< std::string, std::string > headers;
 };
 
 /**
@@ -213,20 +210,20 @@ struct Response {
  * message from the network is reeceived.
  */
 class SSDPCallback {
-public:  
-  SSDPCallback() {}
-  virtual ~SSDPCallback() {}
-  
-/**
- * The SSDP Callback method.
- * \param headers the http request
- */
-  virtual void handle_receive(::http::HttpRequest & request) = 0;
-  /**
-   * The SSDP Callback method.
-   * \param headers the http response
-   */
-    virtual void handle_response(::http::HttpResponse & response) = 0;
+public:
+	SSDPCallback() {}
+	virtual ~SSDPCallback() {}
+
+	/**
+	 * The SSDP Callback method.
+	 * \param headers the http request
+	 */
+	virtual void handle_receive ( ::http::HttpRequest & request ) = 0;
+	/**
+	 * The SSDP Callback method.
+	 * \param headers the http response
+	 */
+	virtual void handle_response ( ::http::HttpResponse & response ) = 0;
 };
 /**
  * The SSDP Connection..
@@ -236,32 +233,32 @@ public:
 class SSDPConnection {
 public:
 
-  SSDPConnection() {}
-  virtual ~SSDPConnection() {}
-  
-/**
- * Start the server.
- */
-  virtual void start() = 0;
-/**
- * Stop the server.
- */
-  virtual void stop() = 0;
-/**
- * Send a message to the network.
- * \param headers the messsage headers
- */
-  virtual void send(std::string request_line, std::map< std::string, std::string > headers) = 0;
-/**
- * Send a reponse to the sender.
- * \param response the response object
- */
-  virtual void send(Response response) = 0;
-/**
- * Set the SSDP Handlers.
- * \param handler the handler implementation
- */
-  virtual void set_handler(SSDPCallback * handler) = 0;
+	SSDPConnection() {}
+	virtual ~SSDPConnection() {}
+
+	/**
+	 * Start the server.
+	 */
+	virtual void start() = 0;
+	/**
+	 * Stop the server.
+	 */
+	virtual void stop() = 0;
+	/**
+	 * Send a message to the network.
+	 * \param headers the messsage headers
+	 */
+	virtual void send ( std::string request_line, std::map< std::string, std::string > headers ) = 0;
+	/**
+	 * Send a reponse to the sender.
+	 * \param response the response object
+	 */
+	virtual void send ( Response response ) = 0;
+	/**
+	 * Set the SSDP Handlers.
+	 * \param handler the handler implementation
+	 */
+	virtual void set_handler ( SSDPCallback * handler ) = 0;
 };
 /**
  * SSDP Server.
@@ -269,97 +266,97 @@ public:
 class SSDPServerImpl : public SSDPCallback {
 
 public:
-   /**
-    * Create a new SSDPServer.
-    */
-    explicit SSDPServerImpl(const std::string & uuid, const std::string & multicast_address, const int & multicast_port);
-    virtual ~SSDPServerImpl() {}
-    /**
-     * Announce the services in the network.
-     */
-    void announce();
-    /**
-     * Suppress the services in the network.
-     */
-    void suppress();
-    /**
-     * Search for services in the network. The call is asynchronous, the services are notified.
-     * @brief Search Services
-     * @param service the service, default ssdp:all
-     */
-    void search(const std::string & service = UPNP_NS_ALL );
-    /**
-    * Start the server.
-    */
-    void start();
-    /**
-    * Stop the server.
-    */
-    void stop();
-    /**
-    * Register an UPNP Service.
-    * \param ns the Service namespace
-    * \param location the service description URL
-    */
-    void register_namespace(std::string ns, std::string location) {
-        namespaces[ns] = location;
-    }
-    /**
-    * Handle response callback method..
-    * \param headers the responset headers
-    */
-    virtual void handle_response(::http::HttpResponse & response);
-    /**
-    * Handle receive callback method..
-    * \param headers the request headers
-    */
-    virtual void handle_receive(::http::HttpRequest & request);
-    /**
-    * Register an UPNP Service.
-    * \return map with the upnp devices, the map key is the service UUID
-    */
-    std::map< std::string, UpnpDevice > get_upnp_devices() {
-        return upnp_devices;
-    }
-    /**
-     * \brief Subscribe for events.
-     */
-    void subscribe( SSDPEventListener * listener ) {
-	listeners.push_back( listener );
-    }
-    
+	/**
+	 * Create a new SSDPServer.
+	 */
+	explicit SSDPServerImpl ( const std::string & uuid, const std::string & multicast_address, const int & multicast_port );
+	virtual ~SSDPServerImpl() {}
+	/**
+	 * Announce the services in the network.
+	 */
+	void announce();
+	/**
+	 * Suppress the services in the network.
+	 */
+	void suppress();
+	/**
+	 * Search for services in the network. The call is asynchronous, the services are notified.
+	 * @brief Search Services
+	 * @param service the service, default ssdp:all
+	 */
+	void search ( const std::string & service = UPNP_NS_ALL );
+	/**
+	* Start the server.
+	*/
+	void start();
+	/**
+	* Stop the server.
+	*/
+	void stop();
+	/**
+	* Register an UPNP Service.
+	* \param ns the Service namespace
+	* \param location the service description URL
+	*/
+	void register_namespace ( std::string ns, std::string location ) {
+		namespaces[ns] = location;
+	}
+	/**
+	* Handle response callback method..
+	* \param headers the responset headers
+	*/
+	virtual void handle_response ( ::http::HttpResponse & response );
+	/**
+	* Handle receive callback method..
+	* \param headers the request headers
+	*/
+	virtual void handle_receive ( ::http::HttpRequest & request );
+	/**
+	* Register an UPNP Service.
+	* \return map with the upnp devices, the map key is the service UUID
+	*/
+	std::map< std::string, UpnpDevice > get_upnp_devices() {
+		return upnp_devices;
+	}
+	/**
+	 * \brief Subscribe for events.
+	 */
+	void subscribe ( SSDPEventListener * listener ) {
+		listeners.push_back ( listener );
+	}
+
 private:
-//    static log4cxx::LoggerPtr logger;
-    std::string uuid, local_listen_address, multicast_address;
-    int multicast_port;
-    std::unique_ptr<SSDPConnection> connection;
+	std::string uuid, local_listen_address, multicast_address;
+	int multicast_port;
+	std::unique_ptr<SSDPConnection> connection;
 
-    UpnpDevice parseRequest( http::HttpRequest request );
-    UpnpDevice parseResponse( http::HttpResponse & response );
+    UpnpDevice parseRequest ( http::HttpRequest & request );
+	UpnpDevice parseResponse ( http::HttpResponse & response );
 
-    void send_anounce( const std::string & nt, const std::string & location );
-    void send_suppress( const std::string & nt );
-    std::map< std::string, std::string > create_response( const std::string & nt, const std::string & location);
-    std::map< std::string, std::string > namespaces;
-    std::map< std::string, UpnpDevice > upnp_devices;
+	void send_anounce ( const std::string & nt, const std::string & location );
+	void send_suppress ( const std::string & nt );
+	std::map< std::string, std::string > create_response ( const std::string & nt, const std::string & location );
+	std::map< std::string, std::string > namespaces;
+	std::map< std::string, UpnpDevice > upnp_devices;
 
-    std::vector< SSDPEventListener * > listeners;
-    void fireEvent( SSDPEventListener::EVENT_TYPE type, std::string client_ip, UpnpDevice device );
-    
-    bool announce_thread_run = true;
-    std::unique_ptr<std::thread> annouceThreadRunner;
-    std::chrono::high_resolution_clock::time_point start_time;
-    void annouceThread();
+	std::vector< SSDPEventListener * > listeners;
+	void fireEvent ( SSDPEventListener::EVENT_TYPE type, std::string client_ip, UpnpDevice device ) const;
+
+	bool announce_thread_run = true;
+	std::unique_ptr<std::thread> annouceThreadRunner;
+	std::chrono::high_resolution_clock::time_point start_time;
+	void annouceThread();
 };
-inline std::string create_header(std::string request_line, std::map< std::string, std::string > headers) {
-  std::ostringstream os;
-  os << request_line + std::string("\r\n");
+inline std::string create_header ( std::string request_line, std::map< std::string, std::string > headers ) {
+	std::ostringstream os;
+	os << request_line + std::string ( "\r\n" );
 
-  for(auto & iter : headers) {
-    os << iter.first << ": " << iter.second << "\r\n";
-  }
-  os << "\r\n";
-  return os.str();
+	for ( auto & iter : headers ) {
+		os << iter.first << ": " << iter.second << "\r\n";
+	}
+
+	os << "\r\n";
+	return os.str();
 }
 }
 #endif // SSDPCONNECTION_H

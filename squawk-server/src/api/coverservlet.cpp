@@ -26,12 +26,12 @@ namespace api {
 void CoverServlet::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
     int cover_id = 0;
-    bool result = match(request.uri, &cover_id);
+    bool result = match(request.uri(), &cover_id);
     if(result && cover_id > 0) {
 
         std::stringstream ss;
         ss << std::string("/") << cover_id  << std::string(".jpg");
-        request.uri = ss.str();
+        request.uri( ss.str() );
 
         FileServlet::do_get(request, response);
 

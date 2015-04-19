@@ -36,7 +36,7 @@ void MediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse &
 
     std::string type;
     int item_id = 0;
-    bool result = match(request.uri, &type, &item_id);
+    bool result = match(request.uri(), &type, &item_id);
     if(result && item_id > 0) {
         if( type == "song" || type == "video" || type == "image" ) {
 
@@ -53,7 +53,7 @@ void MediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse &
 
                 stmt_song->bind_int( 1, item_id );
                 if( stmt_song->step() ) {
-                    request.uri = stmt_song->get_string(0);
+                    request.uri() = stmt_song->get_string(0);
 
                 } else {
                     LOG4CXX_TRACE( logger, "file not found: " << type << "::" << item_id )

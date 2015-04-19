@@ -30,12 +30,12 @@ log4cxx::LoggerPtr ImageServlet::logger(log4cxx::Logger::getLogger("squawk.servl
 void ImageServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & response ) {
 
     int image_id = 0;
-    bool result = match(request.uri, &image_id);
+    bool result = match(request.uri(), &image_id);
     if(result && image_id > 0) {
 
         std::stringstream ss;
         ss << "/image-" << image_id << ".jpg";
-        request.uri = ss.str();
+        request.uri( ss.str() );
 
         FileServlet::do_get(request, response);
 

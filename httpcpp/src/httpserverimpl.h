@@ -23,20 +23,20 @@
 #include "http.h"
 
 namespace http {
-    class HttpServerImpl : public HttpRequestHandler {
-		public:
-            HttpServerImpl(const std::string& address, const std::string& port,
-                          const std::string& doc_root, std::size_t thread_pool_size) {};
+class HttpServerImpl : public HttpRequestHandler {
+public:
+	HttpServerImpl ( const std::string& address, const std::string& port,
+					 const std::string& doc_root, std::size_t thread_pool_size ) {};
 
-            void start();
-            void stop();
+	void start();
+	void stop();
 
-            void register_servlet();
+	void register_servlet();
 
-            void handle_request(const HttpRequest & request, HttpRequest & response);
+	void handle_request ( const HttpRequest & request, HttpRequest & response );
 
-        private:
+private:
 
-	};
+};
 }
 #endif // HTTPSERVERIMPL_H

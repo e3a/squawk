@@ -26,51 +26,58 @@
 
 namespace http {
 
-void WebServer::register_servlet(HttpServlet * servlet) {
-    servlets.push_back(servlet);
+void WebServer::register_servlet ( HttpServlet * servlet ) {
+	servlets.push_back ( servlet );
 }
 
-void WebServer::handle_request(HttpRequest & request, HttpResponse & response, std::function<void()> fptr ) {
+void WebServer::handle_request ( HttpRequest & request, HttpResponse & response, std::function< void() > fptr ) {
 
-    for(auto * servlet : servlets) {
-        if(servlet->match(request.uri)) {
-            try {
-                std::cout << "execute servlet: " << (servlet->getPath()) << std::endl;
+	for ( auto * servlet : servlets ) {
+		if ( servlet->match ( request.uri() ) ) {
+			try {
+				std::cout << "execute servlet: " << ( servlet->getPath() ) << std::endl;
 
-                if( request.request_method == "GET" ) {
-                    servlet->do_get(request, response);
-                } else if( request.request_method == "POST" ) {
-                    servlet->do_post(request, response);
-                } else if( request.request_method == "HEAD" ) {
-                    servlet->do_head(request, response);
-                } else if( request.request_method == "SUBSCRIBE" ) {
-                    servlet->do_subscribe(request, response);
-                } else {
-                    std::cerr << "unknow request method: " << request.request_method << std::endl;
-                    throw http_status::NOT_IMPLEMENTED;
-                }
-                /* TODO handle all http methods */
+				if ( request.method() == "GET" ) {
+					servlet->do_get ( request, response );
+
+				} else if ( request.method() == "POST" ) {
+					servlet->do_post ( request, response );
+
+				} else if ( request.method() == "HEAD" ) {
+					servlet->do_head ( request, response );
+
+				} else if ( request.method() == "SUBSCRIBE" ) {
+					servlet->do_subscribe ( request, response );
+
+				} else {
+					std::cerr << "unknow request method: " << request.method() << std::endl;
+					throw http_status::NOT_IMPLEMENTED;
+				}
+
+				/* TODO handle all http methods */
 
 
-            } catch(http_status & status) {
-                std::cerr << "create error code with status: " /* << status */ << std::endl;
-                servlet->create_stock_reply(status, response);
-            } catch(...) {
-                std::cerr << "create error code without status." << std::endl;
-                servlet->create_stock_reply(http_status::INTERNAL_SERVER_ERROR, response);
-            }
-            //log request
-            std::cout << request.client_ip << " user-identifier anonymous [" << "] \"" << request.request_method << " " <<
-                         request.uri << " HTTP/" << request.http_version_major << "." << request.http_version_minor << " " <<
-                         int(response.status) << " " << response.get_size() << std::endl;
-            fptr();
-            return;
-        }
-    }
+			} catch ( http_status & status ) {
+				std::cerr << "create error code with status: " /* << status */ << std::endl;
+				servlet->create_stock_reply ( status, response );
+
+			} catch ( ... ) {
+				std::cerr << "create error code without status." << std::endl;
+				servlet->create_stock_reply ( http_status::INTERNAL_SERVER_ERROR, response );
+			}
+
+			//log request
+			std::cout << request.remoteIp() << " user-identifier anonymous [" << "] \"" << request.method() << " " <<
+					  request.uri() << " HTTP/" << request.httpVersionMajor() << "." << request.httpVersionMinor() << " " <<
+					  int ( response.status ) << " " << response.get_size() << std::endl;
+			fptr();
+			return;
+		}
+	}
 }
 
 void WebServer::start() {
-    HttpServerFactory::start( local_ip, port/* , threads */, dynamic_cast< http::HttpRequestHandler * > ( this ) );
+	HttpServerFactory::start ( local_ip, port/* , threads */, dynamic_cast< http::HttpRequestHandler * > ( this ) );
 }
 void WebServer::stop() { /* TODO */}
 

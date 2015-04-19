@@ -32,49 +32,49 @@ namespace asio_impl {
 /// Represents a single connection from a client.
 class connection : public std::enable_shared_from_this<connection> {
 public:
-  /// Construct a connection with the given io_service.
-  explicit connection(asio::io_service& io_service, http::HttpRequestHandler * httpRequestHandler);
-  ~connection();
-  /// Get the socket associated with the connection.
-  asio::ip::tcp::socket& socket();
+	/// Construct a connection with the given io_service.
+	explicit connection ( asio::io_service& io_service, http::HttpRequestHandler * httpRequestHandler );
+	~connection();
+	/// Get the socket associated with the connection.
+	asio::ip::tcp::socket& socket();
 
-  /// Start the first asynchronous operation for the connection.
-  void start();
+	/// Start the first asynchronous operation for the connection.
+	void start();
 
 
 private:
-  /// Handle completion of a read operation.
-  void handle_read(const asio::error_code& e,
-      std::size_t bytes_transferred);
+	/// Handle completion of a read operation.
+	void handle_read ( const asio::error_code& e,
+					   std::size_t bytes_transferred );
 
-  /// Handle completion of a write operation.
-  void handle_write(char * buffer, const asio::error_code& e, int bytes_transferred );
+	/// Handle completion of a write operation.
+	void handle_write ( char * buffer, const asio::error_code& e, int bytes_transferred );
 
-  void send_response();
+	void send_response();
 
-  /// Strand to ensure the connection's handlers are not called concurrently.
-  asio::io_service::strand strand_;
+	/// Strand to ensure the connection's handlers are not called concurrently.
+	asio::io_service::strand strand_;
 
-  /// Socket for the connection.
-  asio::ip::tcp::socket socket_;
+	/// Socket for the connection.
+	asio::ip::tcp::socket socket_;
 
-  /// The handler used to process the incoming request.
-  http::HttpRequestHandler * httpRequestHandler;
+	/// The handler used to process the incoming request.
+	http::HttpRequestHandler * httpRequestHandler;
 
-  /// Buffer for incoming data.
-  std::array<char, 8192> buffer_;
+	/// Buffer for incoming data.
+	std::array<char, 8192> buffer_;
 
-  /// The incoming request.
-  http::HttpRequest request_;
+	/// The incoming request.
+	http::HttpRequest request_;
 
-  /// The parser for the incoming request.
-  //TODO request_parser request_parser_;
+	/// The parser for the incoming request.
+	//TODO request_parser request_parser_;
 
-  // The reply to be sent back to the client.
-  http::HttpResponse * reply_ = nullptr;
-  asio::steady_timer timer_;
+	// The reply to be sent back to the client.
+	http::HttpResponse * reply_ = nullptr;
+	asio::steady_timer timer_;
 
-void timer_expired(const asio::error_code & error);
+	void timer_expired ( const asio::error_code & error );
 };
 
 typedef std::shared_ptr<connection> connection_ptr;

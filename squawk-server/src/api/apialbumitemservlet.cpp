@@ -39,7 +39,7 @@ log4cxx::LoggerPtr ApiAlbumItemServlet::logger(log4cxx::Logger::getLogger("squaw
 void ApiAlbumItemServlet::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
     int album_id = 0;
-    bool result = match(request.uri, &album_id);
+    bool result = match(request.uri(), &album_id);
     if(result && album_id > 0) {
 
         squawk::db::Sqlite3Statement * stmt_album = NULL;

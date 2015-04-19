@@ -34,52 +34,52 @@ class connection_manager;
 /// Represents a single connection from a client.
 class connection : public std::enable_shared_from_this<connection> {
 public:
-  connection(const connection&) = delete;
-  connection& operator=(const connection&) = delete;
+	connection ( const connection& ) = delete;
+	connection& operator= ( const connection& ) = delete;
 
-  /// Construct a connection with the given socket.
-  explicit connection(asio::ip::tcp::socket socket,
-      connection_manager& manager, http::HttpRequestHandler * httpRequestHandler);
-  ~connection();
+	/// Construct a connection with the given socket.
+	explicit connection ( asio::ip::tcp::socket socket,
+						  connection_manager& manager, http::HttpRequestHandler * httpRequestHandler );
+	~connection();
 
-  /// Start the first asynchronous operation for the connection.
-  void start();
+	/// Start the first asynchronous operation for the connection.
+	void start();
 
-  /// Stop all asynchronous operations associated with the connection.
-  void stop();
+	/// Stop all asynchronous operations associated with the connection.
+	void stop();
 
-  /* start change threading */
-  explicit connection(asio::io_service& io_service,
-        http::HttpRequestHandler * httpRequestHandler);
+	/* start change threading */
+	explicit connection ( asio::io_service& io_service,
+						  http::HttpRequestHandler * httpRequestHandler );
 
-  asio::ip::tcp::socket& socket();
-  asio::io_service::strand strand_;
-  /* end change threading */
+	asio::ip::tcp::socket& socket();
+	asio::io_service::strand strand_;
+	/* end change threading */
 
 private:
-  /// Perform an asynchronous read operation.
-  void do_read();
+	/// Perform an asynchronous read operation.
+	void do_read();
 
-  /// Perform an asynchronous write operation.
-  void do_write();
+	/// Perform an asynchronous write operation.
+	void do_write();
 
-  /// Socket for the connection.
-  asio::ip::tcp::socket socket_;
+	/// Socket for the connection.
+	asio::ip::tcp::socket socket_;
 
-  /// The manager for this connection.
-  connection_manager& connection_manager_;
+	/// The manager for this connection.
+	connection_manager& connection_manager_;
 
-  /// The handler used to process the incoming request.
-  http::HttpRequestHandler * httpRequestHandler;
+	/// The handler used to process the incoming request.
+	http::HttpRequestHandler * httpRequestHandler;
 
-  /// Buffer for incoming data.
-  std::array<char, 8192> buffer_;
+	/// Buffer for incoming data.
+	std::array<char, 8192> buffer_;
 
-  /// The incoming request.
-  http::HttpRequest request_;
+	/// The incoming request.
+	http::HttpRequest request_;
 
-  /// The reply to be sent back to the client.
-  http::HttpResponse * reply_ = nullptr;
+	/// The reply to be sent back to the client.
+	http::HttpResponse * reply_ = nullptr;
 //  std::ostream * os;
 //  asio::streambuf b;
 

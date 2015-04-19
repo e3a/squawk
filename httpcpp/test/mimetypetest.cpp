@@ -22,18 +22,18 @@
 #include "mimetypes.h"
 #include <gtest/gtest.h>
 
-TEST(MimeTypeParseTest2, GetTypeByExtension) {
-  EXPECT_TRUE(http::mime::MPEG == http::mime::mime_type("mp3"));
-  EXPECT_TRUE(http::mime::VORBIS == http::mime::mime_type("ogg"));
+TEST ( MimeTypeParseTest2, GetTypeByExtension ) {
+	EXPECT_TRUE ( http::mime::MPEG == http::mime::mime_type ( "mp3" ) );
+	EXPECT_TRUE ( http::mime::VORBIS == http::mime::mime_type ( "ogg" ) );
 }
-TEST(MimeTypeParseTest2, GetByExtension) {
-  EXPECT_EQ(std::string("audio/mpeg"), http::mime::mime_type(http::mime::MPEG));
+TEST ( MimeTypeParseTest2, GetByExtension ) {
+	EXPECT_EQ ( std::string ( "audio/mpeg" ), http::mime::mime_type ( http::mime::MPEG ) );
 }
-TEST(MimeTypeParseTest2, GetExtensionByMimeType) {
-    EXPECT_EQ(std::string("mp3"), http::mime::extension(http::mime::MPEG));
-    EXPECT_EQ(std::string("flac"), http::mime::extension(http::mime::FLAC));
+TEST ( MimeTypeParseTest2, GetExtensionByMimeType ) {
+	EXPECT_EQ ( std::string ( "mp3" ), http::mime::extension ( http::mime::MPEG ) );
+	EXPECT_EQ ( std::string ( "flac" ), http::mime::extension ( http::mime::FLAC ) );
 }
-TEST(MimeTypeParseTest2, GetExtensionByMimeTypeText) {
-    EXPECT_EQ(std::string("mp3"), http::mime::extension("audio/mpeg"));
-    EXPECT_EQ(std::string("flac"), http::mime::extension("audio/x-flac"));
+TEST ( MimeTypeParseTest2, GetExtensionByMimeTypeText ) {
+	EXPECT_EQ ( std::string ( "mp3" ), http::mime::extension ( "audio/mpeg" ) );
+	EXPECT_EQ ( std::string ( "flac" ), http::mime::extension ( "audio/x-flac" ) );
 }

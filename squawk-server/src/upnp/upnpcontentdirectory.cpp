@@ -32,7 +32,7 @@ void UpnpContentDirectory::registerContentDirectoryModule( commons::upnp::Conten
 }
 
 void UpnpContentDirectory::do_subscribe(::http::HttpRequest & request, ::http::HttpResponse & response) {
-    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "SUBSCRIBE: " << request.body )
+    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "SUBSCRIBE: " << request.requestBody() )
     response.set_mime_type( ::http::mime::XML );
     response.set_status( ::http::http_status::OK );
     response.add_header("Content-Type", "text/xml; charset=\"utf-8\"");
@@ -42,10 +42,10 @@ void UpnpContentDirectory::do_subscribe(::http::HttpRequest & request, ::http::H
 
 void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
-    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, request.body )
+    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, request.requestBody() )
 
     try {
-        commons::upnp::UpnpContentDirectoryRequest upnp_command = commons::upnp::parseRequest( request.body );
+        commons::upnp::UpnpContentDirectoryRequest upnp_command = commons::upnp::parseRequest( request.requestBody() );
         LOG4CXX_DEBUG(logger, upnp_command )
 
         if( upnp_command.type == commons::upnp::UpnpContentDirectoryRequest::BROWSE ) {
