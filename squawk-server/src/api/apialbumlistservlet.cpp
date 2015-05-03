@@ -43,49 +43,49 @@ void ApiAlbumListServlet::do_get( http::HttpRequest & request, ::http::HttpRespo
         response << "{";
         std::string qAlbums = "from tbl_cds_albums albums ";
         bool first_query_token = true;
-        if( request.parameters.find("artist-id")!=request.parameters.end() &&
-            commons::string::is_number( commons::string::trim( request.parameters["artist-id"] ) ) ) {
+        if( request.containsAttribute( "artist-id" ) &&
+            commons::string::is_number( commons::string::trim( request.attribute("artist-id") ) ) ) {
             first_query_token = false;
             qAlbums = "from tbl_cds_albums albums " \
                       "JOIN tbl_cds_artists_albums m ON albums.ROWID = m.album_id " \
-                      "where m.artist_id=" + request.parameters["artist-id"];
+                      "where m.artist_id=" + request.attribute( "artist-id" );
         }
-        if( request.parameters.find("artist")!=request.parameters.end() ) {
+        if( request.containsAttribute( "artist" ) ) {
             first_query_token = false;
             qAlbums = "from tbl_cds_albums albums " \
                     "JOIN tbl_cds_artists_albums m ON album.ROWID = m.album_id, " \
                     "JOIN tbl_cds_artists_albums m ON album.ROWID = m.album_id " \
                       "where m.artist_id=?";
         }
-        if( request.parameters.find("letter")!=request.parameters.end() &&
-            request.parameters["letter"].size() == 1 && request.parameters["letter"] != "\"") {
+        if( request.containsAttribute( "letter" ) &&
+            request.attribute( "letter" ).size() == 1 && request.attribute( "letter" ) != "\"") {
             if ( first_query_token ) {
                 first_query_token = false;
                 qAlbums += " where ";
             } else qAlbums += " and ";
-            qAlbums += " letter = \"" + request.parameters["letter"] + "\"";
+            qAlbums += " letter = \"" + request.attribute( "letter" ) + "\"";
         }
-        if( request.parameters.find("name")!=request.parameters.end() ) {
+        if( request.containsAttribute( "name" ) ) {
             if ( first_query_token ) {
                 first_query_token = false;
                 qAlbums += " where ";
             } else qAlbums += " and ";
-            qAlbums += " clean_name like \"" + request.parameters["name"] + "\"";
+            qAlbums += " clean_name like \"" + request.attribute( "name" ) + "\"";
         }
-        if( request.parameters.find("genre")!=request.parameters.end() ) {
+        if( request.containsAttribute( "genre" ) ) {
             if ( first_query_token ) {
                 first_query_token = false;
                 qAlbums += " where ";
             } else qAlbums += " and ";
-            qAlbums += " genre = \"" + request.parameters["genre"] + "\"";
+            qAlbums += " genre = \"" + request.attribute( "genre" ) + "\"";
         }
-        if( request.parameters.find("year")!=request.parameters.end() &&
-            commons::string::is_number( request.parameters["year"] ) ) {
+        if( request.containsAttribute( "year" ) &&
+            commons::string::is_number( request.attribute( "year" ) ) ) {
             if ( first_query_token ) {
                 first_query_token = false;
                 qAlbums += " where ";
             } else qAlbums += " and ";
-            qAlbums += " year = \"" + request.parameters["year"] + "\"";
+            qAlbums += " year = \"" + request.attribute( "year" ) + "\"";
         }
 /*        if( request.parameters.find("order-cryteria")==request.parameters.end() ) {
 
@@ -100,8 +100,8 @@ void ApiAlbumListServlet::do_get( http::HttpRequest & request, ::http::HttpRespo
 
         //create count element
         bool has_count = false;
-        if( request.parameters.find("attributes")==request.parameters.end() ||
-            request.parameters["attributes"].find("count") != std::string::npos ) {
+        if( request.containsAttribute( "attributes" ) ||
+            request.attribute( "attributes" ).find("count") != std::string::npos ) {
 
             if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "select count(*) " + qAlbums );
             has_count = true;
@@ -112,24 +112,24 @@ void ApiAlbumListServlet::do_get( http::HttpRequest & request, ::http::HttpRespo
         }
 
         //set the pager
-        if(request.parameters.find("index")!=request.parameters.end() && commons::string::is_number( request.parameters["index"] ) &&
-           request.parameters.find("limit")!=request.parameters.end() &&  commons::string::is_number( request.parameters["limit"] ) ) {
+        if(request.containsAttribute( "index" ) && commons::string::is_number( request.attribute( "index" ) ) &&
+           request.containsAttribute( "limit" ) &&  commons::string::is_number( request.attribute( "limit" ) ) ) {
             if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "select albums.name, albums.genre, albums.year, albums.ROWID " + qAlbums + " LIMIT ?, ?");
             stmt = db->prepare_statement( "select albums.name, albums.genre, albums.year, albums.ROWID " + qAlbums + " LIMIT ?, ?" );
-            stmt->bind_int(1, commons::string::parse_string<int>(request.parameters["index"]));
-            stmt->bind_int(2, commons::string::parse_string<int>(request.parameters["limit"]));
+            stmt->bind_int(1, commons::string::parse_string<int>(request.attribute( "index" ) ) );
+            stmt->bind_int(2, commons::string::parse_string<int>(request.attribute( "limit" ) ) );
         } else {
             if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "select albums.name, albums.genre, albums.year, albums.ROWID " + qAlbums );
             stmt = db->prepare_statement( "select albums.name, albums.genre, albums.year, albums.ROWID " + qAlbums );
         }
         stmt_artist = db->prepare_statement( QUERY_ARTIST_BY_ALBUM );
 
-        if( request.parameters.find("attributes")==request.parameters.end() ||
-            ( request.parameters["attributes"].find("name") != std::string::npos ||
-              request.parameters["attributes"].find("genre") != std::string::npos ||
-              request.parameters["attributes"].find("year") != std::string::npos ||
-              request.parameters["attributes"].find("id") != std::string::npos ||
-              request.parameters["attributes"].find("artist") != std::string::npos ) ) {
+        if( request.containsAttribute( "attributes" ) ||
+            ( request.attribute( "attributes" ).find("name") != std::string::npos ||
+              request.attribute( "attributes" ).find("genre") != std::string::npos ||
+              request.attribute( "attributes" ).find("year") != std::string::npos ||
+              request.attribute( "attributes" ).find("id") != std::string::npos ||
+              request.attribute( "attributes" ).find("artist") != std::string::npos ) ) {
 
             if( has_count ) response << ",";
             response << "\"albums\":[";
@@ -139,29 +139,29 @@ void ApiAlbumListServlet::do_get( http::HttpRequest & request, ::http::HttpRespo
                 response << ( first_album ? "{" : ",{" );
                 if( first_album ) first_album = false;
                 bool first_attribute = true;
-                if( request.parameters.find("attributes")==request.parameters.end() ||
-                    request.parameters["attributes"].find("name") != std::string::npos ) {
+                if( request.containsAttribute( "attributes" ) ||
+                    request.attribute( "attributes" ).find("name") != std::string::npos ) {
                     if( first_attribute ) first_attribute = false; else response << ",";
                     response << "\"name\":\"" << commons::string::escape_json(stmt->get_string(0)) << "\"";
                 }
-                if( request.parameters.find("attributes")==request.parameters.end() ||
-                    request.parameters["attributes"].find("genre") != std::string::npos ) {
+                if( request.containsAttribute( "attributes" ) ||
+                    request.attribute( "attributes" ).find("genre") != std::string::npos ) {
                     if( first_attribute ) first_attribute = false; else response << ",";
                     response << "\"genre\":\"" << commons::string::escape_json(stmt->get_string(1)) << "\"";
                 }
-                if( request.parameters.find("attributes")==request.parameters.end() ||
-                    request.parameters["attributes"].find("year") != std::string::npos ) {
+                if( request.containsAttribute( "attributes" ) ||
+                    request.attribute( "attributes" ).find("year") != std::string::npos ) {
                     if( first_attribute ) first_attribute = false; else response << ",";
                     response << "\"year\":\"" << commons::string::escape_json(stmt->get_string(2)) << "\"";
                 }
-                if( request.parameters.find("attributes")==request.parameters.end() ||
-                    request.parameters["attributes"].find("id") != std::string::npos ) {
+                if( request.containsAttribute( "attributes" ) ||
+                    request.attribute( "attributes" ).find("id") != std::string::npos ) {
                     if( first_attribute ) first_attribute = false; else response << ",";
                     response << "\"id\":" << std::to_string(stmt->get_int(3));
                 }
 
-                if( request.parameters.find("attributes")==request.parameters.end() ||
-                    request.parameters["attributes"].find("artist") != std::string::npos ) {
+                if( request.containsAttribute( "attributes" ) ||
+                    request.attribute( "attributes" ).find("artist") != std::string::npos ) {
                     response << ", \"artists\":[";
                     stmt_artist->bind_int(1, stmt->get_int(3));
                     bool first_artist = true;
@@ -196,6 +196,6 @@ void ApiAlbumListServlet::do_get( http::HttpRequest & request, ::http::HttpRespo
         throw http::http_status::INTERNAL_SERVER_ERROR;
     }
     response.set_mime_type( ::http::mime::JSON );
-    response.set_status( ::http::http_status::OK );
+    response.status( ::http::http_status::OK );
 }
 }}

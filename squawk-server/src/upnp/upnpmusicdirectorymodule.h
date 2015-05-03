@@ -116,7 +116,6 @@ private:
             if( stmt_albums_artist_count != NULL ) db->release_statement( stmt_albums_artist_count );
             throw;
         }
-        std::cout << "album by artist count: " << album_count << std::endl;
         return album_count;
     }
 

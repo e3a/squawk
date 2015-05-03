@@ -9,6 +9,7 @@
 #include <libxml/parser.h>
 #include <libxml/encoding.h>
 #include <libxml/xmlwriter.h>
+#include <libxml/xmlerror.h>
 
 /**
  *\brief common utilities.
@@ -112,7 +113,7 @@ private:
  */
 class XMLReader {
 public:
-    XMLReader(std::string xml) { //TODO open file directly
+    XMLReader(const std::string & xml) { //TODO open file directly
         doc = xmlReadMemory( xml.c_str(), xml.length(), NULL, NULL, XML_PARSE_RECOVER | XML_PARSE_NOENT );
         if (doc == NULL) {
             throw XmlException( 1, "error: could not parse file." );

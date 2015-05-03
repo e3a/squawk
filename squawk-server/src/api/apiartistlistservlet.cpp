@@ -59,6 +59,6 @@ void ApiArtistListServlet::do_get( http::HttpRequest & request, ::http::HttpResp
         throw;
     }
     response.set_mime_type( ::http::mime::JSON );
-    response.set_status( ::http::http_status::OK );
+    response.status( ::http::http_status::OK );
 }
 }}

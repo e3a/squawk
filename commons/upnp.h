@@ -211,6 +211,10 @@ private:
 };
 
 inline UpnpContentDirectoryRequest parseRequest( std::string request ) {
+    std::cout << "-----------------------------" << std::endl;
+    std::cout << request << std::endl;
+    std::cout << "-----------------------------" << std::endl;
+
     commons::xml::XMLReader reader( request );
     std::vector< commons::xml::Node > root_node = reader.getElementsByName( XML_NS_SOAP, "Body" );
     if( root_node.size() == 1 ) {

@@ -28,28 +28,21 @@
 #include <thread>
 #include <future>
 
-#include "http.h"
-
-#define BUFFER_SIZE 8192
-
 namespace http {
 namespace asio_impl {
 
-connection::connection ( asio::io_service& io_service, http::HttpRequestHandler * httpRequestHandler ) :
-	strand_ ( io_service ), socket_ ( io_service ), timer_ ( io_service ), httpRequestHandler ( httpRequestHandler ) {
+connection::connection ( asio::io_service & io_service, http::HttpRequestHandler * httpRequestHandler ) :
+	strand_ ( io_service ), socket_ ( io_service ), timer_ ( io_service ), httpRequestHandler ( httpRequestHandler ),
+	httpResponse_ ( http::response_ptr ( new http::HttpResponse() ) ) {
 
-	reply_ = new ::http::HttpResponse(); //TODO no new needed
-	std::cout << "create new connection." << std::endl;
-
+	std::cout << "create new connection." << std::endl; //TODO
 }
 connection::~connection() {
-	std::cout << "delete connection." << std::endl;
+	std::cout << "delete connection." << std::endl; //TODO
 
 	if ( socket_.is_open() ) {
 		socket_.close();
 	}
-
-	delete reply_;
 }
 
 asio::ip::tcp::socket & connection::socket() {
@@ -60,84 +53,97 @@ void connection::start() {
 	/*      timer_.expires_from_now( std::chrono::seconds( 30 ) );
 	  timer_.async_wait( std::bind( &connection::timer_expired, shared_from_this(), std::placeholders::_1 ) ); */
 
-	socket_.async_read_some ( asio::buffer ( buffer_ ), strand_.wrap (
-								  std::bind ( &connection::handle_read, shared_from_this(),
+	socket_.async_read_some ( asio::buffer ( buffer_ ),
+							  std::bind ( &connection::handle_read_header, shared_from_this(),
 										  std::placeholders::_1,
-										  std::placeholders::_2 ) ) );
+										  std::placeholders::_2 ) );
 }
 
-void connection::handle_read ( const asio::error_code& e, std::size_t bytes_transferred ) {
-	std::cout << "handle read" << std::endl;
-
+void connection::handle_read_header ( const asio::error_code& e, std::size_t bytes_transferred ) {
 	if ( !e ) {
-		http::PARSE_STATE result = ::http::HttpParser::parse_http_request ( request_, buffer_, bytes_transferred );
+		size_t result = _http_parser.parse_http_request ( request_, buffer_, bytes_transferred );
 		request_.remoteIp() = socket_.remote_endpoint().address().to_string();
 
-		if ( result == http::PARSE_STATE::TRUE ) {
+		if ( result > 0 ) {
 
-			httpRequestHandler->handle_request ( request_, *reply_,  std::function<void() > ( std::bind ( &connection::send_response, shared_from_this() ) ) );
+			if ( result < BUFFER_SIZE && result < bytes_transferred ) {
 
-			char * buffer = new char[BUFFER_SIZE];
+				//copy the body
+				request_.content ( buffer_, result, ( bytes_transferred - result ) );
+			}
 
-			std::vector< asio::const_buffer > buffers;
-			std::string response_header = reply_->get_message_header();
-			buffers.push_back ( asio::buffer ( response_header.c_str(), response_header.size() ) );
+			if ( request_.containsParameter ( header::CONTENT_LENGTH ) &&
+					request_.requestBody().size() < commons::string::parse_string<size_t> ( request_.parameter ( header::CONTENT_LENGTH ) ) ) {
 
-			asio::async_write ( socket_, buffers,
-								strand_.wrap (
-									std::bind ( &connection::handle_write, shared_from_this(), buffer, std::placeholders::_1, std::placeholders::_2 ) ) );
+				socket_.async_read_some ( asio::buffer ( buffer_ ), strand_.wrap (
+											  std::bind ( &connection::handle_read_body, shared_from_this(),
+													  std::placeholders::_1,
+													  std::placeholders::_2 ) ) );
 
-		} else if ( result == http::PARSE_STATE::FALSE ) {
-			//TODO HttpResponse::stock_reply(*reply_, http_status::BAD_REQUEST);
-			std::cout << "ERROR: can not READ request" << std::endl;
-			std::vector< asio::const_buffer > buffers;
-			std::string response_header = reply_->get_message_header();
-			buffers.push_back ( asio::buffer ( response_header.c_str(), response_header.size() ) );
-			/* TODO std::string response_body = reply_->get_message_body(); */
-			/* buffers.push_back( asio::buffer(response_body.c_str(), response_body.size()) ); */
+			} else {
+
+				httpRequestHandler->handle_request (
+					request_, *httpResponse_.get(),  std::function<void() > ( std::bind ( &connection::send_response, shared_from_this() ) ) );
+			}
 
 		} else {
-			std::cout << "READ MORE" << std::endl;
-			socket_.async_read_some ( asio::buffer ( buffer_ ), strand_.wrap (
-										  std::bind ( &connection::handle_read, shared_from_this(),
+			//read the rest of the headers
+			socket_.async_read_some ( asio::buffer ( buffer_ ),
+									  std::bind ( &connection::handle_read_header, shared_from_this(),
 												  std::placeholders::_1,
-												  std::placeholders::_2 ) ) );
+												  std::placeholders::_2 ) );
 		}
 
-	} //TODO: what to do on error case?
+	} else { _http_parser.reset(); } //on error
+}
+void connection::handle_read_body ( const asio::error_code & e, std::size_t bytes_transferred ) {
 
-	// If an error occurs then no new asynchronous operations are started. This
-	// means that all shared_ptr references to the connection object will
-	// disappear and the object will be destroyed automatically after this
-	// handler returns. The connection class's destructor closes the socket.
+	if ( !e ) {
+		body_read += bytes_transferred;
+		request_ << std::string ( buffer_.data(), bytes_transferred );
+
+		if ( commons::string::parse_string<size_t> ( request_.parameter ( header::CONTENT_LENGTH ) ) > body_read ) {
+
+			socket_.async_read_some ( asio::buffer ( buffer_ ), strand_.wrap (
+										  std::bind ( &connection::handle_read_body, shared_from_this(),
+												  std::placeholders::_1,
+												  std::placeholders::_2 ) ) );
+
+		} else {
+
+			httpRequestHandler->handle_request (
+				request_, *httpResponse_.get(),  std::function<void() > ( std::bind ( &connection::send_response, shared_from_this() ) ) );
+		}
+
+	} else { _http_parser.reset(); } //on error
 }
 
 void connection::send_response() {
-	std::cout << "send_response callback" << std::endl;
+	_http_parser.reset();
+	asio::async_write ( socket_, asio::buffer ( httpResponse_->get_message_header() ), strand_.wrap (
+							std::bind ( &connection::handle_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2 ) ) );
 }
 
-void connection::handle_write ( char * buffer, const asio::error_code& e, int ) {
+void connection::handle_write ( const asio::error_code & e, int ) {
 	if ( !e ) {
-		int next_size = reply_->fill_buffer ( buffer, BUFFER_SIZE );
+		int next_size = httpResponse_->fill_buffer ( buffer_.data(), BUFFER_SIZE );
 
 		if ( next_size > 0 ) {
 
 			//write next chunk
-			asio::async_write ( socket_, asio::buffer ( buffer, next_size ),
+			asio::async_write ( socket_, asio::buffer ( buffer_, next_size ),
 								strand_.wrap (
-									std::bind ( &connection::handle_write, shared_from_this(), buffer, std::placeholders::_1, std::placeholders::_2 ) ) );
+									std::bind ( &connection::handle_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2 ) ) );
 
 		} else if ( request_.isPersistent() ) { //TODO case sensitive
 
-			//persistend connection, restart
-			delete[] buffer;
-			reply_->reset();
+			std::cout << "handle write: persistent" << std::endl;
+			httpResponse_->reset();
 			start();
 
 		} else {
 
 			std::cout << "handle write: close" << std::endl;
-			delete[] buffer;
 			// Initiate graceful connection closure.
 			asio::error_code ignored_ec;
 			socket_.shutdown ( asio::ip::tcp::socket::shutdown_both, ignored_ec );
@@ -146,11 +152,6 @@ void connection::handle_write ( char * buffer, const asio::error_code& e, int ) 
 	} else {
 		std::cerr << "error in handle_write: " << e.message() << std::endl;
 	}
-
-	// No new asynchronous operations are started. This means that all shared_ptr
-	// references to the connection object will disappear and the object will be
-	// destroyed automatically after this handler returns. The connection class's
-	// destructor closes the socket.
 }
 void connection::timer_expired ( const asio::error_code & error ) {
 	if ( !error ) {
@@ -161,5 +162,5 @@ void connection::timer_expired ( const asio::error_code & error ) {
 		std::cout << "timer expired." << error.message() << std::endl;
 	}
 }
-}
-}
+} //asio_impl
+} //http

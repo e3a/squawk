@@ -1,5 +1,6 @@
 *~
 *.orig
+*.old
 build
 build/**/* 
 .kdev4/

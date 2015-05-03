@@ -120,6 +120,6 @@ void ApiAlbumItemServlet::do_get(::http::HttpRequest & request, ::http::HttpResp
         throw ::http::http_status::BAD_REQUEST;
     }
     response.set_mime_type( ::http::mime::JSON );
-    response.set_status( ::http::http_status::OK );
+    response.status( ::http::http_status::OK );
 }
 }}

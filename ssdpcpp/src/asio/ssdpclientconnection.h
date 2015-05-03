@@ -52,7 +52,7 @@ private:
 	int multicast_port;
 	asio::ip::udp::endpoint sender_endpoint;
 
-	enum { max_length = 8192 };
+    enum { max_length = http::BUFFER_SIZE };
 	std::array< char, max_length > data;
 
 	/* the runner thread */

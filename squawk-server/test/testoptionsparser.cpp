@@ -152,6 +152,7 @@ TEST(SquawkParseOptions, TestDefaultOptions) {
 }
 
 TEST(SquawkParseOptions, TestMergedOptions) {
+
     const char * options[4];
     options[0] = "--http-ip";
     options[1] = "127.0.0.1";
@@ -161,15 +162,15 @@ TEST(SquawkParseOptions, TestMergedOptions) {
     squawk::SquawkConfig config;
 
     ASSERT_TRUE(config.parse(4, options));
-    config.load("../../squawk-server/config/squawk.xml");
+    config.load(std::string( CMAKE_SOURCE_DIR ) + "squawk-server/config/squawk.xml");
     ASSERT_TRUE(config.validate());
 
     EXPECT_EQ(std::string("127.0.0.1"), config.httpAddress());
 
     EXPECT_EQ(std::string("/home/media"), config.mediaDirectories()[0] );
     EXPECT_EQ(8080, config.httpPort());
-    EXPECT_EQ(std::string("../docroot"), config.docRoot() );
-    EXPECT_EQ(std::string("/var/lib/squawk/squawk.db"), config.databaseFile() );
+    EXPECT_EQ(std::string("/usr/local/var/lib/squawk/www"), config.docRoot() );
+    EXPECT_EQ(std::string("/usr/local/var/lib/squawk/squawk.db"), config.databaseFile() );
     EXPECT_EQ(std::string("/var/tmp/squawk"), config.tmpDirectory() );
     EXPECT_EQ(std::string("0.0.0.0"), config.localListenAddress() );
     EXPECT_EQ(std::string("239.255.255.250"), config.multicastAddress() );

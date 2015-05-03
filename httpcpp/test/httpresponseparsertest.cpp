@@ -18,7 +18,11 @@
 #include <string>
 #include <tuple>
 #include <vector>
+
 #include "http.h"
+#include "httpresponseparser.h"
+
+
 /* #include "http-utils.h" */
 #include <gtest/gtest.h>
 
@@ -70,25 +74,26 @@ TEST ( HttpResponseParser, ParseSimpleSSDPResponse ) {
 		0x0a
 	};
 
-	std::array<char, 8192> request;
+	std::array<char, http::BUFFER_SIZE> request;
 
 	for ( size_t i = 0; i < sizeof ( _request ); i++ ) {
 		request[i] = _request[i];
 	}
 
 	http::HttpResponse http_response;
-	http::PARSE_STATE state = http::HttpParser::parse_http_response ( http_response, request, sizeof ( _request ) );
-	EXPECT_EQ ( http::PARSE_STATE::TRUE, state );
-	EXPECT_EQ ( http::http_status::OK, http_response.status );
-	EXPECT_EQ ( "HTTP", http_response.protocol );
+	http::HttpResponseParser httpParser;
+	size_t state = httpParser.parse_http_response ( http_response, request, sizeof ( _request ) );
+	EXPECT_EQ ( sizeof ( _request ), state );
+	EXPECT_EQ ( http::http_status::OK, http_response.status() );
+	EXPECT_EQ ( "HTTP", http_response.protocol() );
 	EXPECT_EQ ( 1, http_response.http_version_major );
 	EXPECT_EQ ( 1, http_response.http_version_minor );
 
-	EXPECT_EQ ( "max-age=1800", http_response.get_header ( "Cache-Control" ) );
-	EXPECT_EQ ( "Mon, 06 Apr 2015 14:14:49 GMT", http_response.get_header ( "Date" ) );
-	EXPECT_EQ ( "", http_response.get_header ( "Ext" ) );
-	EXPECT_EQ ( "http://192.168.0.7:9000/plugins/UPnP/MediaServer.xml", http_response.get_header ( "Location" ) );
-	EXPECT_EQ ( "Linux/x86_64-linux UPnP/1.0 DLNADOC/1.50 LogitechMediaServer/7.8.0/1395409907", http_response.get_header ( "Server" ) );
-	EXPECT_EQ ( "upnp:rootdevice", http_response.get_header ( "St" ) );
-	EXPECT_EQ ( "uuid:6CA0F46C-7DDD-4476-98F5-7E6C9860F484::upnp:rootdevice", http_response.get_header ( "Usn" ) );
+	EXPECT_EQ ( "max-age=1800", http_response.parameter ( "Cache-Control" ) );
+	EXPECT_EQ ( "Mon, 06 Apr 2015 14:14:49 GMT", http_response.parameter ( "Date" ) );
+	EXPECT_EQ ( "", http_response.parameter ( "Ext" ) );
+	EXPECT_EQ ( "http://192.168.0.7:9000/plugins/UPnP/MediaServer.xml", http_response.parameter ( "Location" ) );
+	EXPECT_EQ ( "Linux/x86_64-linux UPnP/1.0 DLNADOC/1.50 LogitechMediaServer/7.8.0/1395409907", http_response.parameter ( "Server" ) );
+	EXPECT_EQ ( "upnp:rootdevice", http_response.parameter ( "St" ) );
+	EXPECT_EQ ( "uuid:6CA0F46C-7DDD-4476-98F5-7E6C9860F484::upnp:rootdevice", http_response.parameter ( "Usn" ) );
 }

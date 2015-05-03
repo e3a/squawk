@@ -3,10 +3,12 @@ cmake_minimum_required(VERSION 2.8.9)
 
 project(httpcpp)
 
-message( ${PROJECT_SOURCE_DIR}/src/asio )
-include_directories(${SQUAWK_INCLUDES} ${LOG4CXX_INCLUDE_DIR} ${PCREPP_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/src/asio)
+find_package(Boost REQUIRED)
 
-set(SOURCES src/httpparser.cpp src/httpservlet.cpp src/webserver.cpp src/httpresponse.cpp
+message( ${PROJECT_SOURCE_DIR}/src/asio )
+include_directories(${SQUAWK_INCLUDES} ${LOG4CXX_INCLUDE_DIR} ${PCREPP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/src/asio)
+
+set(SOURCES src/httprequestparser.cpp src/httpresponseparser.cpp src/httpservlet.cpp src/webserver.cpp src/httpresponse.cpp
             src/httprequest.cpp
             src/asio/asioconnection.cpp src/asio/asioserver.cpp src/asio/httpserverfactory.cpp
             src/servlet/fileservlet.cpp

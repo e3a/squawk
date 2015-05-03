@@ -21,94 +21,139 @@
 
 namespace http  {
 HttpRequest::HttpRequest ( const std::string & path ) :
-	_method ( std::string ( "GET" ) ), _uri ( path ), _protocol ( "HTTP" ), body_size ( 0 ),
-	_remote_ip ( std::string ( "" ) ), _http_version_major ( 1 ), _http_version_minor ( 1 ),
-	request_lines ( std::map< std::string, std::string >() ),
-	parameters ( std::map< std::string, std::string >() ) {
+	method_ ( std::string ( method::GET ) ), uri_ ( path ), protocol_ ( "HTTP" ), remote_ip_ ( std::string ( "" ) ),
+	body_size_ ( 0 ), http_version_major_ ( 1 ), http_version_minor_ ( 1 ),
+	parameters_ ( std::map< std::string, std::string >() ),
+	attributes_ ( std::map< std::string, std::string >() ) {
 
-	out_body = std::shared_ptr< std::istream > ( new std::stringstream() );
+	out_body_ = std::shared_ptr< std::istream > ( new std::stringstream() );
 }
 
 HttpRequest::HttpRequest() :
-	_method ( std::string ( "GET" ) ), _uri ( "" ), _protocol ( "HTTP" ), body_size ( 0 ),
-	_remote_ip ( std::string ( "" ) ), _http_version_major ( 1 ), _http_version_minor ( 1 ),
-	request_lines ( std::map< std::string, std::string >() ),
-	parameters ( std::map< std::string, std::string >() ) {
+	method_ ( std::string ( method::GET ) ), uri_ ( "" ), protocol_ ( "HTTP" ), remote_ip_ ( std::string ( "" ) ),
+	body_size_ ( 0 ), http_version_major_ ( 1 ), http_version_minor_ ( 1 ),
+	parameters_ ( std::map< std::string, std::string >() ),
+	attributes_ ( std::map< std::string, std::string >() ) {
 
-	out_body = std::shared_ptr< std::istream > ( new std::stringstream() );
+	out_body_ = std::shared_ptr< std::istream > ( new std::stringstream() );
 }
 
 void HttpRequest::method ( const std::string & method ) {
-	_method = method;
+	method_ = method;
 }
 std::string HttpRequest::method() const {
-	return _method;
+	return method_;
 }
 void HttpRequest::protocol ( const std::string & protocol ) {
-	_protocol = protocol;
+	protocol_ = protocol;
 }
 std::string HttpRequest::protocol() const {
-	return _protocol;
+	return protocol_;
 }
 std::string HttpRequest::uri() const {
-	return _uri;
+	return uri_;
 }
 void HttpRequest::uri ( const std::string & uri ) {
-	_uri = uri;
+	uri_ = uri;
 }
 void HttpRequest::httpVersionMajor ( const int & http_version_major ) {
-	_http_version_major = http_version_major;
+	http_version_major_ = http_version_major;
 }
 int HttpRequest::httpVersionMajor() const {
-	return _http_version_major;
+	return http_version_major_;
 }
 void HttpRequest::httpVersionMinor ( const int & http_version_minor ) {
-	_http_version_minor = http_version_minor;
+	http_version_minor_ = http_version_minor;
 }
 int HttpRequest::httpVersionMinor() const {
-	return _http_version_minor;
+	return http_version_minor_;
 }
 std::string HttpRequest::remoteIp() const {
-	return _remote_ip;
+	return remote_ip_;
 }
 void HttpRequest::remoteIp ( const std::string & remote_ip ) {
-	_remote_ip = remote_ip;
+	remote_ip_ = remote_ip;
 }
 void HttpRequest::requestBody ( const size_t & size, std::shared_ptr< std::istream > request_body ) {
-	body_size = size;
-	out_body = request_body;
+	body_size_ = size;
+	out_body_ = request_body;
 }
 const std::string HttpRequest::requestBody() const {
-	return ( *std::dynamic_pointer_cast<std::stringstream> ( out_body ) ).str();
+	return ( *std::dynamic_pointer_cast<std::stringstream> ( out_body_ ) ).str();
 }
 bool HttpRequest::isPersistent() { //TODO check standard
-	return _http_version_major == 1 && _http_version_minor == 1 &&
-		   request_lines.find ( HTTP_HEADER_CONNECTION ) != request_lines.end() &&
-		   request_lines[ HTTP_HEADER_CONNECTION ] == "keep-alive";
+	return http_version_major_ == 1 && http_version_minor_ == 1 &&
+		   parameters_.find ( header::CONNECTION ) != parameters_.end() &&
+		   parameters_[ header::CONNECTION ] == "keep-alive";
 }
 void HttpRequest::setPersistend ( bool persistent ) {
 	if ( persistent )
-	{ request_lines[HTTP_HEADER_CONNECTION] = "keep-alive"; }
+	{ parameters_[header::CONNECTION] = "keep-alive"; }
 
 	else
-	{ request_lines[HTTP_HEADER_CONNECTION] = "close"; }
+	{ parameters_[header::CONNECTION] = "close"; }
+}
+void HttpRequest::parameter ( const std::string & name, const std::string & value ) {
+	parameters_[name] = value;
+}
+std::string HttpRequest::parameter ( const std::string & name ) {
+	return parameters_[name];
+}
+bool HttpRequest::containsParameter ( const std::string & name ) {
+	return parameters_.find ( name ) != parameters_.end();
+}
+std::vector<std::string> HttpRequest::parameterNames() {
+	std::vector< std::string > result;
+
+	for ( auto r : parameters_ )
+	{ result.push_back ( r.first ); }
+
+	return result;
+}
+std::map< std::string, std::string > HttpRequest::parameterMap() {
+	return parameters_;
+}
+void HttpRequest::attribute ( const std::string & name, const std::string & value ) {
+	attributes_[name] = value;
+}
+std::string HttpRequest::attribute ( const std::string & name ) {
+	return attributes_[name];
+}
+bool HttpRequest::containsAttribute ( const std::string & name ) {
+	return attributes_.find ( name ) != attributes_.end();
+}
+std::vector<std::string> HttpRequest::attributeNames() {
+	std::vector< std::string > result;
+
+	for ( auto r : attributes_ )
+	{ result.push_back ( r.first ); }
+
+	return result;
+}
+std::map< std::string, std::string > HttpRequest::attributeMap() {
+	return attributes_;
+}
+void HttpRequest::content ( std::array< char, BUFFER_SIZE > & body, const size_t & index, const size_t & count ) {
+	for ( size_t i = index; i < ( index + count ); i++ ) {
+		( *std::dynamic_pointer_cast<std::stringstream> ( out_body_ ) ) << body[i];
+	}
 }
 void HttpRequest::operator<< ( const std::string & in ) {
-	( *std::dynamic_pointer_cast<std::stringstream> ( out_body ) ) << in;
-	body_size += in.size();
+	( *std::dynamic_pointer_cast<std::stringstream> ( out_body_ ) ) << in;
+	body_size_ += in.size();
 }
 std::ostream& operator<< ( std::ostream& out, const http::HttpRequest & request ) {
-	out << request._method << " " << request._uri << " " << request._http_version_major << "." << request._http_version_minor << "\n";
+	out << request.method_ << " " << request.uri_ << " " << request.http_version_major_ << "." << request.http_version_minor_ << "\n";
 	out << "RequestLines:\n";
 
-	for ( auto request_line : request.request_lines ) {
+	for ( auto request_line : request.parameters_ ) {
 		out << "\t" << request_line.first << ": " << request_line.second << "\n";
 	}
 
-	if ( request.parameters.size() > 0 ) {
+	if ( request.attributes_.size() > 0 ) {
 		out << "Parameters:\n";
 
-		for ( auto parameter : request.parameters ) {
+		for ( auto parameter : request.attributes_ ) {
 			out << "\t" << parameter.first << ": " << parameter.second << "\n";
 		}
 	}

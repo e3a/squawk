@@ -28,7 +28,7 @@ namespace api {
 
 log4cxx::LoggerPtr ApiAlbumsLetterServlet::logger(log4cxx::Logger::getLogger("squawk.api.ApiAlbumsLetterServlet"));
 
-void ApiAlbumsLetterServlet::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
+void ApiAlbumsLetterServlet::do_get(::http::HttpRequest & /* request */, ::http::HttpResponse & response) {
     if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "get api albums letter.");
 
     squawk::db::Sqlite3Statement * stmt_letter = NULL;
@@ -64,6 +64,6 @@ void ApiAlbumsLetterServlet::do_get(::http::HttpRequest & request, ::http::HttpR
         throw;
     }
     response.set_mime_type( ::http::mime::JSON );
-    response.set_status( ::http::http_status::OK );
+    response.status( ::http::http_status::OK );
 }
 }}

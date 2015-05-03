@@ -19,33 +19,29 @@
 
 #include "http.h"
 
-#include <future>
-#include <iostream>
-#include <thread>
-
 #include "asio/httpclientconnection.h"
+
+#include "http.h"
 
 namespace http {
 
 HttpClient::HttpClient ( const std::string & ip, const int & port, const std::string & uri ) :
-	_ip ( ip ), _port ( port ), _uri ( uri ), connection ( ip ) {}
-
-/* HttpClient::HttpClient( const std::string & url ) :
-    _ip(parseIp(url)), _port(parsePort(url)), _uri(parsePath(url) ) {} */
+	_ip ( ip ), _port ( port ), _uri ( uri ), connection ( std::unique_ptr<IHttpClientConnection> ( new HttpClientConnection ( ip ) ) ) {}
 
 HttpClient::~HttpClient() {}
 
-void HttpClient::invoke ( HttpRequest & request ) {
+void HttpClient::invoke ( HttpRequest & request, std::function<void ( HttpResponse& ) > callback ) {
 	std::cout << "HTTPclient  invoke" << std::endl;
 
 	if ( request.isPersistent() ) {
-		request.request_lines[HTTP_HEADER_CONNECTION] = "keep-alive";
+		request.parameters_[header::CONNECTION] = "keep-alive";
 
 	} else {
-		request.request_lines[HTTP_HEADER_CONNECTION] = "close";
+		request.parameters_[header::CONNECTION] = "close";
 	}
 
-	connection.start ( request.method(), request.uri(), request.request_lines, request.parameters, request.body_size, request.out_body );
+	connection->start ( &request, &response, callback );
+//	callback ( response );
 }
 std::string HttpClient::parseIp ( const std::string & url ) {
 	if ( url.find ( "http://" ) == 0 ) {

@@ -6,7 +6,9 @@ project(squawk-server)
 find_package(GoogleTest REQUIRED)
 
 # find_package(Flac++ REQUIRED)
-# set(LIBS ${LIBS} ${FLAC++_LIBRARIES})
+find_package(Poppler REQUIRED cpp)
+message( ${POPPLER_LIBRARIES} )
+set(LIBS ${LIBS} ${POPPLER_LIBRARIES})
 
 # find_package(Lame REQUIRED)
 # set(LIBS ${LIBS} ${LAME_LIBRARY})
@@ -16,12 +18,13 @@ find_package(GoogleTest REQUIRED)
 set(LIBS ${CMAKE_BINARY_DIR}/httpcpp/libhttpcpp.a ${LIBS})
 set(LIBS ${CMAKE_BINARY_DIR}/ssdpcpp/libssdpcpp.a ${LIBS})
 
-include_directories(${ROOT} ${SQUAWK_INCLUDES} includes)
+include_directories(${ROOT} ${SQUAWK_INCLUDES} ${POPPLER_INCLUDE_DIRS} includes)
 #include_directories(${ROOT} ${SQLITE3_INCLUDE_DIR}
 #  ${FLAC++_INCLUDE_DIR} ${TINYXML_INCLUDE_DIR} ${LIBXML2_INCLUDE_DIR} ${LOG4CXX_INCLUDE_DIR}
 #  ${PCREPP_INCLUDE_DIR} ${SQUAWK_INCLUDES} ${LAME_INCLUDE_DIR} includes)
 #link_directories(${Boost_LIBRARY_DIR})
 
+set(UTILS src/utils/pdfparser.cpp)
 set(SQUAWK src/squawkconfig.cpp src/loggereventlistener.cpp)
 set(DATABASE src/db/sqlite3statement.cpp src/db/sqlite3database.cpp)
 set(MEDIA src/media/mediadao.cpp src/media/fileparser.cpp)
@@ -34,7 +37,7 @@ set(UPNP src/upnp/upnpconnectionmanager.cpp src/upnp/upnpmediaservlet.cpp src/up
          src/upnp/upnpmusicdirectorymodule.cpp src/upnp/upnpvideodirectory.cpp src/upnp/upnpfiledirectory.cpp src/upnp/upnpimagedirectory.cpp )
 #         src/upnp/upnpwriter.cpp )
 
-set(SOURCES ${SQUAWK} ${DATABASE} ${MEDIA} ${HTTP_SERVER} ${API} ${SERVLET} ${UPNP})
+set(SOURCES ${UTILS} ${SQUAWK} ${DATABASE} ${MEDIA} ${HTTP_SERVER} ${API} ${SERVLET} ${UPNP})
 
 add_executable(squawk src/squawkserver.cpp ${SOURCES})
 target_link_libraries(squawk ${LIBS})

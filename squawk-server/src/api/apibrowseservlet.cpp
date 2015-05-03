@@ -80,9 +80,9 @@ void ApiBrowseServlet::do_get( http::HttpRequest & request, ::http::HttpResponse
             throw http::http_status::INTERNAL_SERVER_ERROR;
         }
         response.set_mime_type( ::http::mime::JSON );
-        response.set_status( ::http::http_status::OK );
+        response.status( ::http::http_status::OK );
     } else {
-        response.set_status( ::http::http_status::NOT_FOUND );
+        response.status( ::http::http_status::NOT_FOUND );
     }
 }
 }}

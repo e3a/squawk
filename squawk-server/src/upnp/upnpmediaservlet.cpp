@@ -68,22 +68,22 @@ void UpnpMediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpRespon
         }
 
         // Fill out the reply to be sent to the client.
-        if( request.request_lines.find( "Range" ) != request.request_lines.end() ) {
+        if( request.containsParameter( http::header::RANGE ) ) {
             std::cout << "get Range" << std::endl;
-            response.set_status( http::http_status::PARTIAL_CONTENT );
-            std::tuple<int, int> range = http::parseRange( request.request_lines["Range"] );
+            response.status( http::http_status::PARTIAL_CONTENT );
+            std::tuple<int, int> range = http::utils::parseRange( request.parameter( http::header::RANGE ) );
             std::cout << "get range: " << std::get<0>(range) << "-" << std::get<1>(range) << std::endl;
-            response.add_header( "Content-Range", "bytes " + std::to_string( std::get<0>(range) ) + "-" +
+            response.parameter( "Content-Range", "bytes " + std::to_string( std::get<0>(range) ) + "-" +
                                  ( std::get<1>(range) == -1 ? std::to_string( filestatus.st_size - 1 ) :
                                                               std::to_string( std::get<1>(range) - 1 ) ) +
                                    "/" + std::to_string( filestatus.st_size ) );
-            response.add_header( HTTP_HEADER_CONTENT_LENGTH, ( std::get<1>(range) == -1 ? std::to_string( filestatus.st_size - std::get<0>(range) ) :
+            response.parameter( http::header::CONTENT_LENGTH, ( std::get<1>(range) == -1 ? std::to_string( filestatus.st_size - std::get<0>(range) ) :
                                                                                           std::to_string( std::get<1>(range) - std::get<0>(range) ) ) );
             is->seekg( std::get<0>( range ), std::ios_base::beg ); //TODO check if range is available
 
         } else {
-            response.add_header( HTTP_HEADER_CONTENT_LENGTH, std::to_string( filestatus.st_size ) );
-            response.set_status( http::http_status::OK );
+            response.parameter( http::header::CONTENT_LENGTH, std::to_string( filestatus.st_size ) );
+            response.status( http::http_status::OK );
         }
     //    response.add_header( HTTP_HEADER_CONTENT_DISPOSITION, "inline; filename= \"" + filename + "\"" );
         if( ::http::mime::mime_type(extension )== http::mime::AVI || ::http::mime::mime_type(extension) == http::mime::MKV )
@@ -137,9 +137,9 @@ void UpnpMediaServlet::do_head( ::http::HttpRequest & request, ::http::HttpRespo
         delete is;
 
         // Fill out the reply to be sent to the client.
-        response.add_header( HTTP_HEADER_CONTENT_LENGTH, std::to_string( filestatus.st_size ) );
+        response.parameter( http::header::CONTENT_LENGTH, std::to_string( filestatus.st_size ) );
     //    response.add_header( HTTP_HEADER_CONTENT_DISPOSITION, "inline; filename= \"" + filename + "\"" );
-        response.set_status( http::http_status::OK );
+        response.status( http::http_status::OK );
 
         if( ::http::mime::mime_type(extension )== http::mime::AVI || ::http::mime::mime_type(extension) == http::mime::MKV )
             response.set_mime_type( http::mime::VIDEOMPEG );
@@ -161,8 +161,8 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
     LOG4CXX_TRACE( logger, "get media file: " << request )
 
     int start = 0, end = 0;
-    if(request.request_lines.find("Range") != request.request_lines.end() ) {
-        std::string str_range = request.request_lines["Range"];
+    if(request.containsParameter( "Range" ) ) {
+        std::string str_range = request.parameter( "Range" );
         if(commons::string::starts_with(str_range, "bytes=")) {
             str_range = str_range.substr(6, str_range.size());
             size_t dash_pos = str_range.find_first_of("-");
@@ -200,16 +200,16 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
 
             //Add the DLNA headers if requested
             //TODO correct them ;)
-            if(request.request_lines.find("Getcontentfeatures.dlna.org") != request.request_lines.end() &&
-               request.request_lines["Getcontentfeatures.dlna.org"] == "1") {
-                response.add_header("transferMode.dlna.org", "Streaming");
-                response.add_header("Accept-Ranges", "bytes");
+            if(request.containsParameter( "Getcontentfeatures.dlna.org" ) &&
+               request.parameter( "Getcontentfeatures.dlna.org" ) == "1") {
+                response.parameter("transferMode.dlna.org", "Streaming");
+                response.parameter("Accept-Ranges", "bytes");
                 // response.add_header("realTimeInfo.dlna.org", "DLNA.ORG_TLAG=*");
-                response.add_header("contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000");
+                response.parameter("contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000");
                 // response.add_header("Connection", "close");
-                response.add_header("EXT", "");
+                response.parameter("EXT", "");
             }
-            response.add_header("Server", "Debian/wheezy/sid DLNADOC/1.50 UPnP/1.0 Squawk/0.1");
+            response.parameter("Server", "Debian/wheezy/sid DLNADOC/1.50 UPnP/1.0 Squawk/0.1");
         } catch( squawk::db::DbException & e ) {
             if( stmt_song != NULL ) {
                 db->release_statement( stmt_song );

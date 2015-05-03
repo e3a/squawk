@@ -28,7 +28,7 @@ namespace upnp {
 
 log4cxx::LoggerPtr UpnpXmlDescription::logger(log4cxx::Logger::getLogger("squawk.upnp.UpnpXmlDescription"));
 
-void UpnpXmlDescription::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
+void UpnpXmlDescription::do_get(::http::HttpRequest&, ::http::HttpResponse & response) {
 
     commons::xml::XMLWriter writer;
     commons::xml::Node root_node = writer.element( "root" );
@@ -127,6 +127,6 @@ void UpnpXmlDescription::do_get(::http::HttpRequest & request, ::http::HttpRespo
 
     response << writer.str();
     response.set_mime_type( ::http::mime::XML );
-    response.set_status( ::http::http_status::OK );
+    response.status( ::http::http_status::OK );
 }
 }}

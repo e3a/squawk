@@ -30,7 +30,7 @@ namespace api {
 
 log4cxx::LoggerPtr ApiVideoListServlet::logger(log4cxx::Logger::getLogger("squawk.api.ApiVideoListServlet"));
 
-void ApiVideoListServlet::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
+void ApiVideoListServlet::do_get(::http::HttpRequest&, ::http::HttpResponse & response) {
 
     squawk::db::Sqlite3Statement * stmt_video = NULL;
     response << "[";
@@ -61,6 +61,6 @@ void ApiVideoListServlet::do_get(::http::HttpRequest & request, ::http::HttpResp
     }
 
     response.set_mime_type( ::http::mime::JSON );
-    response.set_status( ::http::http_status::OK );
+    response.status( ::http::http_status::OK );
 }
 }}

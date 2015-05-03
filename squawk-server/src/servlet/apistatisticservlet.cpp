@@ -28,7 +28,7 @@ namespace servlet {
 
 log4cxx::LoggerPtr ApiStatisticServlet::logger(log4cxx::Logger::getLogger("squawk.servlet.ApiStatisticServlet"));
 
-void ApiStatisticServlet::do_get( http::HttpRequest & request, ::http::HttpResponse & response ) {
+void ApiStatisticServlet::do_get( http::HttpRequest&, ::http::HttpResponse & response ) {
     response << "{";
     squawk::db::Sqlite3Statement * stmt_albums = NULL;
     squawk::db::Sqlite3Statement * stmt_artists = NULL;
@@ -75,6 +75,6 @@ void ApiStatisticServlet::do_get( http::HttpRequest & request, ::http::HttpRespo
         throw;
     }
     response.set_mime_type( ::http::mime::JSON );
-    response.set_status( ::http::http_status::OK );
+    response.status( ::http::http_status::OK );
 }
 }}

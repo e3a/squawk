@@ -80,30 +80,11 @@ void server::run() {
 
 
 void server::do_accept ( const std::error_code& e ) {
-	// start changed for theading
 	if ( !e ) {
 		new_connection_->start();
 	}
 
 	start_accept();
-	// end changed for theading
-
-
-	/*
-	acceptor_.async_accept(socket_, [this](std::error_code ec) {
-	  // Check whether the server was stopped by a signal before this
-	  // completion handler had a chance to run.
-	  if (!acceptor_.is_open()) {
-	    return;
-	  }
-
-	  if (!ec) {
-	    connection_manager_.start(std::make_shared<connection>(
-	        std::move(socket_), connection_manager_, httpRequestHandler));
-	  }
-
-	  do_accept();
-	}); */
 }
 
 void server::start_accept() {

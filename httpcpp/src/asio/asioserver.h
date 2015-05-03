@@ -24,7 +24,6 @@
 #include <string>
 #include <system_error>
 #include "asioconnection.h"
-// #include "connection_manager.h"
 
 #include "http.h"
 
@@ -36,11 +35,17 @@ public:
 	server ( const server& ) = delete;
 	server& operator= ( const server& ) = delete;
 
-	/// Construct the server to listen on the specified TCP address and port, and
-	/// serve up files from the given directory.
+	/**
+	 * @brief Construct the server to listen on the specified TCP address and port.
+	 * @param address
+	 * @param port
+	 * @param httpRequestHandler
+	 */
 	explicit server ( const std::string& address, const int & port, http::HttpRequestHandler * httpRequestHandler );
 
-	/// Run the server's io_service loop.
+	/**
+	 * @brief Run the server's io_service loop.
+	 */
 	void run();
 
 private:

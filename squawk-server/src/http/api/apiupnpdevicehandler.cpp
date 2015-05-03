@@ -27,7 +27,7 @@ namespace squawk {
 namespace http {
 namespace api {
 
-void ApiUpnpDeviceHandler::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
+void ApiUpnpDeviceHandler::do_get(::http::HttpRequest&, ::http::HttpResponse & response) {
 
     std::map< std::string, ssdp::UpnpDevice > devices = ssdp_server->get_upnp_devices();
     std::stringstream * buf = new std::stringstream();

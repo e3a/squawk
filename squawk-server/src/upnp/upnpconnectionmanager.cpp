@@ -57,7 +57,7 @@ void UpnpConnectionManager::do_post(::http::HttpRequest & request, ::http::HttpR
             response <<  xmlWriter.str();
 
             response.set_mime_type( ::http::mime::XML );
-            response.set_status( ::http::http_status::OK );
+            response.status( ::http::http_status::OK );
             return;
 
         } else {

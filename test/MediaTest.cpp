@@ -32,7 +32,6 @@
 } */
 
 TEST( MediaTest, ParseMpegLayer2Mpthreetest) {
-  std::cout << "'" << std::string(TESTFILES) << "mpthreetest.mp3" << "'" << std::endl;
   
     commons::media::MediaFile media_file = commons::media::MediaParser::parseFile( std::string(TESTFILES) + "mpthreetest.mp3" );
 
@@ -65,7 +64,6 @@ TEST( MediaTest, ParseMpegLayer2Sample) {
     ASSERT_EQ( 4, media_file.duration() ); //playlength.
 
     ASSERT_EQ( 1, media_file.tagNames().size() );
-    std::cout << "TAG:" <<  media_file.tagNames()[0] << std::endl;
     ASSERT_STREQ( "Other", media_file.getTag( commons::media::MediaFile::GENRE ).c_str() );
 }
 TEST( MediaTest, ParseFlacSample) {

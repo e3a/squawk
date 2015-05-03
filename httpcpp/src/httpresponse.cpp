@@ -41,10 +41,9 @@
 #define LINE_BREAK std::string("\r\n")
 
 namespace http {
-
 HttpResponse & HttpResponse::operator<< ( const std::string & str ) {
 	body_stream << str;
-	size += str.length();
+	size_ += str.length();
 	return *this;
 }
 
@@ -94,7 +93,7 @@ size_t HttpResponse::fill_buffer ( char * buffer, size_t buffer_size ) {
 std::string HttpResponse::get_message_header() {
 	std::stringstream ss;
 
-	switch ( status ) {
+	switch ( status_ ) {
 	case http_status::OK:
 		ss << RESPONSE_LINE_OK;
 		break;
@@ -167,12 +166,12 @@ std::string HttpResponse::get_message_header() {
 		ss << RESPONSE_LINE_INTERNAL_SERVER_ERROR;
 	}
 
-	if ( size > 0 ) {
-		std::cout << "set size:" << size << std::endl;
-		ss << HTTP_HEADER_CONTENT_LENGTH << std::string ( ": " ) << std::to_string ( size ) << LINE_BREAK;
+	if ( size_ > 0 ) {
+		std::cout << "set size:" << size_ << std::endl;
+		ss << header::CONTENT_LENGTH << std::string ( ": " ) << std::to_string ( size_ ) << LINE_BREAK;
 	}
 
-	for ( auto & header : headers ) {
+	for ( auto & header : parameters_ ) {
 		ss << header.first << std::string ( ": " ) << header.second << LINE_BREAK;
 	}
 
@@ -182,7 +181,7 @@ std::string HttpResponse::get_message_header() {
 		struct tm then_tm = *gmtime ( &now );
 		then_tm.tm_sec += seconds;
 		mktime ( &then_tm );
-		ss << HTTP_HEADER_EXPIRES << std::string ( ": " ) << time_to_string ( &then_tm ) << LINE_BREAK;
+		ss << header::EXPIRES << std::string ( ": " ) << time_to_string ( &then_tm ) << LINE_BREAK;
 	}
 
 	//add last Modified Date
@@ -194,10 +193,10 @@ std::string HttpResponse::get_message_header() {
 	time_t now = time ( nullptr );
 	struct tm now_tm = *gmtime ( &now );
 	mktime ( &now_tm );
-	ss << HTTP_HEADER_DATE << std::string ( ": " ) << time_to_string ( &now_tm ) << LINE_BREAK;
+	ss << header::DATE << std::string ( ": " ) << time_to_string ( &now_tm ) << LINE_BREAK;
 
 	//add mime-type
-	ss << HTTP_HEADER_CONTENT_TYPE << std::string ( ": " ) << ::http::mime::mime_type ( type ) << LINE_BREAK;
+	ss << header::CONTENT_TYPE << std::string ( ": " ) << ::http::mime::mime_type ( type ) << LINE_BREAK;
 
 	ss << LINE_BREAK;
 	ss.flush();
@@ -223,7 +222,29 @@ void HttpResponse::reset() {
 
 	body_istream = nullptr;
 	body_stream.str ( string ( "" ) );
-	headers.clear();
-	size = 0;
+	parameters_.clear();
+	size_ = 0;
 }
+
+
+void HttpResponse::protocol ( const std::string & protocol ) {
+	this->protocol_ = protocol;
 }
+
+std::string HttpResponse::protocol() {
+	return protocol_;
+}
+void HttpResponse::parameter ( const std::string & key, const std::string & value ) {
+	parameters_[key] = value;
+}
+std::string HttpResponse::parameter ( const std::string & key ) {
+	return parameters_[key];
+}
+bool HttpResponse::containsParameter ( const std::string & key ) {
+	return ( parameters_.find ( key ) != parameters_.end() );
+}
+std::string HttpResponse::body() {
+	return body_stream.str();
+}
+
+} //http

@@ -18,6 +18,7 @@
 */
 
 #include "ssdpclientconnection.h"
+#include "httpresponseparser.h"
 
 namespace ssdp {
 inline namespace asio_impl {
@@ -42,13 +43,14 @@ void SSDPClientConnection::send ( const std::string & request_line, const std::m
 					  std::bind ( static_cast<size_t ( asio::io_service::* ) () > ( &asio::io_service::run ), &io_service_ ) ) );
 	std::cout << "SSDPClient started" << std::endl;
 
-	socket.send_to ( asio::buffer ( message, message.length() ), endpoint );
+    socket.send_to ( asio::buffer ( message, message.length() ), endpoint );
 }
 void SSDPClientConnection::handle_receive_from ( const asio::error_code & error, size_t bytes_recvd ) {
 	if ( !error ) {
 		http::HttpResponse response;
 		response.remote_ip = sender_endpoint.address().to_string();
-		http::HttpParser::parse_http_response ( response, data, bytes_recvd );
+        http::HttpResponseParser httpParser; //TODO make global
+        httpParser.parse_http_response ( response, data, bytes_recvd );
 		handler->handle_response ( response );
 
 		socket.async_receive_from ( asio::buffer ( data, max_length ), sender_endpoint,

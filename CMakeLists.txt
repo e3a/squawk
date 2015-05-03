@@ -1,13 +1,13 @@
 # Build squawk project
 # run the cmake command from your build directory:
-# cmake .. -DCMAKE_COMPILER_IS_GNUCXX=true -Dbuild_tests=true -DCMAKE_BUILD_TYPE=debug -DTESTFILES='"/home/e3a/testfiles/"' -DASIO_PATH=~/asio-1.10.2/include/
+# cmake .. -DCMAKE_COMPILER_IS_GNUCXX=true -Dbuild_tests=true -DCMAKE_BUILD_TYPE=debug -DTESTFILES=/home/e3a/testfiles/ -DASIO_PATH=/home/e3a/asio-1.10.2/
 cmake_minimum_required(VERSION 2.8.9)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 option(build_tests "Build all squawk unit tests." ON)
 option(CMAKE_COMPILER_IS_GNUCXX "is the compiler gnucxx" OFF)
-SET(TESTFILES "/home/e3a/testfiles" CACHE FILEPATH "The path to the testfiles.")
-SET(ASIO_PATH "~/asio-1.10.2/" CACHE FILEPATH "The path to asio header files.")
+SET(TESTFILES "/home/e3a/testfiles" CACHE TESTFILES "The path to the testfiles.")
+SET(ASIO_PATH "~/asio-1.10.2/" CACHE ASIO_PATH "The path to asio header files.")
 
 project (squawk)
 
@@ -16,8 +16,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 set(CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG} -O0)
 add_definitions(-DASIO_STANDALONE)
-message( "TESTFILE: " ${TESTFILES} )
 add_definitions(-DTESTFILES="${TESTFILES}/")
+add_definitions(-DCMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}/")
 add_definitions(-Wall -Wextra)
 
 find_package(GoogleTest REQUIRED)

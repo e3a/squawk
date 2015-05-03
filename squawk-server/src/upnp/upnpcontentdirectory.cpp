@@ -34,15 +34,16 @@ void UpnpContentDirectory::registerContentDirectoryModule( commons::upnp::Conten
 void UpnpContentDirectory::do_subscribe(::http::HttpRequest & request, ::http::HttpResponse & response) {
     if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "SUBSCRIBE: " << request.requestBody() )
     response.set_mime_type( ::http::mime::XML );
-    response.set_status( ::http::http_status::OK );
-    response.add_header("Content-Type", "text/xml; charset=\"utf-8\"");
-    response.add_header("Timeout", "Second-1800");
-    response.add_header("SID", "uuid:");
+    response.status( ::http::http_status::OK );
+    response.parameter(http::header::CONTENT_TYPE, "text/xml; charset=\"utf-8\"");
+    response.parameter("Timeout", "Second-1800");
+    response.parameter("SID", "uuid:");
 }
 
 void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
-    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, request.requestBody() )
+    // if( squawk::DEBUG ) LOG4CXX_TRACE(logger, request.requestBody() )
+    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, request )
 
     try {
         commons::upnp::UpnpContentDirectoryRequest upnp_command = commons::upnp::parseRequest( request.requestBody() );
@@ -55,7 +56,7 @@ void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpRe
             response <<  xmlWriter.str();
 
             response.set_mime_type( ::http::mime::XML );
-            response.set_status( ::http::http_status::OK );
+            response.status( ::http::http_status::OK );
 
         } else if( upnp_command.type == commons::upnp::UpnpContentDirectoryRequest::X_FEATURE_LIST ) {
             LOG4CXX_WARN(logger, "X_GetFeatureList: " << request << "\n" << upnp_command  )
@@ -100,7 +101,7 @@ void UpnpContentDirectory::do_post(::http::HttpRequest & request, ::http::HttpRe
             response <<  xmlWriter.str();
 
             response.set_mime_type( ::http::mime::XML );
-            response.set_status( ::http::http_status::OK );
+            response.status( ::http::http_status::OK );
 
         } else {
             LOG4CXX_WARN(logger, "invoke::Unknown Method: " << upnp_command )

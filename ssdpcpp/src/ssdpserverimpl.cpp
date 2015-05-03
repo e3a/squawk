@@ -59,41 +59,41 @@ void SSDPServerImpl::stop() {
 	connection->stop();
 }
 void SSDPServerImpl::handle_response ( ::http::HttpResponse & response ) {
-	if ( response.status == http::http_status::OK ) {
-		if ( response.get_header ( UPNP_HEADER_USN ).find ( uuid ) == string::npos ) {
-			upnp_devices[response.get_header ( UPNP_HEADER_USN )] = parseResponse ( response );
+    if ( response.status() == http::http_status::OK ) {
+		if ( response.parameter ( UPNP_HEADER_USN ).find ( uuid ) == string::npos ) {
+			upnp_devices[response.parameter ( UPNP_HEADER_USN )] = parseResponse ( response );
 			fireEvent ( SSDPEventListener::ANNOUNCE, response.remote_ip, parseResponse ( response ) );
 		}
 	}
 }
 void SSDPServerImpl::handle_receive ( ::http::HttpRequest & request ) {
     if ( request.method() == REQUEST_METHOD_MSEARCH ) {
-		if ( request.request_lines[UPNP_HEADER_ST] == NS_ROOT_DEVICE || request.request_lines[UPNP_HEADER_ST] == UPNP_NS_ALL ) {
+        if ( request.parameter( UPNP_HEADER_ST ) == NS_ROOT_DEVICE || request.parameter( UPNP_HEADER_ST ) == UPNP_NS_ALL ) {
 			for ( auto & iter : namespaces ) {
 				Response response ( Response::ok, HTTP_REQUEST_LINE_OK, create_response ( iter.first, iter.second ) );
 				connection->send ( response );
 			}
 
-		} else if ( namespaces.find ( request.request_lines[UPNP_HEADER_ST] ) != namespaces.end() ) {
+        } else if ( namespaces.find ( request.parameter( UPNP_HEADER_ST ) ) != namespaces.end() ) {
 			connection->send ( Response ( Response::ok, HTTP_REQUEST_LINE_OK,
-										  create_response ( request.request_lines[UPNP_HEADER_ST],
-												  namespaces[request.request_lines[UPNP_HEADER_ST]] ) ) );
+                                          create_response ( request.parameter( UPNP_HEADER_ST ),
+                                                  namespaces[request.parameter( UPNP_HEADER_ST ) ] ) ) );
 		}
 
     } else if ( request.method() == REQUEST_METHOD_NOTIFY ) {
 
-		if ( request.request_lines[UPNP_HEADER_NTS] == UPNP_STATUS_ALIVE ) {
+        if ( request.parameter( UPNP_HEADER_NTS ) == UPNP_STATUS_ALIVE ) {
 			// do not process own messages received over other interface
-			if ( request.request_lines[UPNP_HEADER_USN ].find ( uuid ) == string::npos ) {
-				upnp_devices[request.request_lines[UPNP_HEADER_USN ]] = parseRequest ( request );
+            if ( request.parameter( UPNP_HEADER_USN  ).find ( uuid ) == string::npos ) {
+                upnp_devices[ request.parameter( UPNP_HEADER_USN ) ] = parseRequest ( request );
                 fireEvent ( SSDPEventListener::ANNOUNCE, request.remoteIp(), parseRequest ( request ) );
 			}
 
 		} else {
 			// do not process own messages received over other interface
-			if ( request.request_lines[UPNP_HEADER_USN ].find ( uuid ) == string::npos ) {
+            if ( request.parameter( UPNP_HEADER_USN ).find ( uuid ) == string::npos ) {
                 fireEvent ( SSDPEventListener::BYE, request.remoteIp(), parseRequest ( request ) );
-				upnp_devices.erase ( request.request_lines[UPNP_HEADER_USN ] );
+                upnp_devices.erase ( request.parameter( UPNP_HEADER_USN ) );
 			}
 		}
 
@@ -104,25 +104,25 @@ void SSDPServerImpl::handle_receive ( ::http::HttpRequest & request ) {
 UpnpDevice SSDPServerImpl::parseRequest ( http::HttpRequest & request ) {
 	time_t cache_control = 0;
 
-	if ( request.request_lines.find ( HTTP_HEADER_CACHE_CONTROL ) != request.request_lines.end() )
-		cache_control = ( commons::string::starts_with ( request.request_lines[HTTP_HEADER_CACHE_CONTROL], UPNP_OPTION_MAX_AGE ) ?
-						  commons::string::parse_string<time_t> ( request.request_lines[HTTP_HEADER_CACHE_CONTROL].substr ( UPNP_OPTION_MAX_AGE.size() ) ) : 0 );
+    if ( request.containsParameter( http::header::CACHE_CONTROL ) )
+        cache_control = ( commons::string::starts_with ( request.parameter( http::header::CACHE_CONTROL ), UPNP_OPTION_MAX_AGE ) ?
+                          commons::string::parse_string<time_t> ( request.parameter( http::header::CACHE_CONTROL ).substr ( UPNP_OPTION_MAX_AGE.size() ) ) : 0 );
 
-	return UpnpDevice ( request.request_lines[HTTP_HEADER_HOST], request.request_lines[UPNP_HEADER_LOCATION],
-						request.request_lines[UPNP_HEADER_NT], request.request_lines[UPNP_HEADER_NTS],
-						request.request_lines[UPNP_HEADER_SERVER], request.request_lines[UPNP_HEADER_USN],
+    return UpnpDevice ( request.parameter( http::header::HOST ), request.parameter( UPNP_HEADER_LOCATION ),
+                        request.parameter( UPNP_HEADER_NT ), request.parameter( UPNP_HEADER_NTS ),
+                        request.parameter( UPNP_HEADER_SERVER ), request.parameter( UPNP_HEADER_USN ),
 						std::time ( 0 ), cache_control );
 }
 UpnpDevice SSDPServerImpl::parseResponse ( http::HttpResponse & response ) {
 	time_t cache_control = 0;
 
-	if ( response.hasHeader ( HTTP_HEADER_CACHE_CONTROL ) )
-		cache_control = ( commons::string::starts_with ( response.get_header ( HTTP_HEADER_CACHE_CONTROL ), UPNP_OPTION_MAX_AGE ) ?
-						  commons::string::parse_string<time_t> ( response.get_header ( HTTP_HEADER_CACHE_CONTROL ).substr ( UPNP_OPTION_MAX_AGE.size() ) ) : 0 );
+    if ( response.containsParameter ( http::header::CACHE_CONTROL ) )
+        cache_control = ( commons::string::starts_with ( response.parameter ( http::header::CACHE_CONTROL ), UPNP_OPTION_MAX_AGE ) ?
+                          commons::string::parse_string<time_t> ( response.parameter ( http::header::CACHE_CONTROL ).substr ( UPNP_OPTION_MAX_AGE.size() ) ) : 0 );
 
-	return UpnpDevice ( response.get_header ( HTTP_HEADER_HOST ), response.get_header ( UPNP_HEADER_LOCATION ),
-						response.get_header ( UPNP_HEADER_NT ), response.get_header ( UPNP_HEADER_NTS ),
-						response.get_header ( UPNP_HEADER_SERVER ), response.get_header ( UPNP_HEADER_USN ),
+    return UpnpDevice ( response.parameter ( http::header::HOST ), response.parameter ( UPNP_HEADER_LOCATION ),
+						response.parameter ( UPNP_HEADER_NT ), response.parameter ( UPNP_HEADER_NTS ),
+						response.parameter ( UPNP_HEADER_SERVER ), response.parameter ( UPNP_HEADER_USN ),
 						std::time ( 0 ), cache_control );
 }
 void SSDPServerImpl::announce() {
@@ -146,11 +146,11 @@ void SSDPServerImpl::search ( const std::string & service ) {
 	std::async ( std::launch::async, [this, &service]() {
 
 		std::map< std::string, std::string > map;
-		map[HTTP_HEADER_HOST] = multicast_address + std::string ( ":" ) + commons::string::to_string<int> ( multicast_port );
+        map[http::header::HOST] = multicast_address + std::string ( ":" ) + commons::string::to_string<int> ( multicast_port );
 		map[commons::string::to_upper ( UPNP_HEADER_ST )] = service;
 		map[commons::string::to_upper ( UPNP_HEADER_MX )] = "2";
 		map[commons::string::to_upper ( UPNP_HEADER_MAN )] = UPNP_STATUS_DISCOVER;
-		map[HTTP_HEADER_CONTENT_LENGTH] = std::string ( "0" );
+        map[http::header::CONTENT_LENGTH] = std::string ( "0" );
 
 		SSDPClientConnection connection ( this, multicast_address, multicast_port );
 		connection.send ( SSDP_HEADER_SEARCH_REQUEST_LINE, map );
@@ -160,22 +160,22 @@ void SSDPServerImpl::search ( const std::string & service ) {
 std::map< std::string, std::string > SSDPServerImpl::create_response ( const std::string & nt, const std::string & location ) {
 
 	std::map< std::string, std::string > map;
-	map[HTTP_HEADER_CACHE_CONTROL] = UPNP_OPTION_MAX_AGE + commons::string::to_string<int> ( ANNOUNCE_INTERVAL );
+    map[http::header::CACHE_CONTROL] = UPNP_OPTION_MAX_AGE + commons::string::to_string<int> ( ANNOUNCE_INTERVAL );
 	map[UPNP_HEADER_LOCATION] = location;
 	map[UPNP_HEADER_SERVER] = commons::system::uname() + std::string ( " DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0" ); //TODO
 	map[commons::string::to_upper ( UPNP_HEADER_ST )] = nt;
 	map[commons::string::to_upper ( UPNP_HEADER_USN )] = std::string ( "uuid:" ) + uuid + std::string ( "::" ) + nt;
 	map[commons::string::to_upper ( UPNP_HEADER_EXT )] = "";
-	map["DATE"] = commons::system::time_string();
-	map[HTTP_HEADER_CONTENT_LENGTH] = std::string ( "0" );
+    map[http::header::DATE] = commons::system::time_string();
+    map[http::header::CONTENT_LENGTH] = std::string ( "0" );
 
 	return map;
 }
 void SSDPServerImpl::send_anounce ( const std::string & nt, const std::string & location ) {
 
 	std::map< std::string, std::string > map;
-	map[HTTP_HEADER_HOST] = multicast_address + std::string ( ":" ) + commons::string::to_string<int> ( multicast_port );
-	map[HTTP_HEADER_CACHE_CONTROL] = UPNP_OPTION_MAX_AGE + commons::string::to_string<int> ( ANNOUNCE_INTERVAL );
+    map[http::header::HOST] = multicast_address + std::string ( ":" ) + commons::string::to_string<int> ( multicast_port );
+    map[http::header::CACHE_CONTROL] = UPNP_OPTION_MAX_AGE + commons::string::to_string<int> ( ANNOUNCE_INTERVAL );
 	map[commons::string::to_upper ( UPNP_HEADER_LOCATION )] = location;
 	map[commons::string::to_upper ( UPNP_HEADER_SERVER )] = commons::system::uname() + " " + USER_AGENT;
 	map[commons::string::to_upper ( UPNP_HEADER_NT )] = nt;
@@ -183,21 +183,21 @@ void SSDPServerImpl::send_anounce ( const std::string & nt, const std::string & 
 	map[commons::string::to_upper ( UPNP_HEADER_NTS )] = UPNP_STATUS_ALIVE;
 	map[commons::string::to_upper ( UPNP_HEADER_EXT )] = std::string ( "" );
 	map[commons::string::to_upper ( UPNP_HEADER_DATE )] = commons::system::time_string();
-	map[HTTP_HEADER_CONTENT_LENGTH] = std::string ( "0" );
+    map[http::header::CONTENT_LENGTH] = std::string ( "0" );
 
 	connection->send ( SSDP_HEADER_REQUEST_LINE, map );
 }
 void SSDPServerImpl::send_suppress ( const std::string & nt ) {
 
 	std::map< std::string, std::string > map;
-	map[HTTP_HEADER_HOST] = multicast_address + std::string ( ":" ) + commons::string::to_string<int> ( multicast_port );
+    map[http::header::HOST] = multicast_address + std::string ( ":" ) + commons::string::to_string<int> ( multicast_port );
 	map[commons::string::to_upper ( UPNP_HEADER_NT )] = nt;
 	map[commons::string::to_upper ( UPNP_HEADER_USN )] = "uuid:" + uuid + "::" + nt;
 	map[commons::string::to_upper ( UPNP_HEADER_NTS )] = UPNP_STATUS_BYE;
 	map[commons::string::to_upper ( UPNP_HEADER_SERVER )] = commons::system::uname() + " " + USER_AGENT;
 	map[commons::string::to_upper ( UPNP_HEADER_EXT )] = std::string ( "" );
 	map[commons::string::to_upper ( UPNP_HEADER_DATE )] = commons::system::time_string();
-	map[HTTP_HEADER_CONTENT_LENGTH] = std::string ( "0" );
+    map[http::header::CONTENT_LENGTH] = std::string ( "0" );
 
 	connection->send ( SSDP_HEADER_REQUEST_LINE, map );
 }

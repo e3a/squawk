@@ -26,6 +26,9 @@
 
 #include <asio.hpp>
 
+#include "http.h"
+#include "httprequestparser.h"
+
 #include "ssdp.h"
 
 namespace ssdp {
@@ -77,10 +80,11 @@ private:
 //  ::asio::ip::udp::socket socket;
 	asio::ip::udp::endpoint sender_endpoint;
 //  ::asio::io_service::strand strand_;
+    http::HttpRequestParser http_parser;
 
 	/* local variables */
 	SSDPCallback * handler;
-	enum { max_length = 8192 };
+    enum { max_length = http::BUFFER_SIZE };
 	std::array< char, max_length > data;
 
 	/* the runner thread */

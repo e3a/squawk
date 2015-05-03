@@ -84,22 +84,22 @@ void FileServlet::do_get ( HttpRequest & request, HttpResponse & response ) {
 	}
 
 	// Fill out the reply to be sent to the client.
-	if ( request.request_lines.find ( "Range" ) != request.request_lines.end() ) {
+	if ( request.containsParameter ( http::header::RANGE ) ) {
 		std::cout << "get Range" << std::endl;
-		response.set_status ( http_status::PARTIAL_CONTENT );
-		std::tuple<int, int> range = http::parseRange ( request.request_lines["Range"] );
+		response.status ( http_status::PARTIAL_CONTENT );
+		std::tuple<int, int> range = http::utils::parseRange ( request.parameter ( http::header::RANGE ) );
 		std::cout << "get range: " << std::get<0> ( range ) << "-" << std::get<1> ( range ) << std::endl;
-		response.add_header ( "Content-Range", "bytes " + std::to_string ( std::get<0> ( range ) ) + "-" +
-							  ( std::get<1> ( range ) == -1 ? std::to_string ( filestatus.st_size - 1 ) :
-								std::to_string ( std::get<1> ( range ) - 1 ) ) +
-							  "/" + std::to_string ( filestatus.st_size ) );
-		response.add_header ( HTTP_HEADER_CONTENT_LENGTH, ( std::get<1> ( range ) == -1 ? std::to_string ( filestatus.st_size - std::get<0> ( range ) ) :
-							  std::to_string ( std::get<1> ( range ) - std::get<0> ( range ) ) ) );
+		response.parameter ( "Content-Range", "bytes " + std::to_string ( std::get<0> ( range ) ) + "-" +
+							 ( std::get<1> ( range ) == -1 ? std::to_string ( filestatus.st_size - 1 ) :
+							   std::to_string ( std::get<1> ( range ) - 1 ) ) +
+							 "/" + std::to_string ( filestatus.st_size ) );
+		response.parameter ( header::CONTENT_LENGTH, ( std::get<1> ( range ) == -1 ? std::to_string ( filestatus.st_size - std::get<0> ( range ) ) :
+							 std::to_string ( std::get<1> ( range ) - std::get<0> ( range ) ) ) );
 		is->seekg ( std::get<0> ( range ), std::ios_base::beg ); //TODO check if range is available
 
 	} else {
-		response.add_header ( HTTP_HEADER_CONTENT_LENGTH, std::to_string ( filestatus.st_size ) );
-		response.set_status ( http_status::OK );
+		response.parameter ( header::CONTENT_LENGTH, std::to_string ( filestatus.st_size ) );
+		response.status ( http_status::OK );
 	}
 
 //    response.add_header( HTTP_HEADER_CONTENT_DISPOSITION, "inline; filename= \"" + filename + "\"" );
@@ -150,9 +150,9 @@ void FileServlet::do_head ( HttpRequest & request, HttpResponse & response ) {
 	delete is;
 
 	// Fill out the reply to be sent to the client.
-	response.add_header ( HTTP_HEADER_CONTENT_LENGTH, std::to_string ( filestatus.st_size ) );
+	response.parameter ( header::CONTENT_LENGTH, std::to_string ( filestatus.st_size ) );
 //    response.add_header( HTTP_HEADER_CONTENT_DISPOSITION, "inline; filename= \"" + filename + "\"" );
-	response.set_status ( http_status::OK );
+	response.status ( http_status::OK );
 	response.set_mime_type ( ::http::mime::mime_type ( extension ) );
 	response.set_last_modified ( filestatus.st_mtime );
 //    response.set_expires( 3600 * 24 );

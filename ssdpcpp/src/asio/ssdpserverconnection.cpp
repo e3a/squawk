@@ -85,15 +85,16 @@ void SSDPServerConnection::handle_receive_from ( const asio::error_code & error,
 	if ( !error ) {
 		http::HttpRequest request;
         request.remoteIp( sender_endpoint.address().to_string() );
-		http::HttpParser::parse_http_request ( request, data, bytes_recvd );
+        http_parser.parse_http_request ( request, data, bytes_recvd );
 		handler->handle_receive ( request );
+        http_parser.reset();
 
 		socket.async_receive_from ( asio::buffer ( data, max_length ), sender_endpoint,
 									strand_.wrap (
 										std::bind ( &SSDPServerConnection::handle_receive_from, this,
 												std::placeholders::_1,
 												std::placeholders::_2 ) ) );
-	}
+    } else { http_parser.reset(); } //on error
 }
-}
-}
+} //asio_impl
+} //ssdp
