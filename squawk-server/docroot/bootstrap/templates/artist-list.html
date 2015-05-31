@@ -1,0 +1,5 @@
+<div class="body">
+    <p ng-repeat='(letterKey, letterValue) in artists'>{{letterKey}}
+        <a ng-href="#/artist/{{a.id}}/album" ng-repeat="a in letterValue">{{a.name}}<br/></a>
+    </p>
+</div>

@@ -3,14 +3,13 @@ cmake_minimum_required(VERSION 2.8.9)
 
 project(httpcpp)
 
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED graph)
 
-message( ${PROJECT_SOURCE_DIR}/src/asio )
-include_directories(${SQUAWK_INCLUDES} ${LOG4CXX_INCLUDE_DIR} ${PCREPP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/src/asio)
+include_directories(${SQUAWK_INCLUDES} ${PCREPP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${S3_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/src/asio)
 
-set(SOURCES src/httprequestparser.cpp src/httpresponseparser.cpp src/httpservlet.cpp src/webserver.cpp src/httpresponse.cpp
-            src/httprequest.cpp
-            src/asio/asioconnection.cpp src/asio/asioserver.cpp src/asio/httpserverfactory.cpp
+set(SOURCES src/httprequestparser.cpp src/httpresponseparser.cpp src/httpservlet.cpp src/webserver.cpp
+            src/httpresponse.cpp src/httprequest.cpp
+            src/asio/httpconnection.cpp src/asio/httpserver.cpp
             src/servlet/fileservlet.cpp
             src/httpclient.cpp src/asio/httpclientconnection.cpp)
 
@@ -28,8 +27,8 @@ if (build_tests)
                   test/httpresponseparsertest.cpp
                   test/httpservlettest.cpp
                   test/httpclienttest.cpp
+                  test/urlencodetest.cpp
                   ${SOURCES})
-#   target_link_libraries(testmain_httpcpp pthread)
    target_link_libraries(testmain_httpcpp ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
    add_test(httpcpp-tests testmain_httpcpp)
 endif()

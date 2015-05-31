@@ -1,6 +1,6 @@
 /*
-    <one line to give the library's name and an idea of what it does.>
-    Copyright (C) 2013  <copyright holder> <email>
+    api artist list servlet implementation.
+    Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -19,46 +19,59 @@
 
 #include "apiartistlistservlet.h"
 
-#include "commons.h"
-
-#define QUERY_ARTISTS "select ROWID, name, letter from tbl_cds_artists order by letter, clean_name"
-#define QUERY_ARTISTS_FILTER "select ROWID, name, letter from tbl_cds_artists where name LIKE ? order by letter, clean_name"
+#include "squawk.h"
 
 namespace squawk {
 namespace api {
-	
-log4cxx::LoggerPtr ApiArtistListServlet::logger(log4cxx::Logger::getLogger("squawk.api.ApiArtistListServlet"));
 
-void ApiArtistListServlet::do_get( http::HttpRequest & request, ::http::HttpResponse & response ) {
-    std::cout << "get artists:\n" << request << std::endl;
-    squawk::db::Sqlite3Statement * stmt = NULL;
-    try {
-        /* TODO if(  ) {
-        } else */ stmt = db->prepare_statement( QUERY_ARTISTS );
+log4cxx::LoggerPtr ApiArtistListServlet::logger ( log4cxx::Logger::getLogger ( "squawk.api.ApiArtistListServlet" ) );
 
-        response << "[";
-        bool first_artist = true;
-        while( stmt->step() ) {
-            if( first_artist ){
-                first_artist = false;
-            } else response << ", ";
-            response << "{\"id\":" << std::to_string(stmt->get_int(0)) <<
-                        ", \"name\":\"" << commons::string::escape_json(stmt->get_string(1)) <<
-                        "\", \"letter\":\"" << stmt->get_string(2) << "\"}";
-        }
-        stmt->reset();
-        db->release_statement(stmt);
-        response << "]";
+std::string ApiArtistListServlet::QUERY_ARTISTS = "select ROWID, name, letter from tbl_cds_artists order by letter, clean_name";
+std::string ApiArtistListServlet::QUERY_ARTISTS_FILTER = "select ROWID, name, letter from tbl_cds_artists where name LIKE ? order by letter, clean_name";
 
-    } catch( squawk::db::DbException & e ) {
-        LOG4CXX_FATAL(logger, "Can not get artists, Exception:" << e.code() << "-> " << e.what());
-        if(stmt != NULL) db->release_statement(stmt);
-        throw;
-    } catch( ... ) {
-        LOG4CXX_FATAL(logger, "Other Excpeption in get_artists.");
-        throw;
-    }
-    response.set_mime_type( ::http::mime::JSON );
-    response.status( ::http::http_status::OK );
+void ApiArtistListServlet::do_get ( http::HttpRequest &, ::http::HttpResponse & response ) {
+	if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "get api artist list." ); }
+
+	try {
+		squawk::db::db_statement_ptr stmt = db->prepareStatement ( QUERY_ARTISTS );
+		bool first_artist = true;
+		std::string last_letter;
+
+		while ( stmt->step() ) {
+			std::string letter = ( stmt->get_string ( 2 ) == "" ? "_" : stmt->get_string ( 2 ) );
+
+			if ( first_artist ) {
+				first_artist = false;
+				response << "{\"" << letter << "\":[";
+				last_letter = letter;
+
+			} else {
+				if ( last_letter != stmt->get_string ( 2 ) ) {
+					response << "], \"" << letter << "\":[";
+					last_letter = letter;
+
+				} else {
+					response << ", ";
+				}
+			}
+
+			response << "{\"id\":" << std::to_string ( stmt->get_int ( 0 ) ) <<
+					 ", \"name\":\"" << commons::string::escape_json ( stmt->get_string ( 1 ) ) << "\"}";
+		}
+
+		response << "]}";
+
+	} catch ( squawk::db::DbException & e ) {
+		LOG4CXX_FATAL ( logger, "Can not get artists, Exception:" << e.code() << "-> " << e.what() );
+		throw;
+
+	} catch ( ... ) {
+		LOG4CXX_FATAL ( logger, "Other Excpeption in get_artists." );
+		throw;
+	}
+
+	response.set_mime_type ( ::http::mime::JSON );
+	response.status ( ::http::http_status::OK );
 }
-}}
+}
+}

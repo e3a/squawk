@@ -1,18 +1,40 @@
 /**
 @mainpage Squawk Media Server
-\n
-The Squawk media server .................
-aesfr
-asf
-\n
+@section TOC Table of Contents
 <hr/>
-@section Table of Contents
-\n
+
+-# @ref TOC
 -# @ref Description
 -# @ref License
+-# @ref Dependencies
 -# @ref Build
 \n
+@section Description Description
+
+@section License License
+
+@section Dependencies Dependencies
+
+Squawk server and client is built using the following 3rd party software:
+
+@subsection Natiive Natiive dependencies
+
+Native ibraries:
+
+@subsection Web Web dependencies
+
+Libraties for the web page:
+
+<ul>
+<li><a href="https://angularjs.org/">angularjs</a>&nbsp;Google javascript framework</li>
+<li><a href="http://getbootstrap.com/">bootstrap</a>&nbsp;Twitter css templates</li>
+<li><a href="http://angular-ui.github.io/bootstrap/">angular-UI-Bootstrap</a>&nbsp;Twitter Bootstrap written natively in AngularJS</li>
+<li><a href="https://github.com/dbtek/angular-aside">angular-aside</a>&nbsp;Off canvas side menu to use with ui-bootstrap.</li>
+<li><a href="https://github.com/michaelbromley/angularUtils/tree/master/src/directives/pagination">angular-pagination</a>&nbsp;Content pagination module.</li>
+</ul>
+
 @section Build Build the Server
+
 \n
 install dependencies:
 

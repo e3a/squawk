@@ -33,8 +33,7 @@
 #include "commons.h"
 #include "image.h"
 #include "media.h"
-
-// #include "Imlib2.h"
+#include "../utils/pdfparser.h"
 
 namespace squawk {
 namespace media {
@@ -116,6 +115,8 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
                         files[IMAGEFILE].insert(files[IMAGEFILE].end(), file_item(name, type, s.st_mtim.tv_sec, s.st_size));
                     } else if( commons::string::starts_with(type, "video/") ) {
                         files[VIDEOFILE].insert(files[VIDEOFILE].end(), file_item(name, type, s.st_mtim.tv_sec, s.st_size));
+                    } else if( type == "application/pdf" ) {
+                        files[EBOOK].insert(files[EBOOK].end(), file_item(name, type, s.st_mtim.tv_sec, s.st_size));
                     } else {
                         LOG4CXX_WARN(logger, "unknown file type:" << type << ":" << name)
                     }
@@ -134,14 +135,14 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
     if(files.find( AUDIOFILE ) != files.end()) {
         dir_type = MUSIC;
 
-        for(std::list< file_item >::iterator list_iter = files[ AUDIOFILE ].begin(); list_iter != files[ AUDIOFILE ].end(); list_iter++) {
+        for( auto & audiofile : files[ AUDIOFILE ] ) {
 
-            if(! mediaDao->exist_audiofile( (*list_iter).name, (*list_iter).mtime, (*list_iter).size, true ) ) {
+            if(! mediaDao->exist_audiofile( audiofile.name, audiofile.mtime, audiofile.size, true ) ) {
 
                 //parse the mediafile
-                commons::media::MediaFile media_file = commons::media::MediaParser::parseFile( (*list_iter).name);
+                commons::media::MediaFile media_file = commons::media::MediaParser::parseFile( audiofile.name);
                 if( media_file.getAudioStreams().size() > 1 ) {
-                    LOG4CXX_WARN(logger, "more then one audio streams (" << media_file.getAudioStreams().size() << ") found in " << (*list_iter).name )
+                    LOG4CXX_WARN(logger, "more then one audio streams (" << media_file.getAudioStreams().size() << ") found in " << audiofile.name )
                 }
 
                 if( ! album.equals( media_file.getTag( commons::media::MediaFile::ALBUM ) ) ) {
@@ -151,6 +152,7 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
                                                   media_file.getTag( commons::media::MediaFile::YEAR ) );
 
                     if( media_file.hasTag( commons::media::MediaFile::ARTIST ) ) {
+                        LOG4CXX_WARN(logger, "artist: " << media_file.getTag( commons::media::MediaFile::ARTIST ) )
                         squawk::media::Artist * artist = new Artist( media_file.getTag( commons::media::MediaFile::ARTIST ) ); //TODO remove new
                         if( album.add( artist ) ) {
                             unsigned long new_artist_id = mediaDao->save_artist( artist );
@@ -158,6 +160,7 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
                         } else delete artist;
                     }
                     if( media_file.hasTag( commons::media::MediaFile::COMPOSER ) ) {
+                        LOG4CXX_WARN(logger, "artist: " << media_file.getTag( commons::media::MediaFile::COMPOSER ) )
                         squawk::media::Artist * artist = new Artist( media_file.getTag( commons::media::MediaFile::COMPOSER ) ); //TODO remove new
                         if( album.add( artist ) ) {
                             unsigned long new_artist_id = mediaDao->save_artist( artist );
@@ -167,9 +170,9 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
                     album.id = mediaDao->save_album(get_album_clean_path(path), &album);
                 }
                 squawk::media::Song song(media_file.getTag( commons::media::MediaFile::TITLE ),
-                                         (*list_iter).mime_type, (*list_iter).name, (*list_iter).mtime,
+                                         audiofile.mime_type, audiofile.name, audiofile.mtime,
                                          media_file.getAudioStreams()[0].bitrate(),
-                                         (*list_iter).size,
+                                         audiofile.size,
                                          media_file.getAudioStreams()[0].sampleFrequency(),
                                          media_file.duration(),
                                          commons::string::parse_string<int>( media_file.getTag( commons::media::MediaFile::TRACK ) ),
@@ -177,7 +180,7 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
                                          media_file.getAudioStreams()[0].channels(),
                                          media_file.getAudioStreams()[0].bitsPerSample(),
                                          album.artists);
-                mediaDao->save_audiofile((*list_iter).name, (*list_iter).mtime, (*list_iter).size, album.id, &song);
+                mediaDao->save_audiofile(audiofile.name, audiofile.mtime, audiofile.size, album.id, &song);
             }
         }
         files.erase(AUDIOFILE);
@@ -185,26 +188,26 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
 
     if(files.find( IMAGEFILE ) != files.end()) {
         if(dir_type == MUSIC) {
-            for(std::list< file_item >::iterator list_iter = files[IMAGEFILE].begin(); list_iter != files[IMAGEFILE].end(); list_iter++) {
+            for(file_item & file : files[IMAGEFILE] ) {
 
-                if(! mediaDao->exist_imagefile((*list_iter).name, (*list_iter).mtime, (*list_iter).size, true)) {
+                if(! mediaDao->exist_imagefile(file.name, file.mtime, file.size, true)) {
                     if(album.id == 0) {
                         std::string cleanPath = get_album_clean_path( path );
                         album = mediaDao->get_album(cleanPath);
                     }
-                    (*list_iter).type = ((*list_iter).name.find("front") == std::string::npos && (*list_iter).name.find("cover") == std::string::npos ?
+                    file.type = (file.name.find("front") == std::string::npos && file.name.find("cover") == std::string::npos ?
                                          squawk::media::file_item::OTHER : squawk::media::file_item::COVER);
 
-                    commons::image::Image image( (*list_iter).name );
-                    int image_id = mediaDao->save_imagefile((*list_iter), album.id, &image);
+                    commons::image::Image image( file.name );
+                    int image_id = mediaDao->save_imagefile(file, album.id, &image);
 
                     std::stringstream image_stream;
-                    image_stream << squawk_config->tmpDirectory() << "/image-" << image_id << ".jpg";
+                    image_stream << tmp_directory_ << "/image-" << image_id << ".jpg";
+                    image.scale(400, 400, image_stream.str());
 
-                    //TODO image.scale(1000, 1000, image_stream.str());
-                    if( (*list_iter).type == squawk::media::file_item::COVER ) {
+                    if( file.type == squawk::media::file_item::COVER ) {
                         std::stringstream cover_stream;
-                        cover_stream << squawk_config->tmpDirectory() << "/" << album.id << ".jpg";
+                        cover_stream << tmp_directory_ << "/" << album.id << ".jpg";
                         std::string cover_filename = cover_stream.str();
                         image.scale(150, 150, cover_filename);
                     }
@@ -222,8 +225,8 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
                         unsigned long id = mediaDao->saveFile((*list_iter), path_id, &image);
 
                         //create tumbs
-                        image.scale(150, 150, squawk_config->tmpDirectory() + "/images" + "/cover" + commons::string::to_string<unsigned long>(id) + ".jpg" );
-                        // image.scale(1000, 1000, squawk_config->tmpDirectory() + "/images" + "/" + commons::string::to_string<unsigned long>(id) + ".jpg");
+                        image.scale(150, 150, tmp_directory_ + "/images" + "/cover" + commons::string::to_string<unsigned long>(id) + ".jpg" );
+                        // image.scale(1000, 1000, tmp_directory_ + "/images" + "/" + commons::string::to_string<unsigned long>(id) + ".jpg");
                     }
         }
         files.erase(IMAGEFILE);
@@ -245,13 +248,25 @@ FileParser::DIRECTORY_TYPE FileParser::_parse(const std::string & basepath, cons
             }
         }
     }
+
+    if(files.find( EBOOK ) != files.end()) {
+        std::string relative_path = path.substr( basepath.size() );
+        unsigned long path_id = mediaDao->createDirectory( relative_path );
+        //save file
+        for(auto & book : files[EBOOK] ) {
+            std::string isbn = PdfParser::parsePdf( book.name );
+            if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "found book:" << book.name << ", ISBN:" << isbn)
+        }
+    }
+
     return dir_type;
 }
-// TODO remove
-std::string FileParser::get_artist_clean_name(std::string artist) {
-    return commons::string::trim(commons::string::to_lower(artist));
-}
-std::string FileParser::get_artist_letter(std::string artist) {
+/* / TODO remove
+void FileParser::get_artist_clean_name(std::string & artist) {
+    boost::algorithm::to_lower( artist );
+    boost::algorithm::trim( artist );
+} */
+std::string FileParser::get_artist_letter(const std::string & artist) {
     if(artist.length()>0) {
         return artist.substr(0, 1);
     } else {
@@ -259,12 +274,12 @@ std::string FileParser::get_artist_letter(std::string artist) {
         return std::string("");
     }
 }
-std::string FileParser::get_album_clean_path(std::string path) {
+std::string FileParser::get_album_clean_path(const std::string & path) {
     string clean_path;
     if(re.PartialMatch(path, &clean_path)) {
-        return commons::string::trim(clean_path);
+        return boost::algorithm::trim_copy(clean_path);
     } else {
-        return commons::string::trim(path);
+        return boost::algorithm::trim_copy(path);
     }
 }
 std::string FileParser::get_mime_type(const std::string & filename) {
@@ -300,4 +315,5 @@ std::string FileParser::get_mime_type(const std::string & filename) {
         return "text/plain";
     } else return std::string("application/octet-stream");
 }
-}}
+} // media
+} // squawk

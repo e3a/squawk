@@ -30,30 +30,25 @@ log4cxx::LoggerPtr ApiStatisticServlet::logger(log4cxx::Logger::getLogger("squaw
 
 void ApiStatisticServlet::do_get( http::HttpRequest&, ::http::HttpResponse & response ) {
     response << "{";
-    squawk::db::Sqlite3Statement * stmt_albums = NULL;
-    squawk::db::Sqlite3Statement * stmt_artists = NULL;
-    squawk::db::Sqlite3Statement * stmt_audiofiles = NULL;
     try {
         //Get the Albums Count
-        stmt_albums = db->prepare_statement( QUERY_ALBUMS_COUNT );
+        squawk::db::db_statement_ptr stmt_albums = db->prepareStatement( QUERY_ALBUMS_COUNT );
         while( stmt_albums->step() ) {
             response << "\"albums\":" << std::to_string( stmt_albums->get_int(0) );
         }
         stmt_albums->reset();
-        db->release_statement( stmt_albums );
 
         //Get the Artist Count
-        stmt_artists = db->prepare_statement( QUERY_ARTISTS_COUNT );
+        squawk::db::db_statement_ptr stmt_artists = db->prepareStatement( QUERY_ARTISTS_COUNT );
         while( stmt_artists->step() ) {
             response << ", \"artists\":" << std::to_string(stmt_artists->get_int(0));
         }
         stmt_artists->reset();
-        db->release_statement( stmt_artists );
 
         //Get the Files Count
         response << ", \"audiofiles\":{";
         bool first_audiofile = true;
-        stmt_audiofiles = db->prepare_statement( QUERY_AUDIOFILES_COUNT );
+        squawk::db::db_statement_ptr stmt_audiofiles = db->prepareStatement( QUERY_AUDIOFILES_COUNT );
         while( stmt_audiofiles->step() ) {
             if( first_audiofile ){
                 first_audiofile = false;
@@ -61,14 +56,10 @@ void ApiStatisticServlet::do_get( http::HttpRequest&, ::http::HttpResponse & res
             response << "\"" << stmt_audiofiles->get_string(0) << "\":" << std::to_string(stmt_audiofiles->get_int(1));
         }
         stmt_audiofiles->reset();
-        db->release_statement( stmt_audiofiles );
 
         response << "}}";
     } catch( squawk::db::DbException & e) {
         LOG4CXX_FATAL(logger, "Can not get statistic, Exception:" << e.code() << "-> " << e.what());
-        if(stmt_albums != NULL) db->release_statement( stmt_albums );
-        if(stmt_artists != NULL) db->release_statement( stmt_artists );
-        if(stmt_audiofiles != NULL) db->release_statement( stmt_audiofiles );
         throw;
     } catch( ... ) {
         LOG4CXX_FATAL(logger, "Other Excpeption in get_statistic.");

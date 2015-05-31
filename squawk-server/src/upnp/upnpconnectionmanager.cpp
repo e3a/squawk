@@ -25,7 +25,7 @@
 namespace squawk {
 namespace upnp {
 
-log4cxx::LoggerPtr UpnpConnectionManager::logger(log4cxx::Logger::getLogger("squawk.servlet.UpnpConnectionManager"));
+log4cxx::LoggerPtr UpnpConnectionManager::logger(log4cxx::Logger::getLogger("squawk.upnp.UpnpConnectionManager"));
 
 void UpnpConnectionManager::do_post(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
@@ -74,4 +74,10 @@ void UpnpConnectionManager::do_post(::http::HttpRequest & request, ::http::HttpR
 
     throw ::http::http_status::BAD_REQUEST;
 }
-}}
+void UpnpConnectionManager::do_default( const std::string & method, http::HttpRequest & request, http::HttpResponse & response ) {
+    if(DEBUG) LOG4CXX_TRACE(logger, "Default:" << method << "\n" << request )
+
+    response.status(http::http_status::OK);
+}
+} // upnp
+} // squawk

@@ -19,16 +19,22 @@
 #ifndef COVERSERVLET_H
 #define COVERSERVLET_H
 
+#include "squawk.h"
 #include "http.h"
 #include "fileservlet.h"
 
 namespace squawk {
 namespace api {
-
-class CoverServlet : public ::http::servlet::FileServlet {
+/**
+ * @brief The CoverServlet class
+ */
+class CoverServlet : public http::servlet::FileServlet {
 public:
-    explicit CoverServlet(const std::string path, const std::string docroot) : FileServlet(path, docroot) {}
-    virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
+    CoverServlet ( const std::string & path, http::HttpServletContext context ) :
+        FileServlet ( path, context.parameter ( squawk::CONFIG_TMP_DIRECTORY ) ) {}
+    ~CoverServlet() {}
+    virtual void do_get ( http::HttpRequest & request, http::HttpResponse & response ) override;
 };
-}}
+} // api
+} // squawk
 #endif // COVERSERVLET_H

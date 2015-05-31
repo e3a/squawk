@@ -23,20 +23,22 @@
 namespace squawk {
 namespace api {
 
-void CoverServlet::do_get(::http::HttpRequest & request, ::http::HttpResponse & response) {
+void CoverServlet::do_get ( http::HttpRequest & request, http::HttpResponse & response ) {
 
-    int cover_id = 0;
-    bool result = match(request.uri(), &cover_id);
-    if(result && cover_id > 0) {
+	int cover_id = 0;
+	bool result = match ( request.uri(), &cover_id );
 
-        std::stringstream ss;
-        ss << std::string("/") << cover_id  << std::string(".jpg");
-        request.uri( ss.str() );
+	if ( result && cover_id > 0 ) {
 
-        FileServlet::do_get(request, response);
+		std::stringstream ss;
+		ss << std::string ( "/" ) << cover_id  << std::string ( ".jpg" );
+		request.uri ( ss.str() );
 
-    } else {
-        throw ::http::http_status::BAD_REQUEST;
-    }
+		FileServlet::do_get ( request, response );
+
+	} else {
+        throw http::http_status::BAD_REQUEST;
+	}
 }
-}}
+} // api
+} // squawk

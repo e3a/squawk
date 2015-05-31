@@ -1,6 +1,6 @@
 #include "upnpimagedirectory.h"
 #include "commons.h"
-#include "mimetypes.h"
+#include "http.h"
 
 namespace squawk {
 namespace upnp {

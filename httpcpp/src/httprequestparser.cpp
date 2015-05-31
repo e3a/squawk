@@ -17,7 +17,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "httprequestparser.h"
+#include "httpcpp/httprequestparser.h"
 
 namespace http {
 
@@ -53,7 +53,7 @@ void HttpRequestParser::reset() {
 	request_key = "";
 	body_length = 0;
 }
-size_t HttpRequestParser::parse_http_request ( http::HttpRequest & request, const std::array<char, BUFFER_SIZE> input, size_t size ) {
+size_t HttpRequestParser::parse_http_request ( http::HttpRequest * request, const std::array<char, BUFFER_SIZE> input, size_t size ) {
 
 	for ( size_t i = 0; i < size; i++ ) { //search line break and configure the parser
 
@@ -65,13 +65,13 @@ size_t HttpRequestParser::parse_http_request ( http::HttpRequest & request, cons
 				if ( type == parser_type::REQUEST_VERSION_MINOR ) {
 					int version_minor = 0;
 					ss_buffer >> version_minor;
-					request.httpVersionMinor ( version_minor );
+                    request->httpVersionMinor ( version_minor );
 					ss_buffer.str ( std::string() );
 					ss_buffer.clear();
 					type = next ( type );
 
 				} else if ( type == parser_type::REQUEST_VALUE ) {
-					request.parameter ( commons::string::trim ( request_key ), commons::string::trim ( ss_buffer.str() ) );
+                    request->parameter ( boost::trim_copy ( request_key ), boost::trim_copy ( ss_buffer.str() ) );
 					ss_buffer.str ( std::string() );
 					ss_buffer.clear();
 					type = parser_type::REQUEST_KEY;
@@ -92,7 +92,7 @@ size_t HttpRequestParser::parse_http_request ( http::HttpRequest & request, cons
 			switch ( type ) {
 			case parser_type::METHOD: {
 				if ( input[i] == ' ' ) {
-					request.method ( ss_buffer.str() );
+                    request->method ( ss_buffer.str() );
 					ss_buffer.str ( std::string() );
 					ss_buffer.clear();
 					type = next ( type );
@@ -109,11 +109,11 @@ size_t HttpRequestParser::parse_http_request ( http::HttpRequest & request, cons
 					size_t qmPosition = ss_buffer.str().find ( "?" );
 
 					if ( qmPosition != std::string::npos ) {
-						request.uri ( ss_buffer.str().substr ( 0, qmPosition ) );
+                        request->uri ( ss_buffer.str().substr ( 0, qmPosition ) );
 						utils::get_parameters ( ss_buffer.str().substr ( qmPosition + 1 ), request );
 
 					} else {
-						request.uri ( ss_buffer.str() );
+                        request->uri ( ss_buffer.str() );
 					}
 
 					ss_buffer.str ( std::string() );
@@ -129,7 +129,7 @@ size_t HttpRequestParser::parse_http_request ( http::HttpRequest & request, cons
 
 			case parser_type::REQUEST_PROTOCOL: {
 				if ( input[i] == '/' ) {
-					request.protocol ( ss_buffer.str() );
+                    request->protocol ( ss_buffer.str() );
 					ss_buffer.str ( std::string() );
 					ss_buffer.clear();
 					type = next ( type );
@@ -145,7 +145,7 @@ size_t HttpRequestParser::parse_http_request ( http::HttpRequest & request, cons
 				if ( input[i] == '.' ) {
 					int version_major = 0;
 					ss_buffer >> version_major;
-					request.httpVersionMajor ( version_major );
+                    request->httpVersionMajor ( version_major );
 					ss_buffer.str ( std::string() );
 					ss_buffer.clear();
 					type = next ( type );

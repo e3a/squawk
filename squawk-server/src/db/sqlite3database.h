@@ -1,7 +1,6 @@
 /*
-    SQLite3 Database implementation.
-
-    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
+    DB database manager definition.
+    Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -16,53 +15,41 @@
     You should have received a copy of the GNU Lesser General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-
 */
 
 #ifndef SQLITE3DATABASE_H
 #define SQLITE3DATABASE_H
 
-#include "sqlite3statement.h"
-#include "dbexception.h"
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
+
+#include "sqlite3connection.h"
 
 namespace squawk {
-/**
- * \brief Database utilities.
- */
 namespace db {
 
+typedef std::shared_ptr< Sqlite3Connection > db_connection_ptr;
 /**
- * \brief Database implementation for SQLite.
+ * @brief The Sqlite3Database manager class.
  */
 class Sqlite3Database {
-  public:
-   int exec(const std::string & query);
-   /**
-    * \brief Open the database.
-    * \param path The path of the database file.
-    * \throws DAOException throws DAOExecption
-    */
-    void open(const std::string & path);
-   /**
-    * \brief Close the database.
-    */
-    int close();
-   /**
-    * \brief Prepare the sql statement.
-    * \throws DAOException throws DAOExecption
-    */
-    Sqlite3Statement * prepare_statement(const std::string & statement);
-   /**
-    * \brief Release a statement.
-    */
-    void release_statement(Sqlite3Statement * stmt);
-   /**
-    * \brief Get last insert row id.
-    */
-    unsigned long last_insert_rowid();
-    
-  private:
-    sqlite3 * db;
+public:
+    Sqlite3Database ( const Sqlite3Database& ) = delete;
+    Sqlite3Database & operator= ( const Sqlite3Database& ) = delete;
+
+    static Sqlite3Database & instance() {
+        static Sqlite3Database instance;
+		return instance;
+	}
+	db_connection_ptr connection ( const std::string & path );
+
+private:
+    Sqlite3Database() = default;
+	std::map< std::string, db_connection_ptr > connections_;
+	std::mutex mtx_;
 };
-}}
+} // db
+} // squawk
 #endif // SQLITE3DATABASE_H

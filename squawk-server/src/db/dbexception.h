@@ -1,7 +1,6 @@
 /*
-    Database Header files.
-
-    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
+    DB Exception implementation.
+    Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -30,7 +29,7 @@ namespace db {
  */
 class DbException : public std::exception {
 public:
-    explicit DbException (int _code, std::string _what) throw() : _code(_code), _what(_what) {}
+    explicit DbException ( int _code, std::string _what ) throw() : _code ( _code ), _what ( _what ) {}
     virtual ~DbException() throw() {}
     virtual const char* what() const throw() {
         return _what.c_str();
@@ -42,5 +41,6 @@ private:
     int _code;
     std::string _what;
 };
-}}
+} // db
+} // squawk
 #endif // DATABASE_H

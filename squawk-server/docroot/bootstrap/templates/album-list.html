@@ -1,0 +1,14 @@
+<div class="text-center">
+    <dir-pagination-controls
+        boundary-links="true"
+        on-page-change="pageChanged(newPageNumber)"
+        template-url="/libs/pagination/dirPagination.tpl.html">
+    </dir-pagination-controls>
+</div>
+<div width="100%">
+    <div class="album" dir-paginate="album in albums | itemsPerPage: pageSize" total-items="albums_count" current-page="currentPage">
+        <img ng-src="/api/album/{{album.id}}/cover.jpg"/><br/>
+        <a ng-href="#/album/{{album.id}}">{{album.name | limitTo: 9}}</a><br/>
+        <a ng-href="#/artist/{{artist.id}}/album" ng-repeat="artist in album.artists">{{artist.name}}</a>
+    </div>
+</div>

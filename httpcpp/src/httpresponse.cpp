@@ -18,7 +18,6 @@
 */
 
 #include "http.h"
-#include "mimetypes.h"
 
 #define RESPONSE_LINE_OK                    std::string("HTTP/1.1 200 OK\r\n")
 #define RESPONSE_LINE_PARTIAL_CONTENT       std::string("HTTP/1.1 206 OK\r\n")
@@ -41,6 +40,14 @@
 #define LINE_BREAK std::string("\r\n")
 
 namespace http {
+
+HttpResponse::HttpResponse() : protocol_ ( "" ) {}
+HttpResponse::~HttpResponse() {
+    if ( body_istream ) {
+        delete body_istream; //TODO unique pointer
+    }
+};
+
 HttpResponse & HttpResponse::operator<< ( const std::string & str ) {
 	body_stream << str;
 	size_ += str.length();

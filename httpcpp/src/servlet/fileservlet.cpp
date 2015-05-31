@@ -29,10 +29,10 @@
 #include <sys/stat.h>
 
 #include "http.h"
-#include "mimetypes.h"
 
 namespace http {
 namespace servlet {
+
 
 //TODO handle relative path
 void FileServlet::do_get ( HttpRequest & request, HttpResponse & response ) {

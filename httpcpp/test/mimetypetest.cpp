@@ -17,9 +17,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <string>
-#include <map>
-#include "mimetypes.h"
+#include "http.h"
 #include <gtest/gtest.h>
 
 TEST ( MimeTypeParseTest2, GetTypeByExtension ) {

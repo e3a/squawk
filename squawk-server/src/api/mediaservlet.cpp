@@ -28,50 +28,54 @@
 namespace squawk {
 namespace api {
 
-log4cxx::LoggerPtr MediaServlet::logger(log4cxx::Logger::getLogger("squawk.api.MediaServlet"));
+log4cxx::LoggerPtr MediaServlet::logger ( log4cxx::Logger::getLogger ( "squawk.api.MediaServlet" ) );
 
-void MediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & response ) {
+void MediaServlet::do_get ( ::http::HttpRequest & request, ::http::HttpResponse & response ) {
 
-    squawk::db::Sqlite3Statement * stmt_song = NULL;
+	squawk::db::db_statement_ptr stmt_song = NULL;
 
-    std::string type;
-    int item_id = 0;
-    bool result = match(request.uri(), &type, &item_id);
-    if(result && item_id > 0) {
-        if( type == "song" || type == "video" || type == "image" ) {
+	std::string type;
+	int item_id = 0;
+	bool result = match ( request.uri(), &type, &item_id );
 
-            try {
+	if ( result && item_id > 0 ) {
+		if ( type == "song" || type == "video" || type == "image" ) {
 
-                LOG4CXX_TRACE( logger, type << "::" << item_id )
-                if( type == "song" ) {
-                    stmt_song = db->prepare_statement( QUERY_SONG );
-                } else if( type == "video" ) {
-                    stmt_song = db->prepare_statement( QUERY_VIDEO );
-                } else if( type == "image" ) {
-                    //TODO
-                }
+			try {
 
-                stmt_song->bind_int( 1, item_id );
-                if( stmt_song->step() ) {
-                    request.uri() = stmt_song->get_string(0);
+				LOG4CXX_TRACE ( logger, type << "::" << item_id )
 
-                } else {
-                    LOG4CXX_TRACE( logger, "file not found: " << type << "::" << item_id )
-                }
-                db->release_statement( stmt_song );
-                FileServlet::do_get(request, response);
+				if ( type == "song" ) {
+					stmt_song = db->prepareStatement ( QUERY_SONG );
 
-            } catch( squawk::db::DbException & e ) {
-                if( stmt_song != NULL ) {
-                    db->release_statement( stmt_song );
-                }
-                LOG4CXX_FATAL( logger, "can not get item path: " << e.code() << ":" << e.what() )
-                throw ::http::http_status::INTERNAL_SERVER_ERROR;
-            }
+				} else if ( type == "video" ) {
+					stmt_song = db->prepareStatement ( QUERY_VIDEO );
 
-        }
-    } else {
-        throw ::http::http_status::BAD_REQUEST;
-    }
+				} else if ( type == "image" ) {
+					//TODO
+				}
+
+				stmt_song->bind_int ( 1, item_id );
+
+				if ( stmt_song->step() ) {
+					request.uri() = stmt_song->get_string ( 0 );
+
+				} else {
+					LOG4CXX_TRACE ( logger, "file not found: " << type << "::" << item_id )
+				}
+
+				FileServlet::do_get ( request, response );
+
+			} catch ( squawk::db::DbException & e ) {
+				LOG4CXX_FATAL ( logger, "can not get item path: " << e.code() << ":" << e.what() )
+				throw ::http::http_status::INTERNAL_SERVER_ERROR;
+			}
+
+		}
+
+	} else {
+		throw ::http::http_status::BAD_REQUEST;
+	}
 }
-}}
+}
+}

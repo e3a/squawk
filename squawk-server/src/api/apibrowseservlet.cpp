@@ -28,61 +28,70 @@
 namespace squawk {
 namespace api {
 
-log4cxx::LoggerPtr ApiBrowseServlet::logger(log4cxx::Logger::getLogger("squawk.api.ApiBrowseServlet"));
+log4cxx::LoggerPtr ApiBrowseServlet::logger ( log4cxx::Logger::getLogger ( "squawk.api.ApiBrowseServlet" ) );
 
-void ApiBrowseServlet::do_get( http::HttpRequest & request, ::http::HttpResponse & response ) {
+void ApiBrowseServlet::do_get ( http::HttpRequest & request, ::http::HttpResponse & response ) {
 
-    std::cout << "get albums:\n" << request << std::endl;
+	std::cout << "get albums:\n" << request << std::endl;
 
-    std::string strType, strId;
-    int type = 0;
-    int id = 0;
-    bool result = match(request.uri(), &strType, &strId);
-    if( result ) {
-        id = (strId.length()==0 ? 0 : commons::string::parse_string<int>(strId));
-        if( strType == "image" ){
-            type = IMAGE;
-        } else if( strType == "video") {
-            type = VIDEO;
-        }
+	std::string strType, strId;
+	int type = 0;
+	int id = 0;
+	bool result = match ( request.uri(), &strType, &strId );
 
-        squawk::db::Sqlite3Statement * stmt_items = NULL;
+	if ( result ) {
+		id = ( strId.length() == 0 ? 0 : commons::string::parse_string<int> ( strId ) );
 
-        try {
-            stmt_items = db->prepare_statement( QUERY_ITEM );
-            stmt_items->bind_int(1, id);
-            stmt_items->bind_int(2, type);
+		if ( strType == "image" ) {
+			type = IMAGE;
 
-            response << "[";
-            bool first_item = true;
-            while( stmt_items->step() ) {
-                if(first_item) first_item = false; else response << ",";
-                response << "{\"id\":" << commons::string::to_string( stmt_items->get_int( 0 ) ) <<
-                            ",\"type\":\"" << commons::string::to_string( stmt_items->get_int( 1 ) ) <<
-                            "\",\"name\":\"" << commons::string::escape_json( stmt_items->get_string( 2 ) ) << "\"";
+		} else if ( strType == "video" ) {
+			type = VIDEO;
+		}
 
-                if( stmt_items->get_int( 1 ) > 0 )
-                    response <<  ",\"url\":\"" << "/file/" << strType << "/" << commons::string::to_string( stmt_items->get_int( 0 ) ) << "." <<
-                         http::mime::extension( stmt_items->get_string( 3 ) ) << "\"";
-                response << "}";
-            }
-            response << "]";
+		try {
+			squawk::db::db_statement_ptr stmt_items = db->prepareStatement ( QUERY_ITEM );
+			stmt_items->bind_int ( 1, id );
+			stmt_items->bind_int ( 2, type );
 
-            stmt_items->reset();
-            db->release_statement(stmt_items);
+			response << "[";
+			bool first_item = true;
 
-        } catch( squawk::db::DbException & e ) {
-            LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e.code() << "-> " << e.what());
-            if(stmt_items != NULL) db->release_statement(stmt_items);
-            throw http::http_status::INTERNAL_SERVER_ERROR;
-        } catch( ... ) {
-            LOG4CXX_FATAL(logger, "Other Excpeption in get_albums.");
-            throw http::http_status::INTERNAL_SERVER_ERROR;
-        }
-        response.set_mime_type( ::http::mime::JSON );
-        response.status( ::http::http_status::OK );
-    } else {
-        response.status( ::http::http_status::NOT_FOUND );
-    }
+			while ( stmt_items->step() ) {
+				if ( first_item ) { first_item = false; }
+
+				else { response << ","; }
+
+				response << "{\"id\":" << commons::string::to_string ( stmt_items->get_int ( 0 ) ) <<
+						 ",\"type\":\"" << commons::string::to_string ( stmt_items->get_int ( 1 ) ) <<
+						 "\",\"name\":\"" << commons::string::escape_json ( stmt_items->get_string ( 2 ) ) << "\"";
+
+				if ( stmt_items->get_int ( 1 ) > 0 )
+					response <<  ",\"url\":\"" << "/file/" << strType << "/" << commons::string::to_string ( stmt_items->get_int ( 0 ) ) << "." <<
+							 http::mime::extension ( stmt_items->get_string ( 3 ) ) << "\"";
+
+				response << "}";
+			}
+
+			response << "]";
+
+			stmt_items->reset();
+
+		} catch ( squawk::db::DbException & e ) {
+			LOG4CXX_FATAL ( logger, "Can not get albums, Exception:" << e.code() << "-> " << e.what() );
+			throw http::http_status::INTERNAL_SERVER_ERROR;
+
+		} catch ( ... ) {
+			LOG4CXX_FATAL ( logger, "Other Excpeption in get_albums." );
+			throw http::http_status::INTERNAL_SERVER_ERROR;
+		}
+
+		response.set_mime_type ( ::http::mime::JSON );
+		response.status ( ::http::http_status::OK );
+
+	} else {
+		response.status ( ::http::http_status::NOT_FOUND );
+	}
 }
-}}
+}
+}

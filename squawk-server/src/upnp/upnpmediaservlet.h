@@ -20,9 +20,12 @@
 #define UPNPMEDIASERVLET_H
 
 #include "http.h"
+#include "squawk.h"
 #include "fileservlet.h"
 
 #include "../db/sqlite3database.h"
+#include "../db/sqlite3connection.h"
+#include "../db/sqlite3statement.h"
 
 #include "log4cxx/logger.h"
 
@@ -31,15 +34,15 @@ namespace upnp {
 
 class UpnpMediaServlet : public http::HttpServlet {
 public:
-    explicit UpnpMediaServlet( const std::string path, squawk::db::Sqlite3Database * db ) :
-        HttpServlet(path), db( db ) {}
+    UpnpMediaServlet( const std::string & path, http::HttpServletContext context ) : HttpServlet(path),
+        db(squawk::db::Sqlite3Database::instance().connection( context.parameter( squawk::CONFIG_DATABASE_FILE ) ) ) {}
     virtual void do_get( ::http::HttpRequest & request, ::http::HttpResponse & response );
     virtual void do_head( ::http::HttpRequest & request, ::http::HttpResponse & response );
 private:
     static log4cxx::LoggerPtr logger;
-    std::string path;
+    std::string path; //TODO not set
     void getFile( ::http::HttpRequest & request, ::http::HttpResponse & response );
-    squawk::db::Sqlite3Database * db;
+    squawk::db::db_connection_ptr db;
 };
 }}
 #endif // UPNPMEDIASERVLET_H

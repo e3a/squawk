@@ -5,10 +5,17 @@ project(squawk-server)
 
 find_package(GoogleTest REQUIRED)
 
+find_package(Boost REQUIRED)
+
 # find_package(Flac++ REQUIRED)
 find_package(Poppler REQUIRED cpp)
-message( ${POPPLER_LIBRARIES} )
 set(LIBS ${LIBS} ${POPPLER_LIBRARIES})
+
+find_package(OpenSSL REQUIRED)
+set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
+
+find_package(CURLpp REQUIRED)
+set(LIBS ${LIBS} ${CURLPP_LIBRARIES})
 
 # find_package(Lame REQUIRED)
 # set(LIBS ${LIBS} ${LAME_LIBRARY})
@@ -18,21 +25,20 @@ set(LIBS ${LIBS} ${POPPLER_LIBRARIES})
 set(LIBS ${CMAKE_BINARY_DIR}/httpcpp/libhttpcpp.a ${LIBS})
 set(LIBS ${CMAKE_BINARY_DIR}/ssdpcpp/libssdpcpp.a ${LIBS})
 
-include_directories(${ROOT} ${SQUAWK_INCLUDES} ${POPPLER_INCLUDE_DIRS} includes)
+include_directories(${ROOT} ${SQUAWK_INCLUDES} ${POPPLER_INCLUDE_DIRS} ${OPENSSL_INCLUDES} ${CURLPP_INCLUDE_DIRS} includes)
 #include_directories(${ROOT} ${SQLITE3_INCLUDE_DIR}
 #  ${FLAC++_INCLUDE_DIR} ${TINYXML_INCLUDE_DIR} ${LIBXML2_INCLUDE_DIR} ${LOG4CXX_INCLUDE_DIR}
 #  ${PCREPP_INCLUDE_DIR} ${SQUAWK_INCLUDES} ${LAME_INCLUDE_DIR} includes)
 #link_directories(${Boost_LIBRARY_DIR})
 
-set(UTILS src/utils/pdfparser.cpp)
+set(UTILS src/utils/pdfparser.cpp src/utils/amazonfacade.cpp)
 set(SQUAWK src/squawkconfig.cpp src/loggereventlistener.cpp)
-set(DATABASE src/db/sqlite3statement.cpp src/db/sqlite3database.cpp)
+set(DATABASE src/db/sqlite3statement.cpp src/db/sqlite3connection.cpp src/db/sqlite3database.cpp)
 set(MEDIA src/media/mediadao.cpp src/media/fileparser.cpp)
-set(API src/api/apibrowseservlet.cpp src/api/apialbumlistservlet.cpp src/api/apialbumsletterservlet.cpp src/api/apialbumitemservlet.cpp
-        src/api/apiartistlistservlet.cpp src/api/apivideolistservlet.cpp
-        src/api/mediaservlet.cpp src/api/coverservlet.cpp
+set(API src/api/apibrowseservlet.cpp src/api/apialbumlistservlet.cpp src/api/apialbumitemservlet.cpp src/api/apiartistlistservlet.cpp
+        src/api/apivideolistservlet.cpp src/api/mediaservlet.cpp src/api/coverservlet.cpp
         src/http/api/apiupnpdevicehandler.cpp)
-set(SERVLET src/servlet/apistatisticservlet.cpp src/servlet/imageservlet.cpp src/servlet/songservlet.cpp )
+set(SERVLET src/servlet/apistatisticservlet.cpp src/servlet/imageservlet.cpp src/servlet/songservlet.cpp)
 set(UPNP src/upnp/upnpconnectionmanager.cpp src/upnp/upnpmediaservlet.cpp src/upnp/upnpxmldescription.cpp src/upnp/upnpcontentdirectory.cpp
          src/upnp/upnpmusicdirectorymodule.cpp src/upnp/upnpvideodirectory.cpp src/upnp/upnpfiledirectory.cpp src/upnp/upnpimagedirectory.cpp )
 #         src/upnp/upnpwriter.cpp )
@@ -41,6 +47,9 @@ set(SOURCES ${UTILS} ${SQUAWK} ${DATABASE} ${MEDIA} ${HTTP_SERVER} ${API} ${SERV
 
 add_executable(squawk src/squawkserver.cpp ${SOURCES})
 target_link_libraries(squawk ${LIBS})
+
+add_executable(aws src/utils/aws.cpp ${SOURCES})
+target_link_libraries(aws ${LIBS})
 
 install(TARGETS squawk RUNTIME DESTINATION bin)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/squawk.xml DESTINATION etc/squawk )
@@ -65,6 +74,9 @@ if (build_tests)
         # TODO use from http_cpp test/http/httpparsertest.cpp
         test/http/mimetypetest.cpp
         test/upnp/TestParseConnectionManager.cpp
+        test/utils/testamazonfacade.cpp
+        test/utils/testisbnparser.cpp
+        test/db/testsqlite3connectionmanager.cpp
         ${SOURCES})
     target_link_libraries(testmain_server pthread)
     target_link_libraries(testmain_server

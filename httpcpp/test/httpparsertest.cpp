@@ -23,7 +23,6 @@
 #include <vector>
 
 #include "http.h"
-#include "httprequestparser.h"
 
 #include <gtest/gtest.h>
 
@@ -67,7 +66,7 @@ TEST ( HttpRequestParser, ParseWithBody ) {
 
 	http::HttpRequest http_request;
 	http::HttpRequestParser parser;
-	size_t state = parser.parse_http_request ( http_request, request, strlen ( _request ) );
+    size_t state = parser.parse_http_request ( &http_request, request, strlen ( _request ) );
 	EXPECT_EQ ( 236, state );
 	EXPECT_EQ ( std::string ( "POST" ), http_request.method() );
 	EXPECT_EQ ( std::string ( "/ctl/ContentDir" ), http_request.uri() );
@@ -110,7 +109,7 @@ TEST ( HttpRequestParser, ParseSSDPNotify ) {
 
 	http::HttpRequest http_request;
 	http::HttpRequestParser http_parser;
-	size_t state = http_parser.parse_http_request ( http_request, request, strlen ( _request ) );
+    size_t state = http_parser.parse_http_request ( &http_request, request, strlen ( _request ) );
 	EXPECT_EQ ( strlen ( _request ), state );
 	EXPECT_EQ ( std::string ( "NOTIFY" ), http_request.method() );
 	EXPECT_EQ ( std::string ( "*" ), http_request.uri() );
@@ -204,7 +203,7 @@ TEST ( HttpRequestParser, ParseGetParameter ) {
 
 	http::HttpRequest http_request;
 	http::HttpRequestParser http_parser;
-	size_t state = http_parser.parse_http_request ( http_request, request, sizeof ( _request ) );
+    size_t state = http_parser.parse_http_request ( &http_request, request, sizeof ( _request ) );
 	EXPECT_EQ ( sizeof ( _request ), state );
 	EXPECT_EQ ( std::string ( "GET" ), http_request.method() );
 	EXPECT_EQ ( std::string ( "/suche/" ), http_request.uri() );
@@ -259,7 +258,7 @@ TEST ( HttpRequestParser, ParseSSDPSearch ) {
 
 	http::HttpRequest http_request;
 	http::HttpRequestParser http_parser;
-	size_t state = http_parser.parse_http_request ( http_request, request, sizeof ( _request ) );
+    size_t state = http_parser.parse_http_request ( &http_request, request, sizeof ( _request ) );
 	EXPECT_EQ ( sizeof ( _request ), state );
 	EXPECT_EQ ( std::string ( "M-SEARCH" ), http_request.method() );
 	EXPECT_EQ ( std::string ( "*" ), http_request.uri() );
@@ -305,7 +304,7 @@ TEST ( HttpRequestParser, ParseSSDPSearchSamsung ) {
 
 	http::HttpRequest http_request;
 	http::HttpRequestParser http_parser;
-	size_t state = http_parser.parse_http_request ( http_request, request, sizeof ( _request ) );
+    size_t state = http_parser.parse_http_request ( &http_request, request, sizeof ( _request ) );
 	EXPECT_EQ ( sizeof ( _request ), state );
 	EXPECT_EQ ( std::string ( "M-SEARCH" ), http_request.method() );
 	EXPECT_EQ ( std::string ( "*" ), http_request.uri() );
@@ -353,7 +352,7 @@ TEST ( HttpRequestParser, ParseIncompleteHeader ) {
 
 	http::HttpRequest http_request;
 	http::HttpRequestParser http_parser;
-	size_t state = http_parser.parse_http_request ( http_request, request, strlen ( _request ) );
+    size_t state = http_parser.parse_http_request ( &http_request, request, strlen ( _request ) );
 	EXPECT_EQ ( state, 0 );
 
 	/*TODO  EXPECT_EQ(std::string("NOTIFY"), http_request.method());
@@ -422,7 +421,7 @@ TEST ( HttpRequestParser, ParseChunkedRequest ) {
 
 	http::HttpRequest http_request;
 	http::HttpRequestParser http_parser;
-	size_t state = http_parser.parse_http_request ( http_request, request, sizeof ( peer0_0 ) );
+    size_t state = http_parser.parse_http_request ( &http_request, request, sizeof ( peer0_0 ) );
 	EXPECT_EQ ( sizeof ( peer0_0 ), state );
 }
 TEST ( HttpRequestParser, ParseChunkedRequest2 ) {
@@ -565,9 +564,9 @@ TEST ( HttpRequestParser, ParseChunkedRequest2 ) {
 
 	http::HttpRequest http_request;
 	http::HttpRequestParser http_parser;
-	size_t state = http_parser.parse_http_request ( http_request, request, sizeof ( peer0_0 ) );
+    size_t state = http_parser.parse_http_request ( &http_request, request, sizeof ( peer0_0 ) );
 	EXPECT_EQ ( 0, state );
-	state = http_parser.parse_http_request ( http_request, request2, sizeof ( peer0_1 ) );
+    state = http_parser.parse_http_request ( &http_request, request2, sizeof ( peer0_1 ) );
 	EXPECT_EQ ( 2, state );
 
 	EXPECT_EQ ( std::string ( "POST" ), http_request.method() );

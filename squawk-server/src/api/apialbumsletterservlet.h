@@ -22,7 +22,9 @@
 
 #include <string>
 
+#include "squawk.h"
 #include "http.h"
+#include "../db/sqlite3connectionmanager.h"
 #include "../db/sqlite3database.h"
 #include "../db/sqlite3statement.h"
 
@@ -33,11 +35,13 @@ namespace api {
 
 class ApiAlbumsLetterServlet : public ::http::HttpServlet {
 public:
-    ApiAlbumsLetterServlet( const std::string path, squawk::db::Sqlite3Database * db ) : HttpServlet(path), db(db) {};
-    virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
+	ApiAlbumsLetterServlet ( const std::string & path, http::HttpServletContext context ) : HttpServlet ( path ),
+		db ( squawk::db::Sqlite3ConnectionManager::instance().connection ( context.parameter ( squawk::CONFIG_DATABASE_FILE ) ) ) {}
+	virtual void do_get ( ::http::HttpRequest & request, ::http::HttpResponse & response );
 private:
-    static log4cxx::LoggerPtr logger;
-    squawk::db::Sqlite3Database * db;
+	static log4cxx::LoggerPtr logger;
+	squawk::db::db_connection_ptr db;
 };
-}}
+} // squawk
+} // api
 #endif // APIALBUMSLETTERSERVLET_H

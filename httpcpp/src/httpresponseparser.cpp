@@ -17,7 +17,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "httpresponseparser.h"
+#include "httpcpp/httpresponseparser.h"
 
 namespace http {
 
@@ -61,7 +61,7 @@ size_t HttpResponseParser::parse_http_response ( http::HttpResponse & response, 
 					type = nextResponseType ( type );
 
 				} else if ( type == parser_type::REQUEST_VALUE ) {
-					response.parameter ( commons::string::trim ( request_key ), commons::string::trim ( ss_buffer.str() ) );
+                    response.parameter ( boost::trim_copy ( request_key ), boost::trim_copy ( ss_buffer.str() ) );
 					ss_buffer.str ( std::string() );
 					ss_buffer.clear();
 					type = parser_type::REQUEST_KEY;
@@ -126,7 +126,7 @@ size_t HttpResponseParser::parse_http_response ( http::HttpResponse & response, 
 
 			case parser_type::RESPONSE_STATUS: {
 				if ( input[i] == ' ' ) {
-					response.status ( parse_status ( commons::string::parse_string<int> ( ss_buffer.str() ) ) );
+                    response.status ( parse_status ( std::stoi( ss_buffer.str() ) ) );
 					ss_buffer.str ( std::string() );
 					ss_buffer.clear();
 					type = nextResponseType ( type );

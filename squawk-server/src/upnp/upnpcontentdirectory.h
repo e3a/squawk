@@ -39,10 +39,10 @@ namespace upnp {
  */
 class UpnpContentDirectory : public ::http::HttpServlet {
 public:
-    UpnpContentDirectory( const std::string path ) : HttpServlet(path) {}
+    UpnpContentDirectory( const std::string & path, http::HttpServletContext context ) : HttpServlet( path ) {}
     void registerContentDirectoryModule( commons::upnp::ContentDirectoryModule * module);
-    virtual void do_post(::http::HttpRequest & request, ::http::HttpResponse & response);
-    virtual void do_subscribe(::http::HttpRequest & request, ::http::HttpResponse & response);
+    virtual void do_post( http::HttpRequest & request, http::HttpResponse & response);
+    virtual void do_default( const std::string & method, http::HttpRequest & request, http::HttpResponse & response);
 private:
     static log4cxx::LoggerPtr logger;
     void browse( commons::xml::XMLWriter * xmlWriter, commons::upnp::UpnpContentDirectoryRequest * upnp_command );

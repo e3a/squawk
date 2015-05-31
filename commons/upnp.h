@@ -291,7 +291,7 @@ inline void item( commons::xml::XMLWriter * xmlWriter, commons::xml::Node & didl
     xmlWriter->element(artist_element, commons::upnp::XML_NS_PURL, "date", year + "-01-01" );
     commons::xml::Node dlna_album_art_node = xmlWriter->element(artist_element, commons::upnp::XML_NS_UPNP, "albumArtURI",
 //    "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) +
-    uri_prefix + "/album/" + std::to_string( id ) + "/cover.jpg" );
+    uri_prefix + "/api/album/" + std::to_string( id ) + "/cover.jpg" );
     xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
     xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
 

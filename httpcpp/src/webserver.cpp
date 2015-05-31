@@ -19,9 +19,15 @@
 
 #include "http.h"
 
-#include "httpserverfactory.h"
+#include "httpserver.h"
 
 namespace http {
+
+// TODO threads
+WebServer::WebServer ( std::string local_ip, int port /*, int threads */ )
+    : local_ip ( local_ip ), port ( port ), httpServer_( std::unique_ptr< IHttpServer >( new HttpServer( local_ip, port/* , threads */, dynamic_cast< http::HttpRequestHandler * > ( this ) ) ) ) /*, threads(threads) */ {}
+
+WebServer::~WebServer() {}
 
 void WebServer::register_servlet ( HttpServlet * servlet ) {
 	servlets.push_back ( servlet );
@@ -72,15 +78,17 @@ void WebServer::handle_request ( HttpRequest & request, HttpResponse & response,
 			std::cout << request.remoteIp() << " user-identifier anonymous [" << "] \"" << request.method() << " " <<
 					  request.uri() << " HTTP/" << request.httpVersionMajor() << "." << request.httpVersionMinor() << " " <<
 					  http::parse_status ( response.status() ) << " " << response.size() << std::endl;
-			fptr();
+
+            fptr(); // execute the calback method.
 			return;
 		}
 	}
 }
 
 void WebServer::start() {
-	HttpServerFactory::start ( local_ip, port/* , threads */, dynamic_cast< http::HttpRequestHandler * > ( this ) );
+    httpServer_->start();
 }
-void WebServer::stop() { /* TODO */}
-
+void WebServer::stop() {
+    httpServer_->stop();
+}
 } //http

@@ -25,24 +25,6 @@ inline namespace asio_impl {
 HttpClientConnection::HttpClientConnection ( const std::string & server, const std::string & service ) :
 	io_service_(), resolver_ ( io_service_ ), socket_ ( io_service_ ) {
 
-	/*
-	asio::ip::tcp::resolver::query query ( server, service );
-	asio::ip::tcp::resolver::iterator endpoint_iterator = resolver_.resolve ( query );
-	asio::ip::tcp::resolver::iterator end;
-
-	// Try each endpoint until we successfully establish a connection.
-	asio::error_code error = asio::error::host_not_found;
-
-	while ( error && endpoint_iterator != end ) {
-		socket_.close();
-		socket_.connect ( *endpoint_iterator++, error );
-	}
-
-	if ( error ) { throw error; }
-
-	std::cout << "socket connected" << std::endl;
-	*/
-
 	buffer = std::unique_ptr<char[]> ( new char[ BUFFER_SIZE ] );
 
 	asio::ip::tcp::resolver::query query ( server, service );
@@ -61,6 +43,9 @@ HttpClientConnection::~HttpClientConnection() {
 }
 
 void HttpClientConnection::start ( HttpRequest * request, HttpResponse * response, std::function<void ( HttpResponse& ) > callback ) {
+
+    // TODO std::cout << socket_.;
+
 	httpRequest_ = request;
 	httpResponse_ = response;
 	callback_ = callback;
@@ -94,8 +79,6 @@ void HttpClientConnection::start ( HttpRequest * request, HttpResponse * respons
 
 	request_stream << "\r\n";
 
-
-//    socket_.send( asio::buffer ( request_.data() ) );
 
 	asio::async_write ( socket_, request_,
 						std::bind ( &HttpClientConnection::handle_write_request, this,
@@ -140,9 +123,8 @@ void HttpClientConnection::handle_write_request ( const asio::error_code& err ) 
 
 	if ( !err ) {
 
-		size_t read_size = 0; //TODO
-		/* httpRequest_->outBody()->read ( buffer.get(), buffer_size );
-		size_t read_size = httpRequest_->outBody()->gcount(); */
+        httpRequest_->outBody()->read ( buffer.get(), BUFFER_SIZE );
+        size_t read_size = httpRequest_->outBody()->gcount();
 
 		if ( read_size > 0 ) {
 			asio::async_write ( socket_, asio::buffer ( buffer.get(), read_size ),
@@ -185,6 +167,7 @@ void HttpClientConnection::readHeaders ( const asio::error_code& err, const size
 			std::cout << "body complete, size:" << ( size - position ) << std::endl;
 			std::string body ( buffer_.data(), position, size - position );
 			std::cout << body << std::endl;
+            callback_ ( *httpResponse_ );
 		}
 
 	} else {

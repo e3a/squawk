@@ -22,7 +22,7 @@
 #include "http.h"
 #include "fileservlet.h"
 
-#include "../db/sqlite3database.h"
+#include "../db/sqlite3connection.h"
 
 #include "log4cxx/logger.h"
 
@@ -31,12 +31,12 @@ namespace servlet {
 
 class SongServlet : public ::http::servlet::FileServlet {
 public:
-    explicit SongServlet( const std::string path, squawk::db::Sqlite3Database * db ) :
+    explicit SongServlet( const std::string & path, squawk::db::Sqlite3Connection * db ) :
         FileServlet( path, std::string("") ), db( db ) {}
     virtual void do_get( ::http::HttpRequest & request, ::http::HttpResponse & response );
 private:
     static log4cxx::LoggerPtr logger;
-    squawk::db::Sqlite3Database * db;
+    squawk::db::Sqlite3Connection * db;
 };
 }}
 #endif // SONGSERVLET_H

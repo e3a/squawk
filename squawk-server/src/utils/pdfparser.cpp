@@ -28,7 +28,7 @@
 
 std::string PdfParser::parsePdf( const std::string & filename ) {
 
-    static pcrecpp::RE re("ISBN[\\ |:]*([\\d|-]*)");
+    static pcrecpp::RE re("ISBN(-10)? *:? *([\\d*-?]*)");
     poppler::document * doc = poppler::document::load_from_file  ( filename );
     if( doc == nullptr ) {
         std::cerr << "unable to open pdf document" << std::endl;
@@ -37,8 +37,8 @@ std::string PdfParser::parsePdf( const std::string & filename ) {
     size_t pages = doc->pages();
     for( size_t i=0; i<pages; i++ ) {
         poppler::page * p = doc->create_page( i );
-        std::string isbn_;
-        if( re.PartialMatch( p->text().to_latin1(), &isbn_ ) ) {
+        std::string dummy, isbn_;
+        if( re.PartialMatch( p->text().to_latin1(), &dummy, &isbn_ ) ) {
             return isbn_;
         }
     }

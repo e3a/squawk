@@ -61,6 +61,10 @@ public:
     /** @brief the servers uuid */
     std::string uuid();
 
+    std::map< std::string, std::vector< std::string > > getMap() {
+        return store;
+    }
+
     bool rescan = false;
 
     /** @brief validate the options */
@@ -82,7 +86,7 @@ public:
      * @brief save the configuration xml file.
      * @param filename
      */
-    void save(const std::string & filename);
+    void save(const std::string & filename) const;
 
     /**
      * @brief operator write the options to the ostream.

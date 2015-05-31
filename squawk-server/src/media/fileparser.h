@@ -22,11 +22,15 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 #include <squawk.h>
 #include <media.h>
 #include "../squawkconfig.h"
+#include "../db/sqlite3database.h"
 #include "mediadao.h"
+
+
 
 #include "pcrecpp.h" 
 #include "sys/stat.h"
@@ -38,7 +42,8 @@ namespace media {
 
 class FileParser {
   public:
-    FileParser(squawk::db::Sqlite3Database * db, SquawkConfig * squawk_config) : mediaDao(new MediaDao(db)), squawk_config(squawk_config) {
+    FileParser(const std::string & database_file, const std::string & tmp_directory) :
+        mediaDao(std::unique_ptr<MediaDao>( new MediaDao( squawk::db::Sqlite3Database::instance().connection( database_file ) ) ) ), tmp_directory_(tmp_directory) {
 //TODO        parsers.insert( parsers.end(), new squawk::media::FlacParser() );
 //TODO        parsers.insert( parsers.end(), new squawk::media::LibAVcpp() );
 //TODO        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/audio" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH ); //TODO not used
@@ -53,26 +58,27 @@ class FileParser {
 //TODO        for( auto * parser : parsers )
 //TODO            delete parser;
     }
-    enum FILE_TYPE {MP3, OGG, FLAC, MUSEPACK, MONKEY_AUDIO, IMAGE, AUDIOFILE, IMAGEFILE, VIDEOFILE, UNKNOWN};
+    enum FILE_TYPE {MP3, OGG, FLAC, MUSEPACK, MONKEY_AUDIO, IMAGE, AUDIOFILE, IMAGEFILE, VIDEOFILE, EBOOK, UNKNOWN};
     void parse( std::vector< std::string > paths );
 
     enum DIRECTORY_TYPE { MUSIC, IMAGES, MOVIES, NONE };
 
-    std::string get_artist_clean_name(std::string artist);
-    std::string get_artist_letter(std::string artist);
-    std::string get_album_clean_path(std::string path);
+//    static void get_artist_clean_name( std::string & artist );
+    static std::string get_artist_letter( const std::string & artist );
+    static std::string get_album_clean_path( const std::string & path);
     
   private:
     static log4cxx::LoggerPtr logger;
-    MediaDao * mediaDao;
-    SquawkConfig * squawk_config;
+    std::unique_ptr< MediaDao > mediaDao;
+    const std::string tmp_directory_;
+//    SquawkConfig * squawk_config;
 
 //TODO    std::vector< MetadataParser* > parsers;
 
     std::map<std::string, int> statistic;
     DIRECTORY_TYPE _parse(const std::string & basepath, const std::string & path);
     
-    std::string get_mime_type(const std::string & filename);
+    static std::string get_mime_type(const std::string & filename);
   
     static pcrecpp::RE re;
 };

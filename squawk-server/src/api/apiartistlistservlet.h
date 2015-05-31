@@ -1,6 +1,6 @@
 /*
-    <one line to give the library's name and an idea of what it does.>
-    Copyright (C) 2013  <copyright holder> <email>
+    api artist list servlet definition.
+    Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -22,8 +22,10 @@
 
 #include <string>
 
+#include "squawk.h"
 #include "http.h"
 #include "../db/sqlite3database.h"
+#include "../db/sqlite3connection.h"
 #include "../db/sqlite3statement.h"
 
 #include "log4cxx/logger.h"
@@ -31,13 +33,21 @@
 namespace squawk {
 namespace api {
 
+/**
+ * @brief The ApiArtistListServlet class
+ */
 class ApiArtistListServlet : public ::http::HttpServlet {
 public:
-    ApiArtistListServlet(const std::string path, squawk::db::Sqlite3Database * db) : HttpServlet(path), db(db) {}
-    virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
+	ApiArtistListServlet ( const std::string & path, http::HttpServletContext context ) : HttpServlet ( path ),
+		db ( squawk::db::Sqlite3Database::instance().connection ( context.parameter ( squawk::CONFIG_DATABASE_FILE ) ) ) {}
+	virtual void do_get ( ::http::HttpRequest & request, ::http::HttpResponse & response );
 private:
-    static log4cxx::LoggerPtr logger;
-    squawk::db::Sqlite3Database * db;
+	static log4cxx::LoggerPtr logger;
+	static std::string QUERY_ARTISTS;
+	static std::string QUERY_ARTISTS_FILTER;
+
+	squawk::db::db_connection_ptr db;
 };
-}}
+} // api
+} //squawk
 #endif // APIARTISTLISTSERVET_H

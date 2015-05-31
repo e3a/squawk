@@ -20,10 +20,7 @@
 #include <vector>
 
 #include "http.h"
-#include "httpresponseparser.h"
 
-
-/* #include "http-utils.h" */
 #include <gtest/gtest.h>
 
 

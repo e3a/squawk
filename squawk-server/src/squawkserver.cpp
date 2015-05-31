@@ -36,7 +36,7 @@
 #include "api/apiartistlistservlet.h"
 #include "api/apialbumitemservlet.h"
 #include "servlet/apistatisticservlet.h"
-#include "api/apialbumsletterservlet.h"
+// TODO #include "api/apialbumsletterservlet.h"
 #include "api/apivideolistservlet.h"
 #include "api/mediaservlet.h"
 #include "api/coverservlet.h"
@@ -63,16 +63,20 @@ void SquawkServer::start() {
     ssdp_event_logger = 
       std::unique_ptr<squawk::LoggerEventListener>( new squawk::LoggerEventListener() );
   
+    /*
     database = new squawk::db::Sqlite3Database();
     database->open( squawk_config->databaseFile() );
+    */
 
-    parser = new squawk::media::FileParser(database, squawk_config);
+    http::HttpServletContext context( squawk_config->getMap() );
+    parser = new squawk::media::FileParser(squawk_config->databaseFile(), squawk_config->tmpDirectory());
+
 
     //Setup and start the DLNA server
-    commons::upnp::ContentDirectoryModule * musicDirectory = new squawk::upnp::UpnpMusicDirectoryModule(squawk_config, database);
-    commons::upnp::ContentDirectoryModule * videoDirectory = new squawk::upnp::UpnpVideoDirectory(squawk_config, database);
-    commons::upnp::ContentDirectoryModule * imageDirectory = new squawk::upnp::UpnpImageDirectory(squawk_config, database);
-    squawk::upnp::UpnpContentDirectory * content_directory = new squawk::upnp::UpnpContentDirectory("/ctl/ContentDir");
+    commons::upnp::ContentDirectoryModule * musicDirectory = new squawk::upnp::UpnpMusicDirectoryModule( context );
+    commons::upnp::ContentDirectoryModule * videoDirectory = new squawk::upnp::UpnpVideoDirectory( context );
+    commons::upnp::ContentDirectoryModule * imageDirectory = new squawk::upnp::UpnpImageDirectory( context );
+    squawk::upnp::UpnpContentDirectory * content_directory = new squawk::upnp::UpnpContentDirectory("/ctl/ContentDir", context );
     content_directory->registerContentDirectoryModule(musicDirectory);
     content_directory->registerContentDirectoryModule(videoDirectory);
     content_directory->registerContentDirectoryModule(imageDirectory);
@@ -86,30 +90,30 @@ void SquawkServer::start() {
                 squawk_config->httpPort() /*,
                 squawk_config->int_value(CONFIG_HTTP_THREADS) */ );
 
-    squawk::upnp::UpnpXmlDescription * xmldescription = new squawk::upnp::UpnpXmlDescription(std::string("/rootDesc.xml"), squawk_config );
+    squawk::upnp::UpnpXmlDescription * xmldescription = new squawk::upnp::UpnpXmlDescription(std::string("/rootDesc.xml"), context );
     squawk::servlet::ApiStatisticServlet * statistic_servlet = new squawk::servlet::ApiStatisticServlet(std::string("/api/statistic"), database);
-    squawk::api::ApiAlbumListServlet * albums_servlet = new squawk::api::ApiAlbumListServlet(std::string("/api/album"), database);
-    squawk::api::ApiVideoListServlet * videos_servlet = new squawk::api::ApiVideoListServlet(std::string("/api/video"), database);
+    squawk::api::ApiAlbumListServlet * albums_servlet = new squawk::api::ApiAlbumListServlet(std::string("/api/album"), context );
+    squawk::api::ApiVideoListServlet * videos_servlet = new squawk::api::ApiVideoListServlet(std::string("/api/video"), context );
 //    squawk::servlet::ApiAlbumsByArtist * albumsbyartist_servlet = new squawk::servlet::ApiAlbumsByArtist(std::string("/api/artist/(\\d+)/album"), database);
-    squawk::api::ApiArtistListServlet * artists_servlet = new squawk::api::ApiArtistListServlet(std::string("/api/artist"), database);
-    squawk::api::ApiAlbumItemServlet * album_servlet = new squawk::api::ApiAlbumItemServlet(std::string("/api/album/(\\d*)"), database);
-    squawk::api::ApiAlbumsLetterServlet * letter_servlet = new squawk::api::ApiAlbumsLetterServlet(std::string("/api/album/letter"), database);
+    squawk::api::ApiArtistListServlet * artists_servlet = new squawk::api::ApiArtistListServlet(std::string("/api/artist"), context );
+    squawk::api::ApiAlbumItemServlet * album_servlet = new squawk::api::ApiAlbumItemServlet(std::string("/api/album/(\\d*)"), context );
+    // TODO squawk::api::ApiAlbumsLetterServlet * letter_servlet = new squawk::api::ApiAlbumsLetterServlet(std::string("/api/album/letter"), context );
 
-    squawk::api::CoverServlet * cover_servlet = new squawk::api::CoverServlet("/album/(\\d*)/cover.jpg", squawk_config->tmpDirectory());
+    squawk::api::CoverServlet * cover_servlet = new squawk::api::CoverServlet("/api/album/(\\d*)/cover.jpg", context );
     squawk::servlet::ImageServlet * image_servlet = new squawk::servlet::ImageServlet("/album/image/(\\d*).jpg", squawk_config->tmpDirectory());
     squawk::servlet::SongServlet * song_servlet = new squawk::servlet::SongServlet("/song/(\\d*).(flac|mp3)", database);
 
-    squawk::api::MediaServlet * media_servlet = new squawk::api::MediaServlet("/file/(video|audio|image|cover)/(\\d*).(flac|mp3|avi|mp4|mkv|jpg)", database);
-    squawk::api::ApiBrowseServlet * browse_servlet = new squawk::api::ApiBrowseServlet("/(video|image|book)/?([0-9]+)?", database);
+    squawk::api::MediaServlet * media_servlet = new squawk::api::MediaServlet("/file/(video|audio|image|cover)/(\\d*).(flac|mp3|avi|mp4|mkv|jpg)", context );
+    squawk::api::ApiBrowseServlet * browse_servlet = new squawk::api::ApiBrowseServlet("/(video|image|book)/?([0-9]+)?", context );
 
-    squawk::upnp::UpnpMediaServlet * upnp_media_servlet = new squawk::upnp::UpnpMediaServlet("/(video|audio|image)/(\\d*).(flac|mp3|avi|mp4|mkv)", database);
+    squawk::upnp::UpnpMediaServlet * upnp_media_servlet = new squawk::upnp::UpnpMediaServlet("/(video|audio|image)/(\\d*).(flac|mp3|avi|mp4|mkv)", context );
 
     http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->docRoot());
 
     web_server->register_servlet(content_directory);
     web_server->register_servlet(connection_manager);
     web_server->register_servlet(xmldescription);
-    web_server->register_servlet(letter_servlet);
+    // TODO web_server->register_servlet(letter_servlet);
     web_server->register_servlet(album_servlet);
     web_server->register_servlet(albums_servlet);
     web_server->register_servlet(videos_servlet);
@@ -187,17 +191,16 @@ void SquawkServer::start() {
     ssdp_server->search();
 }
 void SquawkServer::stop() {
+    std::cout << "stop ssdp_server" << std::endl;
     ssdp_server->stop();
     delete ssdp_server;
-
-    std::cout << "ssdp server destroyes" << std::endl; 	
   
-  
-//TODO    http_server->stop();
-    http_thread.join();
-
-    delete parser;
+    std::cout << "stop web_server" << std::endl;
+    web_server->stop();
     delete web_server;
+
+    std::cout << "delete parser" << std::endl;
+    delete parser;
 }
 
 int main(int ac, const char* av[]) {

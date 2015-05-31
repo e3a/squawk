@@ -22,22 +22,29 @@
 
 #include <string>
 
+#include "squawk.h"
 #include "http.h"
+
 #include "../db/sqlite3database.h"
-#include "../db/sqlite3statement.h"
+#include "../db/sqlite3connection.h"
 
 #include "log4cxx/logger.h"
 
 namespace squawk {
 namespace api {
-
-class ApiVideoListServlet : public ::http::HttpServlet {
+/**
+ * @brief The ApiVideoListServlet class
+ */
+class ApiVideoListServlet : public http::HttpServlet {
 public:
-    ApiVideoListServlet(const std::string path, squawk::db::Sqlite3Database * db) : HttpServlet(path), db(db) {}
-    virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
+	ApiVideoListServlet ( const std::string & path, http::HttpServletContext context ) : HttpServlet ( path ),
+		db ( squawk::db::Sqlite3Database::instance().connection ( context.parameter ( squawk::CONFIG_DATABASE_FILE ) ) ) {}
+	~ApiVideoListServlet() {}
+	virtual void do_get ( http::HttpRequest & request, http::HttpResponse & response ) override;
 private:
-    static log4cxx::LoggerPtr logger;
-    squawk::db::Sqlite3Database * db;
+	static log4cxx::LoggerPtr logger;
+	squawk::db::db_connection_ptr db;
 };
-}}
+} // api
+} // squawk
 #endif // APIVIDEOLISTSERVLET_H

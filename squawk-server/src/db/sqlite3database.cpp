@@ -1,7 +1,6 @@
 /*
-    SQLite3 Database implementation.
-
-    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
+    DB database manager implementation.
+    Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -18,42 +17,19 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <sqlite3.h>
-
 #include "sqlite3database.h"
-#include "sqlite3statement.h"
-#include "dbexception.h"
 
 namespace squawk {
 namespace db {
 
-int Sqlite3Database::exec( const std::string & query ) {
-    return sqlite3_exec(db, query.c_str(), NULL, NULL, NULL);
-}
+db_connection_ptr Sqlite3Database::connection ( const std::string & path ) {
+	std::lock_guard<std::mutex> lck ( mtx_ );
 
-void Sqlite3Database::open( const std::string & path ) {
-    int res = sqlite3_open(path.c_str(), &db);
-    if(res != SQLITE_OK) {
-        throw DbException(res, sqlite3_errmsg(db));
-    }
+	if ( connections_.find ( path ) == connections_.end() ) {
+        connections_[ path ] = std::shared_ptr< Sqlite3Connection > ( new Sqlite3Connection ( path ) );
+	}
+
+	return connections_[ path ];
 }
-int Sqlite3Database::close() {
-    return sqlite3_close(db);
-}
-Sqlite3Statement * Sqlite3Database::prepare_statement(const std::string & statement) {
-    sqlite3_stmt * sqlite3_statement;
-    int res = sqlite3_prepare(db, statement.c_str(), -1, &sqlite3_statement, 0);
-    if(SQLITE_OK != res) {
-        throw DbException(res, sqlite3_errmsg(db));
-    }
-    Sqlite3Statement * stmt = new Sqlite3Statement(db, sqlite3_statement);
-    return stmt;
-}
-void Sqlite3Database::release_statement(Sqlite3Statement * statement) {
-    statement->reset();
-    delete statement;
-}
-unsigned long Sqlite3Database::last_insert_rowid() {
-    return sqlite3_last_insert_rowid(db);
-}
-}}
+} // db
+} // squawk

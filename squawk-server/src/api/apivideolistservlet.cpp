@@ -18,49 +18,46 @@
 
 #include "apivideolistservlet.h"
 
-#include <sstream>
-
+#include "squawk.h"
 #include "commons.h"
-#include "mimetypes.h"
-
-#define QUERY_VIDEO "select filename, mime_type, ROWID from tbl_cds_movies" //TODO name
 
 namespace squawk {
 namespace api {
 
-log4cxx::LoggerPtr ApiVideoListServlet::logger(log4cxx::Logger::getLogger("squawk.api.ApiVideoListServlet"));
+log4cxx::LoggerPtr ApiVideoListServlet::logger ( log4cxx::Logger::getLogger ( "squawk.api.ApiVideoListServlet" ) );
 
-void ApiVideoListServlet::do_get(::http::HttpRequest&, ::http::HttpResponse & response) {
+void ApiVideoListServlet::do_get ( http::HttpRequest&, http::HttpResponse & response ) {
 
-    squawk::db::Sqlite3Statement * stmt_video = NULL;
-    response << "[";
+	response << "[";
 
-    try {
-        stmt_video = db->prepare_statement( QUERY_VIDEO );
-        bool first_video = true;
-        while( stmt_video->step() ) {
-            if( first_video ) first_video = false; else response << ",";
-            response << "{\"name\":\"" << commons::string::escape_json(stmt_video->get_string(0)) <<
-                        "\", \"mime-type\":\"" << commons::string::escape_json(stmt_video->get_string(1)) <<
-                        "\", \"ext\":\"" << http::mime::extension( stmt_video->get_string(1) ) <<
-                        "\", \"id\":" << commons::string::to_string<int>(stmt_video->get_int(2)) << "}";
-        }
+	try {
+        squawk::db::db_statement_ptr stmt_video = db->prepareStatement ( squawk::sql::QUERY_VIDEOS );
+		bool first_video = true;
 
-        response << "]";
+		while ( stmt_video->step() ) {
+			if ( first_video ) { first_video = false; }
 
-        db->release_statement(stmt_video);
+			else { response << ","; }
+            // ROWID, name, filename, mime_type, duration, filesize, sampleFrequency, width, height, bitrate, channels
+            response << "{\"name\":\"" << commons::string::escape_json ( stmt_video->get_string ( 1 ) ) <<
+                     "\", \"mime-type\":\"" << commons::string::escape_json ( stmt_video->get_string ( 3 ) ) <<
+                     "\", \"ext\":\"" << http::mime::extension ( stmt_video->get_string ( 3 ) ) <<
+                     "\", \"id\":" << commons::string::to_string<int> ( stmt_video->get_int ( 0 ) ) << "}";
+		}
 
-    } catch( squawk::db::DbException & e ) {
-        LOG4CXX_FATAL(logger, "Can not get videos, Exception:" << e.code() << "-> " << e.what());
-        if(stmt_video != NULL) db->release_statement(stmt_video);
-        throw http::http_status::INTERNAL_SERVER_ERROR;
-    } catch( ... ) {
-        LOG4CXX_FATAL(logger, "Can not get videos" );
-        if(stmt_video != NULL) db->release_statement(stmt_video);
-        throw http::http_status::INTERNAL_SERVER_ERROR;
-    }
+		response << "]";
 
-    response.set_mime_type( ::http::mime::JSON );
-    response.status( ::http::http_status::OK );
+	} catch ( squawk::db::DbException & e ) {
+		LOG4CXX_FATAL ( logger, "Can not get videos, Exception:" << e.code() << "-> " << e.what() );
+		throw http::http_status::INTERNAL_SERVER_ERROR;
+
+	} catch ( ... ) {
+		LOG4CXX_FATAL ( logger, "Can not get videos" );
+		throw http::http_status::INTERNAL_SERVER_ERROR;
+	}
+
+	response.set_mime_type ( http::mime::JSON );
+	response.status ( http::http_status::OK );
 }
-}}
+} // api
+} // squawk

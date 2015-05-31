@@ -23,7 +23,7 @@
 #include <string>
 
 #include "http.h"
-#include "../squawkconfig.h"
+#include "squawk.h"
 
 #include "log4cxx/logger.h"
 
@@ -45,11 +45,12 @@ public:
      * @param path The servlet path
      * @param config the SquawkConfig class
      */
-    UpnpXmlDescription( const std::string path, SquawkConfig * config ) : HttpServlet(path), config(config) {}
+    UpnpXmlDescription( const std::string & path, http::HttpServletContext context ) : HttpServlet( path ),
+        uuid( context.parameter( squawk::CONFIG_UUID ) ) {}
     virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
     static log4cxx::LoggerPtr logger;
-    SquawkConfig * config;
+    std::string uuid;
 };
 }}
 

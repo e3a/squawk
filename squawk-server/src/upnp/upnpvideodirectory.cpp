@@ -18,7 +18,7 @@
 
 #include "upnpvideodirectory.h"
 
-#include "mimetypes.h"
+#include "http.h"
 
 namespace squawk {
 namespace upnp {
@@ -72,7 +72,7 @@ void UpnpVideoDirectory::parseNode( commons::xml::XMLWriter * xmlWriter, commons
            xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "date", /* year_ + */ "2014-01-01" ); //TODO
 
            commons::xml::Node dlna_res_node = xmlWriter->element(item_element, "", "res",
-               "http://" +squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) +
+               "http://" + http_address_ + ":" + commons::string::to_string( http_port_ ) +
                "/video/" + commons::string::to_string( id ) + "." + http::mime::extension( mime_type ) );
 
            std::string tmp_type = mime_type;
@@ -84,7 +84,8 @@ void UpnpVideoDirectory::parseNode( commons::xml::XMLWriter * xmlWriter, commons
            xmlWriter->attribute(dlna_res_node, "", "protocolInfo",
 //                                "http-get:*:video/mp4:DLNA.ORG_PN=AVC_MP4_HP_HD_AAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000" );
                                 //               "http-get:*:" + mime_type  + ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000" );
-               "http-get:*:" + tmp_type + ":*");
+                // "http-get:*:" + tmp_type + ":*");
+                "http-get:*:video/mp4:*");
            xmlWriter->attribute(dlna_res_node, "", "duration", commons::string::time_to_string( duration ) );
            xmlWriter->attribute(dlna_res_node, "", "size", commons::string::to_string( size ) );
            xmlWriter->attribute(dlna_res_node, "", "sampleFrequency", commons::string::to_string( sample_frequency) );

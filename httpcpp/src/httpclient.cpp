@@ -21,8 +21,6 @@
 
 #include "asio/httpclientconnection.h"
 
-#include "http.h"
-
 namespace http {
 
 HttpClient::HttpClient ( const std::string & ip, const int & port, const std::string & uri ) :
@@ -33,6 +31,7 @@ HttpClient::~HttpClient() {}
 void HttpClient::invoke ( HttpRequest & request, std::function<void ( HttpResponse& ) > callback ) {
 	std::cout << "HTTPclient  invoke" << std::endl;
 
+    //TODO add all neccesary headers
 	if ( request.isPersistent() ) {
 		request.parameters_[header::CONNECTION] = "keep-alive";
 
@@ -41,7 +40,6 @@ void HttpClient::invoke ( HttpRequest & request, std::function<void ( HttpRespon
 	}
 
 	connection->start ( &request, &response, callback );
-//	callback ( response );
 }
 std::string HttpClient::parseIp ( const std::string & url ) {
 	if ( url.find ( "http://" ) == 0 ) {
@@ -67,10 +65,10 @@ int HttpClient::parsePort ( const std::string & url ) {
 		size_t slash_pos = url.find_first_of ( "/", 7 );
 
 		if ( slash_pos != std::string::npos ) {
-			return commons::string::parse_string<int> ( url.substr ( dot_pos + 1, slash_pos - dot_pos ) );
+            return std::stoi ( url.substr ( dot_pos + 1, slash_pos - dot_pos ) );
 
 		} else {
-			return commons::string::parse_string<int> ( url.substr ( dot_pos + 1, url.size() - dot_pos ) );
+            return std::stoi ( url.substr ( dot_pos + 1, url.size() - dot_pos ) );
 		}
 
 	} else { return 0; }

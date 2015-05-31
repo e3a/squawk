@@ -31,8 +31,6 @@ log4cxx::LoggerPtr SongServlet::logger(log4cxx::Logger::getLogger("squawk.servle
 
 void SongServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & response ) {
 
-    squawk::db::Sqlite3Statement * stmt_song = NULL;
-
     int song_id = 0;
     bool result = match(request.uri(), &song_id);
     if(result && song_id > 0) {
@@ -41,7 +39,7 @@ void SongServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & 
 
             LOG4CXX_TRACE( logger, "song_id: " << song_id )
 
-            stmt_song = db->prepare_statement( QUERY_SONG );
+            squawk::db::db_statement_ptr stmt_song = db->prepareStatement( QUERY_SONG );
             stmt_song->bind_int( 1, song_id );
             if( stmt_song->step() ) {
                 request.uri( stmt_song->get_string(0) );
@@ -49,13 +47,9 @@ void SongServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & 
             } else {
                 LOG4CXX_TRACE( logger, "file not found: " << song_id )
             }
-            db->release_statement( stmt_song );
             FileServlet::do_get(request, response);
 
         } catch( squawk::db::DbException & e ) {
-            if( stmt_song != NULL ) {
-                db->release_statement( stmt_song );
-            }
             LOG4CXX_FATAL( logger, "can not get song path: " << e.code() << ":" << e.what() )
             throw ::http::http_status::INTERNAL_SERVER_ERROR;
         }

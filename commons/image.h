@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <string>
-#include <mimetypes.h>
+#include <httpcpp/mimetypes.h>
 
 #include "Imlib2.h"
 

@@ -20,6 +20,7 @@
 #include "http.h"
 
 namespace http  {
+
 HttpRequest::HttpRequest ( const std::string & path ) :
 	method_ ( std::string ( method::GET ) ), uri_ ( path ), protocol_ ( "HTTP" ), remote_ip_ ( std::string ( "" ) ),
 	body_size_ ( 0 ), http_version_major_ ( 1 ), http_version_minor_ ( 1 ),
@@ -81,7 +82,7 @@ void HttpRequest::requestBody ( const size_t & size, std::shared_ptr< std::istre
 const std::string HttpRequest::requestBody() const {
 	return ( *std::dynamic_pointer_cast<std::stringstream> ( out_body_ ) ).str();
 }
-bool HttpRequest::isPersistent() { //TODO check standard
+bool HttpRequest::isPersistent() {
 	return http_version_major_ == 1 && http_version_minor_ == 1 &&
 		   parameters_.find ( header::CONNECTION ) != parameters_.end() &&
 		   parameters_[ header::CONNECTION ] == "keep-alive";
@@ -160,5 +161,4 @@ std::ostream& operator<< ( std::ostream& out, const http::HttpRequest & request 
 
 	return out;
 }
-
 } //http

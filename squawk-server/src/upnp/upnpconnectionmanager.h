@@ -36,10 +36,13 @@ namespace upnp {
 /**
  * @brief The UpnpConnectionManager class.
  */
-class UpnpConnectionManager : public ::http::HttpServlet {
+class UpnpConnectionManager : public http::HttpServlet {
 public:
-    UpnpConnectionManager( const std::string path ) : HttpServlet(path) {}
+    UpnpConnectionManager( const std::string & path, http::HttpServletContext context ) : HttpServlet(path) {}
+
+    UpnpConnectionManager( const std::string & path ) : HttpServlet(path) {}
     virtual void do_post(::http::HttpRequest & request, ::http::HttpResponse & response);
+    virtual void do_default( const std::string & method, http::HttpRequest & request, http::HttpResponse & response );
 private:
     static log4cxx::LoggerPtr logger;
     std::string SOURCE_TYPES =
@@ -134,5 +137,6 @@ private:
         "http-get:*:audio/x-flac:*," \
         "http-get:*:application/ogg:*";
 };
-}}
+} // upnp
+} // squawk
 #endif // UPNPCONNECTIONMANAGER_H

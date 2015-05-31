@@ -5,7 +5,7 @@ mediafile::mediafile()
 }
 
 
-int main(int ac, const char* av[]) {
+int main(int, const char* av[]) {
     std::cout << "load mediafile: " << av[1] << std::endl;
 
     commons::media::MediaFile file = commons::media::MediaParser::parseFile( av[1] );

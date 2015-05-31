@@ -21,6 +21,7 @@
 #define MEDIADAO_H
 
 #include "log4cxx/logger.h"
+#include "../db/sqlite3connection.h"
 #include "../db/sqlite3database.h"
 
 #include "squawk.h"
@@ -30,17 +31,20 @@
 namespace squawk {
 namespace media {
 
-
+/**
+ * @brief The file_item struct
+ */
 struct file_item {
   enum IMAGE_TYPE { COVER, OTHER, FOLDER } type;
-  file_item(std::string name, std::string mime_type, unsigned long mtime, unsigned long size) : name(name), mime_type(mime_type), mtime(mtime), size(size) {};
+  file_item( const std::string & name, const std::string & mime_type, const unsigned long & mtime, const unsigned long & size) :
+      name(name), mime_type(mime_type), mtime(mtime), size(size) {}
   std::string name, mime_type;
   unsigned long mtime, size;
 };
 
 class MediaDao {
 public:
-    MediaDao(squawk::db::Sqlite3Database * db);
+    MediaDao( squawk::db::db_connection_ptr db );
     ~MediaDao();
     void start_transaction();
     void end_transaction();
@@ -62,21 +66,9 @@ public:
 
 private:
     static log4cxx::LoggerPtr logger;
-    squawk::db::Sqlite3Database * db;
-    std::map<std::string, squawk::db::Sqlite3Statement *> stmtMap;
-    bool exist(std::string table, std::string filename, long mtime, long size, bool update);
-    const std::string create_statements[10] {
-        "create table if not exists tbl_cds_audiofiles(album_id, filename NOT NULL, filesize, mtime, title, track, timestamp, mime_type, bitrate, sample_rate, bits_per_sample, channels, length, disc);",
-        "CREATE UNIQUE INDEX IF NOT EXISTS UniqueIndexFilename ON tbl_cds_audiofiles (filename)",
-        "create table if not exists tbl_cds_artists_albums(album_id, artist_id, role);",
-        "CREATE UNIQUE INDEX IF NOT EXISTS UniqueIndexMapping ON tbl_cds_artists_albums (album_id, artist_id)",
-        "create table if not exists tbl_cds_artists(name, clean_name, letter);",
-        "create table if not exists tbl_cds_albums(path, name, genre, year, clean_name, letter);",
-        "create table if not exists tbl_cds_images(album, filename, mtime, timestamp, filesize, type, mime_type, width, height);",
-        "CREATE UNIQUE INDEX IF NOT EXISTS UniqueIndexImagesFilename ON tbl_cds_images (filename)",
-        "create table if not exists tbl_cds_movies(name, parent, type, filename, mtime, timestamp, filesize, mime_type);",
-        "create table if not exists tbl_cds_files(name, parent, type, filename, mtime, timestamp, filesize, mime_type, width, height, color, bitrate, sampleFrequency, channels, duration, codecId);"
-    };
+    squawk::db::db_connection_ptr db;
+    bool exist(const squawk::sql::TBL_NAMES & table_name, const std::string & filename, const long & mtime, const long & size, const bool & update);
 };
-}}
+} // media
+} // squawk
 #endif // MEDIADAO_H

@@ -31,8 +31,8 @@ void UpnpContentDirectory::registerContentDirectoryModule( commons::upnp::Conten
     modules.insert( modules.end(), module );
 }
 
-void UpnpContentDirectory::do_subscribe(::http::HttpRequest & request, ::http::HttpResponse & response) {
-    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "SUBSCRIBE: " << request.requestBody() )
+void UpnpContentDirectory::do_default( const std::string & method, ::http::HttpRequest & request, ::http::HttpResponse & response) {
+    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, method << ": " << request.requestBody() )
     response.set_mime_type( ::http::mime::XML );
     response.status( ::http::http_status::OK );
     response.parameter(http::header::CONTENT_TYPE, "text/xml; charset=\"utf-8\"");

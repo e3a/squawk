@@ -21,7 +21,6 @@
 #include <sstream>
 
 #include "commons.h"
-#include "mimetypes.h"
 #include "squawk.h"
 
 #define QUERY_SONG
@@ -156,7 +155,7 @@ void UpnpMediaServlet::do_head( ::http::HttpRequest & request, ::http::HttpRespo
 
 void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpResponse & response ) {
 
-    squawk::db::Sqlite3Statement * stmt_song = NULL;
+    squawk::db::db_statement_ptr stmt_song = NULL;
 
     LOG4CXX_TRACE( logger, "get media file: " << request )
 
@@ -184,9 +183,9 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
             LOG4CXX_TRACE( logger, "id: " << type << ":" << song_id )
 
             if( type == "audio" ) {
-                stmt_song = db->prepare_statement( "select songs.filename from tbl_cds_audiofiles songs where songs.ROWID = ?" );
+                stmt_song = db->prepareStatement( "select songs.filename from tbl_cds_audiofiles songs where songs.ROWID = ?" );
             } else if( type == "video" ) {
-                stmt_song = db->prepare_statement( "select video.filename from tbl_cds_files video where video.ROWID = ?" );
+                stmt_song = db->prepareStatement( "select video.filename from tbl_cds_files video where video.ROWID = ?" );
             } else if( squawk::DEBUG ) LOG4CXX_TRACE( logger, "can not find type: " << type )
 
             stmt_song->bind_int( 1, song_id );
@@ -196,7 +195,6 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
             } else {
                 LOG4CXX_TRACE( logger, "file not found: " << song_id )
             }
-            db->release_statement( stmt_song );
 
             //Add the DLNA headers if requested
             //TODO correct them ;)
@@ -211,9 +209,6 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
             }
             response.parameter("Server", "Debian/wheezy/sid DLNADOC/1.50 UPnP/1.0 Squawk/0.1");
         } catch( squawk::db::DbException & e ) {
-            if( stmt_song != NULL ) {
-                db->release_statement( stmt_song );
-            }
             LOG4CXX_FATAL( logger, "can not get song path: " << e.code() << ":" << e.what() )
             throw ::http::http_status::INTERNAL_SERVER_ERROR;
         }

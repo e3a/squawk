@@ -730,7 +730,7 @@ public:
 
         av_register_all();
 
-        open_input_file(filename.c_str(), &fmt_ctx, &input_codec_context);
+        open_input_file(filename.c_str(), &fmt_ctx );
 	
         /** Make sure that there is only one stream in the input file. */
         if ( fmt_ctx->nb_streams > 0 ) {
@@ -764,9 +764,7 @@ public:
 			default: 
 			  std::cout << "CODEC id not found:" << input_codec_context->codec_id << ", " << input_codec_context->codec_name << std::endl;
 			};
-			
-			
-			
+
                         VideoStream videofile;
                         videofile.width( input_codec_context->width );
                         videofile.height( input_codec_context->height );
@@ -856,7 +854,6 @@ public:
                 } else if(std::strcmp(tag->key, "ARTIST")==0 ||
                           std::strcmp(tag->key, "artist")==0 ||
                           std::strcmp(tag->key, "album_artist")==0 ||
-                          std::strcmp(tag->key, "COMPOSER")==0 ||
                           std::strcmp(tag->key, "ALBUM ARTIST")==0 ||
                           std::strcmp(tag->key, "ENSEMBLE")==0 ||
                           std::strcmp(tag->key, "PERFORMER")==0) {
@@ -957,8 +954,7 @@ private:
     
     /** Open an input file and the required decoder. */
     static void open_input_file(const char *filename,
-                               AVFormatContext **input_format_context,
-                               AVCodecContext **input_codec_context /* TODO unused */ ) {
+                               AVFormatContext **input_format_context ) {
         int error;
 
         /** Open the input file to read from it. */

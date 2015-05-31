@@ -50,9 +50,9 @@ class SquawkServer {
     void stop();
 
   private:
-    std::thread http_thread;
+    //TODO std::thread http_thread;
     squawk::SquawkConfig * squawk_config = nullptr;
-    squawk::db::Sqlite3Database * database = nullptr;
+    squawk::db::Sqlite3Connection * database = nullptr;
     squawk::media::FileParser * parser = nullptr;
     http::WebServer * web_server = nullptr;
     ssdp::SSDPServerImpl * ssdp_server = nullptr;

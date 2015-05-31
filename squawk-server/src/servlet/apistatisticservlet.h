@@ -23,7 +23,7 @@
 #include <string>
 
 #include "http.h"
-#include "../db/sqlite3database.h"
+#include "../db/sqlite3connection.h"
 #include "../db/sqlite3statement.h"
 
 #include "log4cxx/logger.h"
@@ -33,11 +33,11 @@ namespace servlet {
 
 class ApiStatisticServlet : public ::http::HttpServlet {
 public:
-    ApiStatisticServlet(const std::string path, squawk::db::Sqlite3Database * db) : HttpServlet(path), db(db) {}
+    ApiStatisticServlet(const std::string & path, squawk::db::Sqlite3Connection * db) : HttpServlet(path), db(db) {}
     virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
     static log4cxx::LoggerPtr logger;
-    squawk::db::Sqlite3Database * db;
+    squawk::db::Sqlite3Connection * db;
 };
 }}
 #endif // APISTATISTICSERVLET_H

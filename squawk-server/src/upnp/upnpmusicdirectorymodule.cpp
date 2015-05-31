@@ -18,7 +18,7 @@
 
 #include "upnpmusicdirectorymodule.h"
 #include "commons.h"
-#include "mimetypes.h"
+#include "http.h"
 
 // #define OBJECT_ID "ObjectID"
 
@@ -69,9 +69,8 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
                request->getValue( commons::upnp::OBJECT_ID ) == "music.artists" ) {
 
         int number_returned = 0;
-        squawk::db::Sqlite3Statement * stmt_artists = NULL;
         try {
-            stmt_artists = db->prepare_statement( SQL_ARTIST );
+            squawk::db::db_statement_ptr stmt_artists = db->prepareStatement( SQL_ARTIST );
             stmt_artists->bind_int( 1, start_index );
             stmt_artists->bind_int( 2, request_count );
             while( stmt_artists->step() ) {
@@ -80,15 +79,12 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
                                     commons::upnp::UPNP_CLASS_MUSIC_ARTIST );
                 ++number_returned;
             }
-            db->release_statement( stmt_artists );
 
         } catch( squawk::db::DbException & e ) {
             LOG4CXX_FATAL(logger, "Can not get artist, Exception:" << e.code() << "-> " << e.what());
-            if( stmt_artists != NULL ) db->release_statement( stmt_artists );
             throw;
         } catch( ... ) {
             LOG4CXX_FATAL(logger, "Other Excpeption in artist.");
-            if( stmt_artists != NULL ) db->release_statement( stmt_artists );
             throw;
         }
         int artist_count = artistCount();
@@ -103,10 +99,9 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
                                                           request->getValue( commons::upnp::OBJECT_ID ).length()));
 
         int return_count = 0;
-        squawk::db::Sqlite3Statement * stmt_artist_albums = NULL;
         try {
-            const std::string uri_prefix = "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() );
-            stmt_artist_albums = db->prepare_statement( SQL_ARTIST_ALBUM );
+            const std::string uri_prefix = "http://" + http_address_ + ":" + http_port_;
+            squawk::db::db_statement_ptr stmt_artist_albums = db->prepareStatement( SQL_ARTIST_ALBUM );
             stmt_artist_albums->bind_int( 1, id );
             stmt_artist_albums->bind_int( 2, start_index );
             stmt_artist_albums->bind_int( 3, request_count );
@@ -115,15 +110,12 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
                                  artist( stmt_artist_albums->get_int( 2 ) ), uri_prefix);
                 ++return_count;
             }
-            db->release_statement( stmt_artist_albums );
 
         } catch( squawk::db::DbException & e ) {
             LOG4CXX_FATAL(logger, "Can not get albums by artist, Exception:" << e.code() << "-> " << e.what());
-            if( stmt_artist_albums != NULL ) db->release_statement( stmt_artist_albums );
             throw;
         } catch( ... ) {
             LOG4CXX_FATAL(logger, "Other Excpeption in albums by artist.");
-            if( stmt_artist_albums != NULL ) db->release_statement( stmt_artist_albums );
             throw;
         }
         int album_count = albumByArtistCount( id );
@@ -134,10 +126,9 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
     } else if( request->contains( commons::upnp::OBJECT_ID) && request->getValue( commons::upnp::OBJECT_ID ) == "music.albums" ) {
 
         int albums_returned = 0;
-        squawk::db::Sqlite3Statement * stmt_albums = NULL;
         try {
-            const std::string uri_prefix = "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() );
-            stmt_albums = db->prepare_statement( SQL_ALBUM );
+            const std::string uri_prefix = "http://" + http_address_ + ":" + http_port_;
+            squawk::db::db_statement_ptr stmt_albums = db->prepareStatement( SQL_ALBUM );
             stmt_albums->bind_int( 1, start_index );
             stmt_albums->bind_int( 2, request_count );
             std::cout << "start stmt:albums" << request_count  << std::endl;
@@ -147,15 +138,12 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
                 ++albums_returned;
             }
             std::cout << "endt stmt:albums" << albums_returned << std::endl;
-            db->release_statement( stmt_albums );
 
         } catch( squawk::db::DbException & e ) {
             LOG4CXX_FATAL(logger, "Can not get albums, Exception:" << e.code() << "-> " << e.what());
-            if( stmt_albums != NULL ) db->release_statement( stmt_albums );
             throw;
         } catch( ... ) {
             LOG4CXX_FATAL(logger, "Other Excpeption in albums.");
-            if( stmt_albums != NULL ) db->release_statement( stmt_albums );
             throw;
         }
         int album_count = albumCount();
@@ -166,24 +154,20 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
     } else if( request->contains( commons::upnp::OBJECT_ID) && request->getValue( commons::upnp::OBJECT_ID ) == "music.new" ) {
 
         int albums_returned = 0;
-        squawk::db::Sqlite3Statement * stmt_albums = NULL;
         try {
-            const std::string uri_prefix = "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() );
-            stmt_albums = db->prepare_statement( SQL_ALBUM_NEW );
+            const std::string uri_prefix = "http://" + http_address_ + ":" + http_port_;
+            squawk::db::db_statement_ptr stmt_albums = db->prepareStatement( SQL_ALBUM_NEW );
             while( stmt_albums->step() ) {
                 ::upnp::didl::item(xmlWriter, didl_element, stmt_albums->get_int( 2 ), stmt_albums->get_string( 0 ), stmt_albums->get_string( 1 ),
                                  artist( stmt_albums->get_int( 2 ) ), uri_prefix);
                 ++albums_returned;
             }
-            db->release_statement( stmt_albums );
 
         } catch( squawk::db::DbException & e ) {
             LOG4CXX_FATAL(logger, "Can not get new albums, Exception:" << e.code() << "-> " << e.what());
-            if( stmt_albums != NULL ) db->release_statement( stmt_albums );
             throw;
         } catch( ... ) {
             LOG4CXX_FATAL(logger, "Other Excpeption in new albums.");
-            if( stmt_albums != NULL ) db->release_statement( stmt_albums );
             throw;
         }
         int album_count = 100;
@@ -224,8 +208,8 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
                 xmlWriter->element(item_element, commons::upnp::XML_NS_PURL, "creator", artist_name );
         });
     commons::xml::Node dlna_album_art_node = xmlWriter->element(item_element, commons::upnp::XML_NS_UPNP, "albumArtURI",
-        "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) +
-        "/album/" + std::to_string( id ) + "/cover.jpg" );
+        "http://" + http_address_ + ":" + http_port_ +
+        "/api/album/" + std::to_string( id ) + "/cover.jpg" );
     xmlWriter->ns(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "dlna", false);
     xmlWriter->attribute(dlna_album_art_node, commons::upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
 
@@ -235,7 +219,7 @@ void UpnpMusicDirectoryModule::parseNode( commons::xml::XMLWriter * xmlWriter, c
                "&lt;pv:lastUpdated&gt;" << (*list_iter).mtime << "&lt;/pv:lastUpdated&gt; */
 
     commons::xml::Node dlna_res_node = xmlWriter->element(item_element, "", "res",
-        "http://" + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) +
+        "http://" + http_address_ + ":" + commons::string::to_string( http_port_ ) +
         "/audio/" + commons::string::to_string( song_id ) + "." + http::mime::extension( mime_type ) );
     xmlWriter->attribute(dlna_res_node, "", "protocolInfo",
         "http-get:*:" + mime_type  + ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000" );

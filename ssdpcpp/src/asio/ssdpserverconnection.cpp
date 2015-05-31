@@ -18,7 +18,7 @@
 */
 
 #include "ssdpserverconnection.h"
-#include <mimetypes.h>
+
 #include <http.h>
 
 #include <thread>
@@ -85,7 +85,7 @@ void SSDPServerConnection::handle_receive_from ( const asio::error_code & error,
 	if ( !error ) {
 		http::HttpRequest request;
         request.remoteIp( sender_endpoint.address().to_string() );
-        http_parser.parse_http_request ( request, data, bytes_recvd );
+        http_parser.parse_http_request ( &request, data, bytes_recvd );
 		handler->handle_receive ( request );
         http_parser.reset();
 

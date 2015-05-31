@@ -19,8 +19,12 @@
 #define UPNPVIDEODIRECTORY_H
 
 #include "squawk.h"
-#include "../squawkconfig.h"
+
 #include "../db/sqlite3database.h"
+#include "../db/sqlite3connection.h"
+#include "../db/sqlite3statement.h"
+
+#include <http.h>
 #include <upnp.h>
 
 #include <functional>
@@ -33,35 +37,36 @@ namespace upnp {
 
 class UpnpVideoDirectory : public commons::upnp::ContentDirectoryModule {
 public:
-    UpnpVideoDirectory(squawk::SquawkConfig * squawk_config, squawk::db::Sqlite3Database * db ) : db(db), squawk_config(squawk_config) {}
+    UpnpVideoDirectory( http::HttpServletContext context ) :
+        db(squawk::db::Sqlite3Database::instance().connection( context.parameter( squawk::CONFIG_DATABASE_FILE ) ) ),
+        http_address_( context.parameter( squawk::CONFIG_HTTP_IP ) ), http_port_( context.parameter( squawk::CONFIG_HTTP_PORT ) ) {}
+
+    //TODO UpnpVideoDirectory(squawk::SquawkConfig * squawk_config, squawk::db::Sqlite3Database * db ) : db(db), squawk_config(squawk_config) {}
     virtual void getRootNode( commons::xml::XMLWriter * xmlWriter, commons::xml::Node * element, commons::upnp::CdsResult * cds_result );
     virtual bool match( commons::upnp::UpnpContentDirectoryRequest * parseRequest );
     virtual void parseNode( commons::xml::XMLWriter * xmlWriter, commons::upnp::CdsResult * cds_result, commons::upnp::UpnpContentDirectoryRequest * parseRequest );
 
 private:
     static log4cxx::LoggerPtr logger;
-    squawk::db::Sqlite3Database * db;
-    squawk::SquawkConfig * squawk_config;
+    squawk::db::db_connection_ptr db;
+    std::string http_address_;
+    std::string http_port_;
 
     /* get video count */
     static constexpr const char * SQL_VIDEO_COUNT = "select count(*) from tbl_cds_files where type=2";
     int videoCount() {
         int count;
-        squawk::db::Sqlite3Statement * stmt_videos = NULL;
         try {
-            stmt_videos = db->prepare_statement( SQL_VIDEO_COUNT );
+            squawk::db::db_statement_ptr stmt_videos = db->prepareStatement( SQL_VIDEO_COUNT );
             if( stmt_videos->step() ) {
                 count = stmt_videos->get_int( 0 );
             }
-            db->release_statement( stmt_videos );
 
         } catch( squawk::db::DbException & e ) {
             LOG4CXX_FATAL(logger, "Can not get video count, Exception:" << e.code() << "-> " << e.what());
-            if( stmt_videos != NULL ) db->release_statement( stmt_videos );
             throw;
         } catch( ... ) {
             LOG4CXX_FATAL(logger, "Other Excpeption in video count.");
-            if( stmt_videos != NULL ) db->release_statement( stmt_videos );
             throw;
         }
         return count;
@@ -69,24 +74,20 @@ private:
     /* get videos */
     static constexpr const char * SQL_VIDEOS = "select ROWID, name, filename, mime_type, duration, filesize, sampleFrequency, width, height, bitrate, channels from tbl_cds_files where type=2 order by name";
     void videos( std::function<void(const int, const std::string, const std::string,  const int & duration, const int & size, const int & sample_frequency, const int & width, const int & height, const int & bitrate, const int & channels)> callback ) {
-        squawk::db::Sqlite3Statement * stmt_videos = NULL;
         try {
-            stmt_videos = db->prepare_statement( SQL_VIDEOS );
+            squawk::db::db_statement_ptr stmt_videos = db->prepareStatement( SQL_VIDEOS );
             while( stmt_videos->step() ) {
                 callback( stmt_videos->get_int( 0 ), stmt_videos->get_string( 2 ), stmt_videos->get_string( 3 ),
                           stmt_videos->get_int( 4 ), stmt_videos->get_int( 5 ), stmt_videos->get_int( 6 ),
                           stmt_videos->get_int( 7 ), stmt_videos->get_int( 8 ), stmt_videos->get_int( 9 ),
                           stmt_videos->get_int( 10 ) );
             }
-            db->release_statement( stmt_videos );
 
         } catch( squawk::db::DbException & e ) {
             LOG4CXX_FATAL(logger, "Can not get videos, Exception:" << e.code() << "-> " << e.what());
-            if( stmt_videos != NULL ) db->release_statement( stmt_videos );
             throw;
         } catch( ... ) {
             LOG4CXX_FATAL(logger, "Other Excpeption in get video.");
-            if( stmt_videos != NULL ) db->release_statement( stmt_videos );
             throw;
         }
     }

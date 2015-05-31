@@ -1,6 +1,6 @@
 /*
     HttpServlet implementation.
-    Copyright (C) 2013  <copyright holder> <email>
+    Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public

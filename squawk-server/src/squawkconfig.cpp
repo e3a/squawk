@@ -146,7 +146,7 @@ void SquawkConfig::load( std::string filename ) {
         }
     }
 }
-void SquawkConfig::save(const std::string & filename) {
+void SquawkConfig::save(const std::string & filename) const {
     commons::xml::XMLWriter writer;
     commons::xml::Node root_node = writer.element( "squawk" );
     for( auto & itr : store ) {

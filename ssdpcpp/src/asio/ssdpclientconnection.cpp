@@ -18,7 +18,7 @@
 */
 
 #include "ssdpclientconnection.h"
-#include "httpresponseparser.h"
+#include "http.h"
 
 namespace ssdp {
 inline namespace asio_impl {

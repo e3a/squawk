@@ -1,5 +1,6 @@
 var squawkApp = angular.module('squawkApp', [
 'ngRoute',
+'shoppinpal.ng-mobile-menu',
 'squawkControllers'
 ]);
   
@@ -30,5 +31,3 @@ otherwise({
 redirectTo: '/album'
 });
 }]);
-
-    
