@@ -33,6 +33,7 @@
 namespace http {
 namespace servlet {
 
+::http::ServletRegister<FileServlet> FileServlet::reg("http::servlet::FileServlet");
 
 //TODO handle relative path
 void FileServlet::do_get ( HttpRequest & request, HttpResponse & response ) {
@@ -50,8 +51,6 @@ void FileServlet::do_get ( HttpRequest & request, HttpResponse & response ) {
 		full_path += std::string ( "/index.html" );
 		stat ( full_path.c_str(), &filestatus );
 	}
-
-	std::cout << "FileServlet Full Path:" << full_path << std::endl;
 
 	/*/test if the file has changed
 	struct tm * timeinfo = gmtime ( &filestatus.st_mtime );
@@ -123,8 +122,6 @@ void FileServlet::do_head ( HttpRequest & request, HttpResponse & response ) {
 		full_path += std::string ( "/index.html" );
 		stat ( full_path.c_str(), &filestatus );
 	}
-
-	std::cout << "FileServlet Full Path:" << full_path << std::endl;
 
 	// Determine the filename and extension.
 	std::size_t last_slash_pos = full_path.find_last_of ( "/" );

@@ -31,12 +31,15 @@ namespace servlet {
  */
 class FileServlet : public http::HttpServlet {
 public:
+        FileServlet () : HttpServlet("") {}
         explicit FileServlet ( const std::string & path, const std::string & docroot ) : HttpServlet ( path ), docroot ( docroot ) {}
-	virtual void do_get ( HttpRequest & request, HttpResponse & response );
+        virtual void do_get ( HttpRequest & request, HttpResponse & response );
 	virtual void do_head ( HttpRequest & request, HttpResponse & response );
+
 private:
 	std::string docroot;
+        static ServletRegister<FileServlet> reg;
 };
-}
-}
+} //servlet
+} //http
 #endif // FILESERVLET_H

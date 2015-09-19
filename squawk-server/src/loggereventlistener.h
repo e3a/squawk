@@ -31,7 +31,7 @@ public:
   LoggerEventListener() {};
   virtual ~LoggerEventListener() {};
   
-  void ssdpEvent( ssdp::SSDPEventListener::EVENT_TYPE type, std::string  client_ip, ssdp::UpnpDevice device );
+  void ssdpEvent( ssdp::SSDPEventListener::EVENT_TYPE type, std::string  client_ip, ssdp::SsdpEvent device );
 
 private:
   static log4cxx::LoggerPtr logger;

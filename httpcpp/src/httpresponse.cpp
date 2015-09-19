@@ -55,7 +55,7 @@ HttpResponse & HttpResponse::operator<< ( const std::string & str ) {
 }
 
 void HttpResponse::set_istream ( std::istream * is ) {
-	std::cout << "set stream im response" << std::endl;
+    std::cout << "set stream im response" << std::endl;
 
 	if ( body_istream ) {
 		std::cerr << "body input stream can only be set once." << std::endl;

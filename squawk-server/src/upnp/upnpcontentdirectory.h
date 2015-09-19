@@ -39,7 +39,7 @@ namespace upnp {
  */
 class UpnpContentDirectory : public ::http::HttpServlet {
 public:
-    UpnpContentDirectory( const std::string & path, http::HttpServletContext context ) : HttpServlet( path ) {}
+    UpnpContentDirectory( const std::string & path, http::HttpServletContext ) : HttpServlet( path ) {}
     void registerContentDirectoryModule( commons::upnp::ContentDirectoryModule * module);
     virtual void do_post( http::HttpRequest & request, http::HttpResponse & response);
     virtual void do_default( const std::string & method, http::HttpRequest & request, http::HttpResponse & response);

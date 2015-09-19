@@ -25,13 +25,9 @@ inline namespace asio_impl {
 HttpConnection::HttpConnection ( asio::io_service & io_service, http::HttpRequestHandler * httpRequestHandler ) :
     strand_ ( io_service ), socket_ ( io_service ), timer_ ( io_service ), httpRequestHandler_ ( httpRequestHandler ),
 	httpResponse_ ( http::response_ptr ( new http::HttpResponse() ) ) {
-
-	std::cout << "create new connection." << std::endl; //TODO
 }
 HttpConnection::~HttpConnection() {
-	std::cout << "delete connection." << std::endl; //TODO
-
-	if ( socket_.is_open() ) {
+    if ( socket_.is_open() ) {
 		socket_.close();
 	}
 }
@@ -130,14 +126,12 @@ void HttpConnection::handle_write ( const asio::error_code & e, int ) {
 
         } else if ( request_->isPersistent() ) {
 
-			std::cout << "handle write: persistent" << std::endl;
 			httpResponse_->reset();
 			start();
 
 		} else {
-
-			std::cout << "handle write: close" << std::endl;
-			// Initiate graceful connection closure.
+            std::cout << "handle write: close" << std::endl;
+            // Initiate graceful connection closure.
 			asio::error_code ignored_ec;
 			socket_.shutdown ( asio::ip::tcp::socket::shutdown_both, ignored_ec );
 		}

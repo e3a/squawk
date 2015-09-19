@@ -82,10 +82,11 @@ void UpnpVideoDirectory::parseNode( commons::xml::XMLWriter * xmlWriter, commons
                tmp_type = "video/mpeg";
            }
            xmlWriter->attribute(dlna_res_node, "", "protocolInfo",
-//                                "http-get:*:video/mp4:DLNA.ORG_PN=AVC_MP4_HP_HD_AAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000" );
-                                //               "http-get:*:" + mime_type  + ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000" );
+//                               "http-get:*:video/mp4:DLNA.ORG_PN=AVC_MP4_HP_HD_AAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000" );
+//                                "http-get:*:" + mime_type  + ":DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000" );
+           "http-get:*:" + mime_type  + ":*" );
                 // "http-get:*:" + tmp_type + ":*");
-                "http-get:*:video/mp4:*");
+//                "http-get:*:video/mp4:*");
            xmlWriter->attribute(dlna_res_node, "", "duration", commons::string::time_to_string( duration ) );
            xmlWriter->attribute(dlna_res_node, "", "size", commons::string::to_string( size ) );
            xmlWriter->attribute(dlna_res_node, "", "sampleFrequency", commons::string::to_string( sample_frequency) );

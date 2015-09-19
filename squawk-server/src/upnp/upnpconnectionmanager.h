@@ -38,7 +38,7 @@ namespace upnp {
  */
 class UpnpConnectionManager : public http::HttpServlet {
 public:
-    UpnpConnectionManager( const std::string & path, http::HttpServletContext context ) : HttpServlet(path) {}
+    UpnpConnectionManager( const std::string & path, http::HttpServletContext ) : HttpServlet(path) {}
 
     UpnpConnectionManager( const std::string & path ) : HttpServlet(path) {}
     virtual void do_post(::http::HttpRequest & request, ::http::HttpResponse & response);

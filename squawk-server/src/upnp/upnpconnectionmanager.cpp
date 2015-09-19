@@ -33,7 +33,7 @@ void UpnpConnectionManager::do_post(::http::HttpRequest & request, ::http::HttpR
 
     try {
         commons::upnp::UpnpContentDirectoryRequest upnp_command = commons::upnp::parseRequest( request.requestBody() );
-        LOG4CXX_DEBUG(logger, upnp_command )
+        if( squawk::DEBUG ) LOG4CXX_DEBUG(logger, upnp_command )
 
         if( upnp_command.type == commons::upnp::UpnpContentDirectoryRequest::PROTOCOL_INFO ) {
 
@@ -49,7 +49,7 @@ void UpnpConnectionManager::do_post(::http::HttpRequest & request, ::http::HttpR
             commons::xml::Node response_node = xmlWriter.element(body_node, "", "GetProtocolInfoResponse", "");
             xmlWriter.ns(response_node, commons::upnp::XML_NS_UPNP_CMS, "u", true);
 
-            commons::xml::Node source_node = xmlWriter.element(response_node, "", "Source", "http-get:*:text/plain:*,http-get:*:video/mp4:*,http-get:*:video/mpeg:*,http-get:*:video/quicktime:*" /*SOURCE_TYPES*/);
+            commons::xml::Node source_node = xmlWriter.element(response_node, "", "Source", "http-get:*:audio/mpeg:*,http-get:*:text/plain:*,http-get:*:video/mp4:*,http-get:*:video/mpeg:*,http-get:*:video/quicktime:*" /*SOURCE_TYPES*/);
             xmlWriter.attribute(source_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "type", "xsd:string");
             commons::xml::Node sink_node = xmlWriter.element(response_node, "", "Sink", "");
             xmlWriter.attribute(sink_node, commons::upnp::XML_NS_SCHEMA_INSTANCE, "type", "xsd:string");

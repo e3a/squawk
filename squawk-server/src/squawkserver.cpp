@@ -35,12 +35,15 @@
 #include "api/apialbumlistservlet.h"
 #include "api/apiartistlistservlet.h"
 #include "api/apialbumitemservlet.h"
-#include "servlet/apistatisticservlet.h"
-// TODO #include "api/apialbumsletterservlet.h"
+#include "api/apibooklistservlet.h"
+#include "api/apistatisticsservlet.h"
 #include "api/apivideolistservlet.h"
+#include "api/apivideoitemservlet.h"
 #include "api/mediaservlet.h"
 #include "api/coverservlet.h"
 #include "api/apibrowseservlet.h"
+#include "api/apiupnpeventservlet.h"
+#include "api/apiupnpdeviceservlet.h"
 #include "servlet/imageservlet.h"
 #include "servlet/songservlet.h"
 
@@ -51,8 +54,6 @@
 #include "upnp/upnpimagedirectory.h"
 #include "upnp/upnpconnectionmanager.h"
 #include "upnp/upnpmediaservlet.h"
-
-// #include "http/api/apiupnpdevicehandler.h"
 
 #include "log4cxx/logger.h"
 #include "log4cxx/basicconfigurator.h"
@@ -91,9 +92,11 @@ void SquawkServer::start() {
                 squawk_config->int_value(CONFIG_HTTP_THREADS) */ );
 
     squawk::upnp::UpnpXmlDescription * xmldescription = new squawk::upnp::UpnpXmlDescription(std::string("/rootDesc.xml"), context );
-    squawk::servlet::ApiStatisticServlet * statistic_servlet = new squawk::servlet::ApiStatisticServlet(std::string("/api/statistic"), database);
+    squawk::api::ApiStatisticsServlet * statistic_servlet = new squawk::api::ApiStatisticsServlet(std::string("/api/statistic"), context );
     squawk::api::ApiAlbumListServlet * albums_servlet = new squawk::api::ApiAlbumListServlet(std::string("/api/album"), context );
+    squawk::api::ApiBookListServlet * books_servlet = new squawk::api::ApiBookListServlet(std::string("/api/book"), context );
     squawk::api::ApiVideoListServlet * videos_servlet = new squawk::api::ApiVideoListServlet(std::string("/api/video"), context );
+    squawk::api::ApiVideoItemServlet * video_servlet = new squawk::api::ApiVideoItemServlet(std::string("/api/video/(\\d*)"), context );
 //    squawk::servlet::ApiAlbumsByArtist * albumsbyartist_servlet = new squawk::servlet::ApiAlbumsByArtist(std::string("/api/artist/(\\d+)/album"), database);
     squawk::api::ApiArtistListServlet * artists_servlet = new squawk::api::ApiArtistListServlet(std::string("/api/artist"), context );
     squawk::api::ApiAlbumItemServlet * album_servlet = new squawk::api::ApiAlbumItemServlet(std::string("/api/album/(\\d*)"), context );
@@ -103,12 +106,10 @@ void SquawkServer::start() {
     squawk::servlet::ImageServlet * image_servlet = new squawk::servlet::ImageServlet("/album/image/(\\d*).jpg", squawk_config->tmpDirectory());
     squawk::servlet::SongServlet * song_servlet = new squawk::servlet::SongServlet("/song/(\\d*).(flac|mp3)", database);
 
-    squawk::api::MediaServlet * media_servlet = new squawk::api::MediaServlet("/file/(video|audio|image|cover)/(\\d*).(flac|mp3|avi|mp4|mkv|jpg)", context );
+    squawk::api::MediaServlet * media_servlet = new squawk::api::MediaServlet("/file/(video|audio|image|cover)/(\\d*).(flac|mp3|avi|mp4|mkv|mpeg|mov|wmv|jpg)", context );
     squawk::api::ApiBrowseServlet * browse_servlet = new squawk::api::ApiBrowseServlet("/(video|image|book)/?([0-9]+)?", context );
 
-    squawk::upnp::UpnpMediaServlet * upnp_media_servlet = new squawk::upnp::UpnpMediaServlet("/(video|audio|image)/(\\d*).(flac|mp3|avi|mp4|mkv)", context );
-
-    http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->docRoot());
+    squawk::upnp::UpnpMediaServlet * upnp_media_servlet = new squawk::upnp::UpnpMediaServlet("/(video|audio|image)/(\\d*).(flac|mp3|avi|mp4|mkv|mpeg|mov|wmv)", context );
 
     web_server->register_servlet(content_directory);
     web_server->register_servlet(connection_manager);
@@ -116,7 +117,9 @@ void SquawkServer::start() {
     // TODO web_server->register_servlet(letter_servlet);
     web_server->register_servlet(album_servlet);
     web_server->register_servlet(albums_servlet);
+    web_server->register_servlet(books_servlet);
     web_server->register_servlet(videos_servlet);
+    web_server->register_servlet(video_servlet);
 //    web_server->register_servlet(albumsbyartist_servlet);
     web_server->register_servlet(artists_servlet);
     web_server->register_servlet(cover_servlet);
@@ -126,7 +129,6 @@ void SquawkServer::start() {
     web_server->register_servlet(statistic_servlet);
     web_server->register_servlet(media_servlet);
     web_server->register_servlet(upnp_media_servlet);
-    web_server->register_servlet(fileServlet);
     web_server->start();
 
 
@@ -171,6 +173,13 @@ void SquawkServer::start() {
 
     ssdp_server->subscribe( ssdp_event_logger.get() );
     
+    squawk::api::ApiUpnpEventServlet * upnp_event_servlet = new squawk::api::ApiUpnpEventServlet(std::string("/api/upnp/event"), ssdp_server );
+    squawk::api::ApiUpnpDeviceServlet * upnp_device_servlet = new squawk::api::ApiUpnpDeviceServlet(std::string("/api/upnp/device"), ssdp_server );
+    http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->docRoot());
+    web_server->register_servlet(upnp_event_servlet);
+    web_server->register_servlet(upnp_device_servlet);
+    web_server->register_servlet(fileServlet);
+
     //TODO squawk::http::RequestCallback * api_upnp_device_handler = new api::ApiUpnpDeviceHandler(service, ssdp_server);
     //TODO http_server->register_handler("GET", "/api/devices", api_upnp_device_handler);
 

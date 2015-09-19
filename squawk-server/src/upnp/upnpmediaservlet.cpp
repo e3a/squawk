@@ -46,7 +46,6 @@ void UpnpMediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpRespon
             full_path += std::string("/index.html");
             stat( full_path.c_str(), &filestatus );
         }
-        std::cout << "FileServlet Full Path:" << full_path << std::endl;
 
         // Determine the filename and extension.
         std::size_t last_slash_pos = full_path.find_last_of("/");
@@ -90,7 +89,9 @@ void UpnpMediaServlet::do_get( ::http::HttpRequest & request, ::http::HttpRespon
         else
             response.set_mime_type( ::http::mime::mime_type( extension ) );
 
-    //    response.set_last_modified( filestatus.st_mtime );
+            response.parameter("CONTENT-TYPE", "video/mpeg" );
+
+            //    response.set_last_modified( filestatus.st_mtime );
     //    response.set_expires( 3600 * 24 );
         response.set_istream( is );
 
@@ -114,7 +115,6 @@ void UpnpMediaServlet::do_head( ::http::HttpRequest & request, ::http::HttpRespo
             full_path += std::string("/index.html");
             stat( full_path.c_str(), &filestatus );
         }
-        std::cout << "FileServlet Full Path:" << full_path << std::endl;
 
         // Determine the filename and extension.
         std::size_t last_slash_pos = full_path.find_last_of("/");
@@ -145,6 +145,7 @@ void UpnpMediaServlet::do_head( ::http::HttpRequest & request, ::http::HttpRespo
         else
             response.set_mime_type( ::http::mime::mime_type( extension ) );
 
+        response.parameter("CONTENT-TYPE", "video/mpeg" );
         response.set_last_modified( filestatus.st_mtime );
     //    response.set_expires( 3600 * 24 );
 
@@ -183,9 +184,9 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
             LOG4CXX_TRACE( logger, "id: " << type << ":" << song_id )
 
             if( type == "audio" ) {
-                stmt_song = db->prepareStatement( "select songs.filename from tbl_cds_audiofiles songs where songs.ROWID = ?" );
+                stmt_song = db->prepareStatement( "select songs.filename, songs.duration from tbl_cds_files songs where songs.ROWID = ?" );
             } else if( type == "video" ) {
-                stmt_song = db->prepareStatement( "select video.filename from tbl_cds_files video where video.ROWID = ?" );
+                stmt_song = db->prepareStatement( "select video.filename, video.duration from tbl_cds_files video where video.ROWID = ?" );
             } else if( squawk::DEBUG ) LOG4CXX_TRACE( logger, "can not find type: " << type )
 
             stmt_song->bind_int( 1, song_id );
@@ -203,9 +204,12 @@ void UpnpMediaServlet::getFile( ::http::HttpRequest & request, ::http::HttpRespo
                 response.parameter("transferMode.dlna.org", "Streaming");
                 response.parameter("Accept-Ranges", "bytes");
                 // response.add_header("realTimeInfo.dlna.org", "DLNA.ORG_TLAG=*");
-                response.parameter("contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000");
+                response.parameter("contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=017000 00000000000000000000000000");
                 // response.add_header("Connection", "close");
                 response.parameter("EXT", "");
+            }
+            if(request.containsParameter( "Getmediainfo.sec" ) && request.parameter( "Getmediainfo.sec" ) == "1" ) {
+                response.parameter( "getMediaInfo.sec", "SEC_Duration=" + std::to_string( 1000 * stmt_song->get_int( 1 ) ) + ";" );
             }
             response.parameter("Server", "Debian/wheezy/sid DLNADOC/1.50 UPnP/1.0 Squawk/0.1");
         } catch( squawk::db::DbException & e ) {

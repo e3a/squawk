@@ -41,8 +41,23 @@ squawkApp.controller('ArtistListCtrl', ['$scope', '$http', function ArtistListCt
 }]);
 squawkApp.controller('VideoListCtrl', ['$scope', '$http', function VideoListCtrl($scope, $http) {
   $http.get('/api/video').success(function(data) {
-    $scope.video = data;
+    $scope.videos = data;
   });
+}]);
+squawkApp.controller('VideoItemCtrl', ['$scope', '$http', '$routeParams', '$sce', function VideoItemCtrl($scope, $http, $routeParams, $sce) {
+    $http.get('/api/video/' + $routeParams.videoId).success(function(data) {
+        $scope.video = data;
+        $scope.video.id = $routeParams.videoId;
+        $scope.config = {
+            preload: "none",
+            sources: [
+                {src: $sce.trustAsResourceUrl("/video/" + $routeParams.videoId + "." + data.ext), type: data.mime_type},
+            ],
+            theme: {
+                url: "http://www.videogular.com/styles/themes/default/latest/videogular.css"
+            }
+        };
+    });
 }]);
 squawkApp.controller('AlbumByArtistCtrl', ['$scope', '$http', '$routeParams', '$window',  function AlbumByArtistCtrl($scope, $http, $routeParams, $window) {
     $scope.albums = [];
@@ -86,4 +101,43 @@ squawkApp.controller('AlbumDetailCtrl', ['$scope', '$http', '$routeParams',  fun
     });
     $scope.songsOrderProp = 'track';
     $scope.showGallery = 'true';
+}]);
+squawkApp.controller('AdminCtrl', ['$scope', '$http', function AdminCtrl($scope, $http) {
+    $scope.panes = [
+        { title:"Settings",     content:"templates/config.html" , active: true},
+        { title:"Dorectories",  content:"templates/directories.html"},
+        { title:"Statistic",    content:"templates/statistic.html"},
+        { title:"Upnp",         content:"templates/upnpevents.html"},
+        { title:"About",        content:"templates/about.html"}
+    ];
+    $http.get('/api/statistic').success(function(data) {
+        $scope.statistic = data;
+    });
+    $http.get('/api/upnp/event').success(function(data) {
+        $scope.events = data;
+    });
+    $http.get('/api/upnp/device').success(function(data) {
+        $scope.devices = data;
+    });
+}]);
+squawkApp.controller('MusicSearchCtrl', ['$scope', '$http', '$routeParams',  function MusicSearchCtrl($scope, $http, $routeParams) {
+    $scope.musicSearch = {};
+    $scope.musicSearch.albums = {};
+    $scope.musicSearch.artists = {};
+
+/*    $scope.update = function(musicSearch) {
+        alert( "update:" + musicSearch );
+      }; */
+    $scope.$watch(function(scope) { return $scope.musicSearch.term },
+        function(newValue, oldValue) {
+            if( newValue && newValue.length > 3 ) {
+                $http.get('/api/album?attributes=id,name,artist&index=0&limit=10&order=name&name=' + newValue).success(function(data) {
+                    $scope.musicSearch.albums  = data.albums;
+                });
+                $http.get('/api/artist?name=' + newValue).success(function(data) {
+                    $scope.musicSearch.artists  = data;
+                });
+            }
+        }
+    );
 }]);

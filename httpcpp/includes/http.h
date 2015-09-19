@@ -45,21 +45,6 @@ static const bool DEBUG = true;
 static const size_t BUFFER_SIZE = 8192;
 } //http
 
-#include "httpcpp/mimetypes.h"
-#include "httpcpp/httpstatus.h"
-#include "httpcpp/httpresponse.h"
-#include "httpcpp/httprequest.h"
-#include "httpcpp/httputils.h"
-#include "httpcpp/httpresponseparser.h"
-#include "httpcpp/httprequestparser.h"
-#include "httpcpp/ihttpclientconnection.h"
-#include "httpcpp/httpclient.h"
-#include "httpcpp/httpservletcontext.h"
-#include "httpcpp/httpservlet.h"
-#include "httpcpp/httprequesthandler.h"
-#include "httpcpp/ihttpserver.h"
-#include "httpcpp/webserver.h"
-
 namespace http {
 namespace utils {
 /**
@@ -183,4 +168,20 @@ inline std::string escape_xml(std::string str) {
 }
 } // utils
 } // http
+
+#include "httpcpp/mimetypes.h"
+#include "httpcpp/httpstatus.h"
+#include "httpcpp/httpresponse.h"
+#include "httpcpp/httprequest.h"
+#include "httpcpp/httputils.h"
+#include "httpcpp/httpresponseparser.h"
+#include "httpcpp/httprequestparser.h"
+#include "httpcpp/ihttpclientconnection.h"
+#include "httpcpp/httpclient.h"
+#include "httpcpp/httpservletcontext.h"
+#include "httpcpp/httpservlet.h"
+#include "httpcpp/httprequesthandler.h"
+#include "httpcpp/ihttpserver.h"
+#include "httpcpp/webserver.h"
+
 #endif // HTTP_H

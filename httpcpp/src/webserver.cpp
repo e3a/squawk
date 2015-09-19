@@ -25,7 +25,15 @@ namespace http {
 
 // TODO threads
 WebServer::WebServer ( std::string local_ip, int port /*, int threads */ )
-    : local_ip ( local_ip ), port ( port ), httpServer_( std::unique_ptr< IHttpServer >( new HttpServer( local_ip, port/* , threads */, dynamic_cast< http::HttpRequestHandler * > ( this ) ) ) ) /*, threads(threads) */ {}
+    : local_ip ( local_ip ), port ( port ), httpServer_( std::unique_ptr< IHttpServer >( new HttpServer( local_ip, port/* , threads */, dynamic_cast< http::HttpRequestHandler * > ( this ) ) ) ) /*, threads(threads) */ {
+    std::cout << "==registered servlets:" << std::endl;
+    for( map_type::iterator it = http::ServletFactory::getMap()->begin(); it != http::ServletFactory::getMap()->end(); it++ ) {
+        std::string str = it->first;
+        std::cout << " -> " << str << std::endl;
+    }
+    std::cout << "<<<<" << std::endl;
+
+}
 
 WebServer::~WebServer() {}
 

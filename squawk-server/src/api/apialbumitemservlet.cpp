@@ -94,8 +94,9 @@ void ApiAlbumItemServlet::do_get ( http::HttpRequest & request, http::HttpRespon
 					first_image = false;
 
 				} else { response << ", "; }
-
-				response << std::to_string ( stmt_images->get_int ( 0 ) );
+                //TODO Thumbnail
+                response << "{\"thumb\":\"/album/image/" << std::to_string ( stmt_images->get_int ( 0 ) ) << ".jpg\", \"img\":\"/album/image/" <<
+                            std::to_string ( stmt_images->get_int ( 0 ) ) << ".jpg\"}";
 			}
 
 			response << "]}";

@@ -178,6 +178,40 @@ public:
 	 */
 	void create_response ( HttpResponse & response, ::http::http_status http_status, std::istream * ss, int content_length, mime::MIME_TYPE mime_type );
 };
+
+template<typename T> HttpServlet * createT() { return new T; }
+
+typedef std::map<std::string, HttpServlet*(*)()> map_type;
+
+struct ServletFactory {
+public:
+
+//    static map_type * map_;
+    static HttpServlet * createInstance( std::string const & name) {
+        map_type::iterator it = getMap()->find( name );
+        if(it == getMap()->end())
+            return nullptr;
+        return it->second();
+    }
+
+// protected:
+    static map_type * getMap() {
+        // never delete'ed. (exist until program termination)
+        // because we can't guarantee correct destruction order
+        // if(!map_) { map_ = new map_type; }
+        static map_type * map_ = new map_type();
+        return map_;
+    }
+
+private:
+};
+
+template<typename T>
+struct ServletRegister : ServletFactory {
+    ServletRegister(std::string const & name) {
+        getMap()->insert( std::make_pair( name, &createT<T> ) );
+    }
+};
 } //http
 #endif // HTTPSERVLET
 

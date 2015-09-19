@@ -1,6 +1,6 @@
 /*
-    header file for the media database access object.
-    Copyright (C) 2013  <copyright holder> <e.knecht@netwings.ch>
+    media dao definition.
+    Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -25,8 +25,10 @@
 #include "../db/sqlite3database.h"
 
 #include "squawk.h"
+#include "album.h"
 #include "image.h"
 #include "media.h"
+#include "song.h"
 
 namespace squawk {
 namespace media {
@@ -34,40 +36,123 @@ namespace media {
 /**
  * @brief The file_item struct
  */
-struct file_item {
-  enum IMAGE_TYPE { COVER, OTHER, FOLDER } type;
-  file_item( const std::string & name, const std::string & mime_type, const unsigned long & mtime, const unsigned long & size) :
-      name(name), mime_type(mime_type), mtime(mtime), size(size) {}
-  std::string name, mime_type;
-  unsigned long mtime, size;
+struct FileItem {
+    // enum IMAGE_TYPE { COVER, OTHER, FOLDER } type;
+	FileItem ( const std::string & name, const std::string & mime_type, const unsigned long & mtime, const unsigned long & size ) :
+        type ( OTHER ), name ( name ), mime_type ( mime_type ), mtime ( mtime ), size ( size ) {}
+    FILE_TYPE type;
+	std::string name, mime_type;
+	unsigned long mtime, size;
 };
 
+/**
+ * @brief The MediaDao class
+ */
 class MediaDao {
 public:
-    MediaDao( squawk::db::db_connection_ptr db );
-    ~MediaDao();
-    void start_transaction();
-    void end_transaction();
-    bool exist_audiofile(std::string filename, long mtime, long size, bool update);
-    bool exist_videofile(std::string filename, long mtime, long size, bool update);
-    bool exist_imagefile(std::string filename, long mtime, long size, bool update);
+	explicit MediaDao ( const std::string & database_file );
+	MediaDao ( const MediaDao& ) = delete;
+	MediaDao ( MediaDao&& ) = delete;
+	MediaDao& operator= ( const MediaDao& ) = delete;
+	MediaDao& operator= ( MediaDao&& ) = delete;
+	~MediaDao() {}
 
-    unsigned long getOrCreateDirectory( const std::string & path, const std::string & name, const unsigned long & parent, const int & type );
-    unsigned long saveFile( const file_item & file, const unsigned long & parent, commons::image::Image * imagefile );
-    unsigned long saveVideo( const file_item & file, const unsigned long & parent, commons::media::MediaFile & media_file );
-
-    squawk::media::Album get_album(std::string path);
-    unsigned long save_album(std::string path, squawk::media::Album * album);
-    unsigned long save_artist(squawk::media::Artist * artist);
-    void save_audiofile(std::string filename, long mtime, long size, unsigned long album_id, squawk::media::Song * song);
-    unsigned long createDirectory(const std::string path );
-    unsigned long save_imagefile(const file_item & file, const unsigned long & album, commons::image::Image * imagefile);
-    void sweep( long mtime );
+	/**
+	 * @brief start database transaction
+	 */
+	void startTransaction();
+	/**
+	 * @brief end database transaction
+	 */
+	void endTransaction();
+	/**
+	 * @brief test if file exist
+	 * @param filename the filename
+	 * @param mtime the last access date
+	 * @param size the file size
+	 * @param update update the mtime with timestamp
+	 * @return
+	 */
+	bool exist ( const std::string & filename, const long & mtime, long const & size, const bool & update );
+	/**
+	 * @brief save image
+	 * @param parent
+	 * @param file
+	 * @param imagefile
+	 * @return
+	 */
+	unsigned long saveFile ( const unsigned long & parent, const FileItem & file, Image & imagefile );
+	/**
+	 * @brief save cover
+	 * @param path_id
+	 * @param file
+	 * @param album
+	 * @param imagefile
+	 * @return
+	 */
+	unsigned long saveFile ( const unsigned long & path_id, const FileItem & file, const unsigned long & album, Image & imagefile );
+	/**
+	 * @brief save video
+	 * @param parent
+	 * @param file
+	 * @param media_file
+	 * @return
+	 */
+	unsigned long saveFile ( const unsigned long & parent, const FileItem & file, commons::media::MediaFile & media_file );
+	/**
+	 * @brief save audiofile
+	 * @param path_id
+	 * @param filename
+	 * @param mtime
+	 * @param size
+	 * @param album_id
+	 * @param song
+	 */
+	void saveFile ( const unsigned long & path_id, const std::string & filename, const long & mtime, const long & size, const unsigned long & album_id, const Song & song );
+    /**
+     * @brief save book
+     * @param path_id
+     * @param filename
+     * @param mtime
+     * @param size
+     * @param isbn
+     */
+    void saveFile ( const unsigned long & parent, const FileItem & file, const std::string & isbn );
+    /**
+	 * @brief save album
+	 * @param album
+	 * @return
+	 */
+	unsigned long save ( Album & album );
+	/**
+	 * @brief save artist
+	 * @param artist
+	 * @return
+	 */
+	unsigned long save ( Artist & artist );
+	/**
+	 * @brief save directory
+	 * @param parent
+	 * @param name
+	 * @param path
+	 * @return
+	 */
+	unsigned long save ( const unsigned long parent, const std::string & name, const std::string & path );
+	/**
+	 * @brief get album by path
+	 * @param path
+	 * @return
+	 */
+	Album getAlbum ( const std::string & path );
+	/**
+	 * @brief sweep all
+	 * @param mtime
+	 */
+	void sweep ( long mtime );
 
 private:
-    static log4cxx::LoggerPtr logger;
-    squawk::db::db_connection_ptr db;
-    bool exist(const squawk::sql::TBL_NAMES & table_name, const std::string & filename, const long & mtime, const long & size, const bool & update);
+	static log4cxx::LoggerPtr logger;
+	squawk::db::db_connection_ptr db_;
 };
 } // media
 } // squawk

@@ -154,8 +154,9 @@ inline void get_parameters ( std::string parameters, HttpRequest * request ) {
 			mode = VALUE;
 
 		} else if ( parameters[i] == '&' ) {
-			std::cout << ss_buffer_key.str() << " = " <<  ss_buffer_value.str() << std::endl;
-                        request->attribute ( ss_buffer_key.str(), ss_buffer_value.str() );
+                    std::string value;
+                    url_decode( ss_buffer_value.str() , value);
+                        request->attribute ( ss_buffer_key.str(), value );
 			ss_buffer_key.str ( std::string() );
 			ss_buffer_key.clear();
 			ss_buffer_value.str ( std::string() );
@@ -171,7 +172,9 @@ inline void get_parameters ( std::string parameters, HttpRequest * request ) {
 	}
 
 	if ( mode == VALUE ) {
-                request->attribute ( ss_buffer_key.str(), ss_buffer_value.str() );
+            std::string value;
+            url_decode( ss_buffer_value.str() , value);
+            request->attribute ( ss_buffer_key.str(), value );
 	}
 }
 /**

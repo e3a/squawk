@@ -17,27 +17,33 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef APISTATISTICSERVLET_H
-#define APISTATISTICSERVLET_H
-
 #include <string>
 
-#include "http.h"
-#include "../db/sqlite3connection.h"
-#include "../db/sqlite3statement.h"
+#include "ssdp.h"
 
-#include "log4cxx/logger.h"
+#include <gtest/gtest.h>
 
-namespace squawk {
-namespace servlet {
 
-class ApiStatisticServlet : public ::http::HttpServlet {
-public:
-    ApiStatisticServlet(const std::string & path, squawk::db::Sqlite3Connection * db) : HttpServlet(path), db(db) {}
-    virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
-private:
-    static log4cxx::LoggerPtr logger;
-    squawk::db::Sqlite3Connection * db;
-};
-}}
-#endif // APISTATISTICSERVLET_H
+namespace ssdp {
+TEST( TimerTest, ParseTimeTest ) {
+
+    auto time = parse_keep_alive( "max-age=1800" );
+    EXPECT_EQ( 1800, time );
+}
+TEST( TimerTest, ParseTimeSpacesTest ) {
+
+    auto time = parse_keep_alive( "max-age = 1800" );
+    EXPECT_EQ( 1800, time );
+}
+TEST( TimerTest, TimeoutCheckTest ) {
+
+    auto last_seen = std::time ( 0 );
+
+    ASSERT_FALSE( check_timeout( last_seen, 1000) );
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+    ASSERT_TRUE( check_timeout( last_seen, 1) );
+
+}
+} //ssdp

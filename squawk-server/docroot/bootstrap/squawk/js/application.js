@@ -1,42 +1,26 @@
 var squawkApp = angular.module('squawkApp', [
 'ngRoute',
+'ngSanitize',
 'ui.bootstrap',
 'ngAside',
 'angularUtils.directives.dirPagination',
+"com.2fdevs.videogular",
+'jkuri.gallery'
 ])
 .controller('MainCtrl', function($scope, $aside) {
-
-  $scope.asideState = {
-    open: false
-  };
-
-  $scope.openAside = function(position, backdrop) {
-    $scope.asideState = {
-      open: true,
-      position: position
-    };
-
-    function postClose() {
-      $scope.asideState.open = false;
-    }
-
-    $aside.open({
-      templateUrl: 'templates/aside-menu.html',
-      placement: position,
-      size: 'sm',
-      backdrop: backdrop,
-      controller: function($scope, $modalInstance) {
-        $scope.ok = function(e) {
-          $modalInstance.close();
-          e.stopPropagation();
-        };
-        $scope.cancel = function(e) {
-          $modalInstance.dismiss();
-          e.stopPropagation();
-        };
+    var asideInstance = $scope.openAside = function openAside(position) {
+      if( position == "right" ) {
+          url = 'templates/search-menu.html';
+      } else {
+          url = 'templates/aside-menu.html';
       }
-    }).result.then(postClose, postClose);
-  }
+
+      $aside.open({
+        placement: position,
+        templateUrl: url,
+        size: 'lg'
+      });
+    };
 });
 
 squawkApp.config(['$routeProvider',
@@ -63,8 +47,12 @@ templateUrl: 'templates/video-list.html',
 controller: 'VideoListCtrl'
 }).
 when('/video/:videoId', {
-templateUrl: 'templates/video-list.html',
-controller: 'VideoListCtrl'
+templateUrl: 'templates/video-item.html',
+controller: 'VideoItemCtrl'
+}).
+when('/admin', {
+templateUrl: 'templates/admin.html',
+controller: 'AdminCtrl'
 }).
 otherwise({
 redirectTo: '/album'

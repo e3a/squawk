@@ -41,8 +41,6 @@ void SSDPClientConnection::send ( const std::string & request_line, const std::m
 
 	ssdp_runner = std::unique_ptr<std::thread> ( new std::thread (
 					  std::bind ( static_cast<size_t ( asio::io_service::* ) () > ( &asio::io_service::run ), &io_service_ ) ) );
-	std::cout << "SSDPClient started" << std::endl;
-
     socket.send_to ( asio::buffer ( message, message.length() ), endpoint );
 }
 void SSDPClientConnection::handle_receive_from ( const asio::error_code & error, size_t bytes_recvd ) {

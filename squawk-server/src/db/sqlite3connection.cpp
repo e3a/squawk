@@ -91,7 +91,6 @@ void Sqlite3Connection::release_statement ( Sqlite3Statement * statement ) {
 	std::lock_guard<std::mutex> lck ( mtx_ );
 	statement->reset();
 	stmt_pool[statement->statement()].push_back ( statement );
-    if( squawk::DEBUG ) LOG4CXX_TRACE ( logger, "size of statement pool: " << stmt_pool.size() )
 }
 unsigned long Sqlite3Connection::last_insert_rowid() {
 	return sqlite3_last_insert_rowid ( db_.get() );

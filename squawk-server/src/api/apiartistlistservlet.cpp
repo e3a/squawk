@@ -19,7 +19,10 @@
 
 #include "apiartistlistservlet.h"
 
+#include "boost/algorithm/string/case_conv.hpp"
+
 #include "squawk.h"
+
 
 namespace squawk {
 namespace api {
@@ -27,13 +30,23 @@ namespace api {
 log4cxx::LoggerPtr ApiArtistListServlet::logger ( log4cxx::Logger::getLogger ( "squawk.api.ApiArtistListServlet" ) );
 
 std::string ApiArtistListServlet::QUERY_ARTISTS = "select ROWID, name, letter from tbl_cds_artists order by letter, clean_name";
-std::string ApiArtistListServlet::QUERY_ARTISTS_FILTER = "select ROWID, name, letter from tbl_cds_artists where name LIKE ? order by letter, clean_name";
+std::string ApiArtistListServlet::QUERY_ARTISTS_FILTER = "select ROWID, name, letter from tbl_cds_artists where clean_name LIKE ? order by letter, clean_name";
 
-void ApiArtistListServlet::do_get ( http::HttpRequest &, ::http::HttpResponse & response ) {
+void ApiArtistListServlet::do_get ( http::HttpRequest & request, ::http::HttpResponse & response ) {
 	if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "get api artist list." ); }
 
 	try {
-		squawk::db::db_statement_ptr stmt = db->prepareStatement ( QUERY_ARTISTS );
+        squawk::db::db_statement_ptr stmt = nullptr;
+
+        if ( request.containsAttribute ( "name" ) ) {
+
+            stmt = db->prepareStatement ( QUERY_ARTISTS_FILTER );
+            stmt->bind_text( 1, "%" + squawk::media::clean_name( request.attribute ( "name" ) ) + "%" ); //TODO clean string
+
+        } else {
+            stmt = db->prepareStatement ( QUERY_ARTISTS );
+        }
+
 		bool first_artist = true;
 		std::string last_letter;
 

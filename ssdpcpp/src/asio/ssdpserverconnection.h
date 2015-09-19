@@ -73,12 +73,7 @@ private:
 	std::string multicast_address;
 	int multicast_port;
 
-//  ::asio::io_service io_service; //TODO
-//  std::string multicast_address;
-//  int multicast_port;
-//  ::asio::ip::udp::socket socket;
 	asio::ip::udp::endpoint sender_endpoint;
-//  ::asio::io_service::strand strand_;
     http::HttpRequestParser http_parser;
 
 	/* local variables */
@@ -91,6 +86,6 @@ private:
 
 	void handle_receive_from ( const asio::error_code&, size_t bytes_recvd );
 };
-}
-}
+} // asio_impl
+} // ssdp
 #endif // SSDPASIOCONNECTION_H

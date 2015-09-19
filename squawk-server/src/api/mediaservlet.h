@@ -41,6 +41,6 @@ private:
 	static log4cxx::LoggerPtr logger;
 	squawk::db::db_connection_ptr db;
 };
-}
-}
+} // api
+} // squawk
 #endif // MEDIASERVLET_H

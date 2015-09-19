@@ -1,6 +1,6 @@
 /*
-    <one line to give the library's name and an idea of what it does.>
-    Copyright (C) 2013  <copyright holder> <email>
+    file parser definition.
+    Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -26,13 +26,8 @@
 
 #include <squawk.h>
 #include <media.h>
-#include "../squawkconfig.h"
-#include "../db/sqlite3database.h"
 #include "mediadao.h"
 
-
-
-#include "pcrecpp.h" 
 #include "sys/stat.h"
 
 #include "log4cxx/logger.h"
@@ -41,46 +36,31 @@ namespace squawk {
 namespace media {
 
 class FileParser {
-  public:
-    FileParser(const std::string & database_file, const std::string & tmp_directory) :
-        mediaDao(std::unique_ptr<MediaDao>( new MediaDao( squawk::db::Sqlite3Database::instance().connection( database_file ) ) ) ), tmp_directory_(tmp_directory) {
-//TODO        parsers.insert( parsers.end(), new squawk::media::FlacParser() );
-//TODO        parsers.insert( parsers.end(), new squawk::media::LibAVcpp() );
-//TODO        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/audio" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH ); //TODO not used
-//TODO        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/images" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH ); //TODO not used
-//TODO        mkdir( ( squawk_config->string_value(CONFIG_TMP_DIRECTORY) + "/video" ).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH ); //TODO not used
-    };
-    FileParser() {
-//TODO        parsers.insert( parsers.end(), new squawk::media::FlacParser() );
-//TODO        parsers.insert( parsers.end(), new squawk::media::LibAVcpp() );
-    }
-    ~FileParser() {
-//TODO        for( auto * parser : parsers )
-//TODO            delete parser;
-    }
-    enum FILE_TYPE {MP3, OGG, FLAC, MUSEPACK, MONKEY_AUDIO, IMAGE, AUDIOFILE, IMAGEFILE, VIDEOFILE, EBOOK, UNKNOWN};
-    void parse( std::vector< std::string > paths );
+public:
+	FileParser ( const std::string & database_file, const std::string & tmp_directory ) :
+		mediaDao ( std::unique_ptr<MediaDao> ( new MediaDao ( database_file ) ) ), tmp_directory_ ( tmp_directory ) {}
 
-    enum DIRECTORY_TYPE { MUSIC, IMAGES, MOVIES, NONE };
+	FileParser ( const FileParser& ) = delete;
+	FileParser ( FileParser&& ) = delete;
+	FileParser& operator= ( const FileParser& ) = delete;
+	FileParser& operator= ( FileParser&& ) = delete;
+	~FileParser() { }
 
-//    static void get_artist_clean_name( std::string & artist );
-    static std::string get_artist_letter( const std::string & artist );
-    static std::string get_album_clean_path( const std::string & path);
-    
-  private:
-    static log4cxx::LoggerPtr logger;
-    std::unique_ptr< MediaDao > mediaDao;
-    const std::string tmp_directory_;
-//    SquawkConfig * squawk_config;
+	enum FILE_TYPE {MP3, OGG, FLAC, MUSEPACK, MONKEY_AUDIO, IMAGE, AUDIOFILE, IMAGEFILE, VIDEOFILE, EBOOK, UNKNOWN};
+	enum DIRECTORY_TYPE { MUSIC, IMAGES, MOVIES, NONE };
 
-//TODO    std::vector< MetadataParser* > parsers;
+	void parse ( std::vector< std::string > paths );
 
-    std::map<std::string, int> statistic;
-    DIRECTORY_TYPE _parse(const std::string & basepath, const std::string & path);
-    
-    static std::string get_mime_type(const std::string & filename);
-  
-    static pcrecpp::RE re;
+private:
+	static log4cxx::LoggerPtr logger;
+	std::unique_ptr< MediaDao > mediaDao;
+	const std::string tmp_directory_;
+
+	std::map<std::string, int> statistic;
+	DIRECTORY_TYPE _parse ( const unsigned long & path_id, const std::string & basepath, const std::string & path );
+
+	static std::string get_mime_type ( const std::string & filename );
 };
-}}
+}
+}
 #endif // FILEPARSER_H

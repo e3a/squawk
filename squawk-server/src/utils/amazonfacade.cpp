@@ -20,23 +20,11 @@
 #include <curlpp/Options.hpp>
 
 #include "http.h"
+#include "xml.h"
 
-// namespace amazon {
+namespace amazon {
 
-AmazonFacade::AmazonFacade() { }
-
-void AmazonFacade::bookByIsbn( const std::string & access_key, const std::string & key, const std::string & isbn ) {
-
-    // AWSAccessKeyId=AKIAIC5IGJNCXA3YR2FA&
-    // AssociateTag=AcmeBooks&
-    // Keywords=9780786751075&
-    // Operation=ItemSearch&
-    // ResponseGroup=Large&
-    // SearchIndex=Books&
-    // Service=AWSECommerceService&
-    // Timestamp=2015-05-17T17%3A13%3A33Z&
-    // Version=2009-03-31&
-    // Signature=eDoZPJPDtYFWqzi6%2FjFVbQmI2jEqaHk%2FZy8F1moJBqQ%3D
+BookResult AmazonFacade::bookByIsbn( const std::string & access_key, const std::string & key, const std::string & isbn ) {
 
     std::map< std::string, std::string > map;
     map["AssociateTag"] = "AcmeBooks";
@@ -45,19 +33,11 @@ void AmazonFacade::bookByIsbn( const std::string & access_key, const std::string
     map["ResponseGroup"] = "Large";
     map["SearchIndex"] = "Books";
     map["Service"] = "AWSECommerceService";
-    map["Timestamp"] = get_utc_time_string(); //"2015-05-17T17%3A13%3A33Z";
+    map["Timestamp"] = get_utc_time_string();
     map["Version"] = "2009-03-31";
     map["AWSAccessKeyId"] = access_key;
 
     std::string query = canonicalize( map );
-
-/*    bool first = true;
-    for( auto iter : map ) {
-        if(first ) { first = false; }
-        else { query += "&"; }
-        query += iter.first + "=" + iter.second;
-    } */
-    std::cout << query << std::endl;
 
     std::stringstream ss;
     ss << "GET\n" <<
@@ -71,29 +51,29 @@ void AmazonFacade::bookByIsbn( const std::string & access_key, const std::string
 
     //make the request
     try {
-        // That's all that is needed to do cleanup of used resources (RAII style).
         curlpp::Cleanup myCleanup;
-
-        // Our request to be sent.
         curlpp::Easy myRequest;
-
-        // Set the URL.
         myRequest.setOpt<curlpp::options::Url>( buf.str() );
 
-        // Send request and get a result.
-        // By default the result goes to standard output.
+        std::stringstream sstream;
+        curlpp::options::WriteStream ws(&sstream);
+        myRequest.setOpt(ws);
+
         myRequest.perform();
+
+        return parse( sstream.str( ) );
+
     } catch(curlpp::RuntimeError & e) {
-        std::cout << e.what() << std::endl;
+        std::cerr << e.what() << std::endl;
+        throw;
     } catch(curlpp::LogicError & e) {
-        std::cout << e.what() << std::endl;
+        std::cerr << e.what() << std::endl;
+        throw;
     }
 }
 std::string AmazonFacade::generate_hmac256bit_hash(const char *message, const char *key_buf) {
-    std::cout << "------------------" << message << "\n-----------------------";
     unsigned char* result;
     unsigned int result_len = 32;
-    int i;
     HMAC_CTX ctx;
 
     result = (unsigned char*) malloc(sizeof(char) * result_len);
@@ -107,21 +87,6 @@ std::string AmazonFacade::generate_hmac256bit_hash(const char *message, const ch
     HMAC_Final(&ctx, result, &result_len);
     HMAC_CTX_cleanup(&ctx);
 
-/*    for (i=0; i!=result_len; i++) {
-           if (expected[i]!=result[i]) {
-                   printf("Got %02X instead of %02X at byte %d!\n", result[i], expected[i], i);
-                   break;
-           }
-    }
-    if (i==result_len) {
-        printf("Test ok!\n");
-    } */
-
-    std::cout << "the key is:";
-    for (i=0; i!=result_len; i++) {
-        printf("%02x", result[i]);
-    }
-    std::cout << std::endl;
     return std::string( base64( result, result_len ) );
 }
 
@@ -147,13 +112,39 @@ char * AmazonFacade::base64(const unsigned char *input, int length) {
 
   return buff;
 }
+BookResult AmazonFacade::parse( const std::string & response ) {
 
-/**
- * Canonicalize the query string as required by Amazon.
- *
- * @param sortedParamMap    Parameter name-value pairs in lexicographical order.
- * @return                  Canonical form of query string.
- */
+    BookResult result;
+    commons::xml::XMLReader reader( response );
+    std::vector< commons::xml::Node > images = reader.getElementsByName( "LargeImage" );
+    for( auto node : images[0].children() ) {
+        if(node.name() == "URL" ) {
+            result.coverUri( node.content() );
+        }
+    }
+
+    std::vector< commons::xml::Node > attributes =  reader.getElementsByName( "ItemAttributes" );
+    for( auto node : attributes[0].children() ) {
+        if(node.name() == "Author" && result.author() == "" ) {
+            result.author( node.content() );
+        } else if(node.name() == "Publisher" ) {
+            result.publisher( node.content() );
+        } else if(node.name() == "PublicationDate" ) {
+            result.publicationDate( node.content() );
+        } else if(node.name() == "Title" ) {
+            result.title( node.content() );
+        }
+    }
+
+    std::vector< commons::xml::Node > reviews =  reader.getElementsByName( "EditorialReview" );
+    for( auto node : reviews[0].children() ) {
+        if(node.name() == "Content" && result.description() == "" ) {
+            result.description( node.content() );
+        }
+
+    }
+    return result;
+}
 std::string AmazonFacade::canonicalize( const std::map<std::string, std::string> & sortedParamMap ) {
     if ( sortedParamMap.empty() ) {
         return "";
@@ -165,9 +156,6 @@ std::string AmazonFacade::canonicalize( const std::map<std::string, std::string>
         if( first ) { first = false; }
         else { ss << "&"; }
         ss << http::utils::UrlEscape::urlEncode( itr.first.c_str() ) << "=" << http::utils::UrlEscape::urlEncode( itr.second.c_str() );
-        // buffer.append(percentEncodeRfc3986(kvpair.getKey()));
-        // buffer.append("=");
-        // buffer.append(percentEncodeRfc3986(kvpair.getValue()));
     }
 
     return ss.str();
@@ -182,5 +170,4 @@ std::string AmazonFacade::get_utc_time_string() {
         sprintf(timestamp_str, "%d-%02d-%02dT%02d:%02d:%02dZ", 1900+ptm->tm_year, 1+ptm->tm_mon, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
         return std::string(timestamp_str);
 }
-
-// } // amazon
+} // amazon

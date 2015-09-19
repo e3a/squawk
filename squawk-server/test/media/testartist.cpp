@@ -17,16 +17,16 @@
 */
 
 #include <vector>
-#include "../../includes/squawk.h"
+#include "../../src/media/artist.h"
 #include <gtest/gtest.h>
 
 TEST(ParseArtist, CleanArtist) {
     squawk::media::Artist artist("  Artist Name " );
-    ASSERT_STREQ("artist name", artist.clean_name().c_str() );
+    ASSERT_STREQ("artist name", artist.cleanName().c_str() );
 }
 TEST(ParseArtist, CleanArtistRage) {
     squawk::media::Artist artist("Rage Against The Machine");
-    ASSERT_STREQ("rage against the machine", artist.clean_name().c_str() );
+    ASSERT_STREQ("rage against the machine", artist.cleanName().c_str() );
 }
 TEST(ParseArtist, Letter) {
     squawk::media::Artist artist("  Artist Name " );

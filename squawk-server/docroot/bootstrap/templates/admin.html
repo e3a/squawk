@@ -1,0 +1,11 @@
+<div width="100%">
+   <tabset justified="true">
+   <tab
+        active="pane.active"
+        heading="{{pane.title}}"
+        ng-repeat="pane in panes"
+      >
+        <div ng-include="pane.content"></div>
+      </tab>
+   </tabset>
+</div>

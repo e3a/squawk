@@ -250,7 +250,7 @@ namespace string {
       }
       ss << hours << ":";
       _seconds = _seconds - (hours * 3600);
-    }
+    } else ss << "00:";
     if(_seconds > 60) {
       int minutes = _seconds / 60;
       if(minutes < 10) {
@@ -262,7 +262,7 @@ namespace string {
     if(_seconds < 10) {
       ss << "0";
     }
-    ss << _seconds;
+    ss << _seconds << ".000";
     return ss.str();
   }
 }}
