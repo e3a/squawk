@@ -34,11 +34,11 @@ include_directories(${ROOT} ${SQUAWK_INCLUDES} ${POPPLER_INCLUDE_DIRS} ${OPENSSL
 set(UTILS src/utils/pdfparser.cpp src/utils/amazonfacade.cpp)
 set(SQUAWK src/squawkconfig.cpp src/loggereventlistener.cpp)
 set(DATABASE src/db/sqlite3statement.cpp src/db/sqlite3connection.cpp src/db/sqlite3database.cpp)
-set(MEDIA src/media/mediadao.cpp src/media/fileparser.cpp)
+set(MEDIA src/media/image.cpp src/media/album.cpp  src/media/mediadao.cpp src/media/fileparser.cpp)
 set(API src/api/apibrowseservlet.cpp src/api/apialbumlistservlet.cpp src/api/apialbumitemservlet.cpp src/api/apiartistlistservlet.cpp
-        src/api/apivideolistservlet.cpp src/api/mediaservlet.cpp src/api/coverservlet.cpp
-        src/http/api/apiupnpdevicehandler.cpp)
-set(SERVLET src/servlet/apistatisticservlet.cpp src/servlet/imageservlet.cpp src/servlet/songservlet.cpp)
+        src/api/apivideolistservlet.cpp src/api/apivideoitemservlet.cpp src/api/mediaservlet.cpp src/api/coverservlet.cpp
+        src/api/apiupnpeventservlet.cpp src/api/apiupnpdeviceservlet.cpp src/api/apistatisticsservlet.cpp src/api/apibooklistservlet.cpp)
+set(SERVLET src/servlet/imageservlet.cpp src/servlet/songservlet.cpp)
 set(UPNP src/upnp/upnpconnectionmanager.cpp src/upnp/upnpmediaservlet.cpp src/upnp/upnpxmldescription.cpp src/upnp/upnpcontentdirectory.cpp
          src/upnp/upnpmusicdirectorymodule.cpp src/upnp/upnpvideodirectory.cpp src/upnp/upnpfiledirectory.cpp src/upnp/upnpimagedirectory.cpp )
 #         src/upnp/upnpwriter.cpp )
