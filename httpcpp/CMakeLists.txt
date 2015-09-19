@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.9)
 
 project(httpcpp)
 
-find_package(Boost REQUIRED graph)
+find_package(Boost REQUIRED)
 
 include_directories(${SQUAWK_INCLUDES} ${PCREPP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${S3_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/src/asio)
 
