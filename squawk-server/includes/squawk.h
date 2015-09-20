@@ -144,7 +144,7 @@ static const std::string INSERT_FILE_VIDEO = "insert into tbl_cds_files(parent, 
 static const std::string UPDATE_BOOK = "update tbl_cds_files SET " \
                                              "parent=?, mtime=?, timestamp=?, filesize=?, type=?, mime_type=?, isbn=?, name=? where ROWID = ?";
 static const std::string INSERT_BOOK = "insert into tbl_cds_files(parent, filename, mtime, timestamp, filesize, type, mime_type, isbn, name) " \
-                                             "values (?,?,?,?,?,?,?,?)";
+                                             "values (?,?,?,?,?,?,?,?,?)";
 
 /* SWEEP AND DELETE */
 static const std::string SWEEP_FILES = "delete from tbl_cds_files where timestamp < ?";
