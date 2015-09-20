@@ -9,6 +9,8 @@ option(CMAKE_COMPILER_IS_GNUCXX "is the compiler gnucxx" OFF)
 SET(TESTFILES "/home/e3a/testfiles" CACHE TESTFILES "The path to the testfiles.")
 SET(ASIO_PATH "${CMAKE_SOURCE_DIR}/contrib/asio-1.10.6/" CACHE ASIO_PATH "The path to asio header files.")
 
+message( ${ASIO_PATH} )
+
 project (squawk)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
