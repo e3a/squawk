@@ -8,8 +8,7 @@ option(build_tests "Build all squawk unit tests." ON)
 option(CMAKE_COMPILER_IS_GNUCXX "is the compiler gnucxx" OFF)
 SET(TESTFILES "/home/e3a/testfiles" CACHE TESTFILES "The path to the testfiles.")
 SET(ASIO_PATH "${CMAKE_SOURCE_DIR}/contrib/asio-1.10.6/" CACHE ASIO_PATH "The path to asio header files.")
-
-message( ${ASIO_PATH} )
+SET(BOWER_COMPONENTS "angular-animate" "angular-aside" "angular-bootstrap" "angular-route" "angular-sanitize" "bootstrap" "ngGallery" "videogular" "dirPagination" "font-awesome")
 
 project (squawk)
 
@@ -60,6 +59,11 @@ if (build_tests)
     add_test(squawk-tests testmain)
 endif()
 
+
+add_custom_target(bower /usr/local/bin/bower --allow-root install ${BOWER_COMPONENTS}
+WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/squawk-server/docroot
+COMMENT "Download Bower Components" VERBATIM
+)
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
