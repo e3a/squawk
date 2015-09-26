@@ -98,7 +98,7 @@ SET(CPACK_PACKAGE_VERSION_PATCH "${PATCH_VERSION}")
 SET(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${MAJOR_VERSION}.${MINOR_VERSION}.${CPACK_PACKAGE_VERSION_PATCH}")
 SET(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${MAJOR_VERSION}.${MINOR_VERSION}.${CPACK_PACKAGE_VERSION_PATCH}")
 #demo dependencies
-SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libpcrecpp0, liblog4cxx10, libimlib2, libavcodec54, libavformat54, libavutil52, libpoppler-cpp0")
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libpcrecpp0, liblog4cxx10, libimlib2, libavcodec54, libavformat54, libavutil52, libpoppler-cpp0, libcurlpp0")
 
 #dependencies for this service menu
 # SET(CPACK_DEBIAN_PACKAGE_DEPENDS " kate , dolphin ")
