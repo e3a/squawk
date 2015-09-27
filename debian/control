@@ -1,9 +1,14 @@
 Source: squawk
-Package: squawk
-Version: 0.0.1
 Section: base
 Priority: optional
-Architecture: i386
+Build-Depends: debhelper (>= 9)
+Maintainer: Etienne
+
+Package: squawk
+Section: base
+Priority: optional
+Architecture: all
 Depends: libpcrecpp0, liblog4cxx10, libimlib2, libavcodec54, libavformat54, libavutil52, libpoppler-cpp0, libcurlpp0
-Maintainer: Your Name <you@email.com>
 Description: Squawk Media Server
+ Media Server with DLNA capabilities 
+

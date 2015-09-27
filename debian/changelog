@@ -1,7 +1,5 @@
-squawk (0.1) unstable; urgency=low
+squawk (0.1) UNRELEASED; urgency=medium
 
-  * Initial release (Closes: #0)
- 
- -- Etienne <e.knecht@netwings.ch>  Son, 27 Sept 2015 00:37:31 +0100
- 
- 
+  * Initial release. (Closes: #XXXXXX)
+
+ -- etienne <e.knecht@netwings.ch>  Sun, 27 Sep 2015 11:27:41 +0200
