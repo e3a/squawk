@@ -1,5 +1,6 @@
-squawk (0.1) UNRELEASED; urgency=medium
+squawk (0.1ubuntu1) stable; urgency=medium
 
   * Initial release. (Closes: #XXXXXX)
+  * 
 
- -- etienne <e.knecht@netwings.ch>  Sun, 27 Sep 2015 11:27:41 +0200
+ -- etienne <e3a@terminal>  Sun, 27 Sep 2015 14:41:24 +0200
