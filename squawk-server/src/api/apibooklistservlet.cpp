@@ -52,7 +52,7 @@ void ApiBookListServlet::do_get ( http::HttpRequest & request, http::HttpRespons
 
 
             if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "select count(*) " + qBooks ); }
-            squawk::db::db_statement_ptr stmt_count = db->prepareStatement ( "select count(*) " + qBooks );
+            db::db_statement_ptr stmt_count = db->prepareStatement ( "select count(*) " + qBooks );
             while ( stmt_count->step() ) {
                     response << "\"count\":" << std::to_string ( stmt_count->get_int ( 0 ) );
             }
@@ -70,7 +70,7 @@ void ApiBookListServlet::do_get ( http::HttpRequest & request, http::HttpRespons
             }
 
             //set the pager
-            squawk::db::db_statement_ptr stmt = NULL;
+            db::db_statement_ptr stmt = NULL;
 
             if ( request.containsAttribute ( "index" ) && commons::string::is_number ( request.attribute ( "index" ) ) &&
                             request.containsAttribute ( "limit" ) &&  commons::string::is_number ( request.attribute ( "limit" ) ) ) {
@@ -85,7 +85,7 @@ void ApiBookListServlet::do_get ( http::HttpRequest & request, http::HttpRespons
                     stmt = db->prepareStatement ( "select name, mime_type, isbn, ROWID " + qBooks + " ORDER BY " + order_mode );
             }
 
-            squawk::db::db_statement_ptr stmt_artist = db->prepareStatement ( squawk::sql::QUERY_ARTIST_BY_ALBUM );
+            db::db_statement_ptr stmt_artist = db->prepareStatement ( squawk::sql::QUERY_ARTIST_BY_ALBUM );
 
             response << ", \"albums\":[";
             bool first_album = true;
@@ -140,7 +140,7 @@ void ApiBookListServlet::do_get ( http::HttpRequest & request, http::HttpRespons
             response << "]}";
 
 
-		} catch ( squawk::db::DbException & e ) {
+		} catch ( db::DbException & e ) {
                         LOG4CXX_FATAL ( logger, "Can not get book list, Exception:" << e.code() << "-> " << e.what() );
 			throw;
 		}

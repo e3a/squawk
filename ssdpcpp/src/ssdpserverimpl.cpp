@@ -34,7 +34,7 @@
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
 
-namespace ssdp {
+namespace didl {
 
 SSDPServerImpl::SSDPServerImpl ( const std::string & uuid, const std::string & multicast_address, const int & multicast_port ) :
 	uuid ( uuid ), multicast_address ( multicast_address ), multicast_port ( multicast_port ) {
@@ -43,7 +43,7 @@ SSDPServerImpl::SSDPServerImpl ( const std::string & uuid, const std::string & m
 void SSDPServerImpl::start() {
 	//start the server
 	connection = std::unique_ptr<SSDPServerConnection> (
-					 new ssdp::SSDPServerConnection ( multicast_address, multicast_port ) );
+					 new didl::SSDPServerConnection ( multicast_address, multicast_port ) );
 	connection->set_handler ( this );
 	connection->start();
 

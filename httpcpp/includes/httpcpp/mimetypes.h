@@ -28,7 +28,7 @@ namespace http {
 namespace mime {
 
 enum MIME_TYPE { GIF = 0, HTM = 1, HTML = 2, JPEG = 3, PNG = 4, CSS = 5, JS = 6, MPEG = 7, FLAC = 8, VORBIS = 9, MUSEPACK = 10, JSON = 11, TEXT = 12, XML = 13, AVI = 14,
-                                 MP4 = 15, MKV = 16, VIDEOMPEG = 17, MOV = 18, WMV = 19, VTT = 20
+                                 MP4 = 15, MKV = 16, VIDEOMPEG = 17, MOV = 18, WMV = 19, VTT = 20, PDF=21, TXT=22
 			   };
 
 static struct mapping {
@@ -56,6 +56,8 @@ static struct mapping {
         { "mov", "video/quicktime" },
         { "wmv", "video/x-ms-wmv" },
         { "vtt", "text/vtt" },
+        { "pdf", "application/pdf" },
+        { "txt", "text/plain" },
         { 0, 0 }
 };
 
@@ -65,16 +67,15 @@ static struct mapping {
  * @return
  */
 inline MIME_TYPE mime_type ( const std::string & extension ) {
-	int position = 0;
-
-	for ( mapping* m = mappings; m->extension; ++m ) {
-		if ( m->extension == extension ) {
-			return MIME_TYPE ( position );
+        int position_ = 0;
+        std::string clean_ext_ = extension;
+        if( clean_ext_ == "jpeg" ) clean_ext_ = "jpg";
+        for ( mapping * m = mappings; m->extension; ++m ) {
+                if ( m->extension == clean_ext_ ) {
+                        return MIME_TYPE ( position_ );
 		}
-
-		position++;
+                position_++;
 	}
-
 	return TEXT;
 }
 /**

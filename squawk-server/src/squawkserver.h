@@ -24,7 +24,11 @@
 #include <thread>
 
 #include "squawkconfig.h"
-#include "media/fileparser.h"
+//TODO remve #include "media/fileparser.h"
+
+#include "upnpcontentdirectorydao.h"
+#include "upnpcontentdirectoryparser.h"
+
 #include "ssdp.h"
 #include "loggereventlistener.h"
 
@@ -50,12 +54,14 @@ class SquawkServer {
     void stop();
 
   private:
+    squawk::ptr_upnp_dao _upnp_cds_dao;
+    std::shared_ptr<squawk::UpnpContentDirectoryParser> _upnp_file_parser;
+
     //TODO std::thread http_thread;
     squawk::SquawkConfig * squawk_config = nullptr;
-    squawk::db::Sqlite3Connection * database = nullptr;
-    squawk::media::FileParser * parser = nullptr;
+    db::Sqlite3Connection * database = nullptr;
     http::WebServer * web_server = nullptr;
-    ssdp::SSDPServerImpl * ssdp_server = nullptr;
+    didl::SSDPServerImpl * ssdp_server = nullptr;
     
     std::unique_ptr<squawk::LoggerEventListener> ssdp_event_logger;
 };

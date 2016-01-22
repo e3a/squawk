@@ -77,7 +77,7 @@ void ApiAlbumListServlet::do_get ( http::HttpRequest & request, http::HttpRespon
 
 		if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "select count(*) " + qAlbums ); }
 
-		squawk::db::db_statement_ptr stmt_count = db->prepareStatement ( "select count(*) " + qAlbums );
+         db::db_statement_ptr stmt_count = db->prepareStatement ( "select count(*) " + qAlbums );
 
 		while ( stmt_count->step() ) {
 			response << "\"count\":" << std::to_string ( stmt_count->get_int ( 0 ) );
@@ -96,7 +96,7 @@ void ApiAlbumListServlet::do_get ( http::HttpRequest & request, http::HttpRespon
 		}
 
 		//set the pager
-		squawk::db::db_statement_ptr stmt = NULL;
+         db::db_statement_ptr stmt = NULL;
 
 		if ( request.containsAttribute ( "index" ) && commons::string::is_number ( request.attribute ( "index" ) ) &&
 				request.containsAttribute ( "limit" ) &&  commons::string::is_number ( request.attribute ( "limit" ) ) ) {
@@ -112,7 +112,7 @@ void ApiAlbumListServlet::do_get ( http::HttpRequest & request, http::HttpRespon
 			stmt = db->prepareStatement ( "select albums.name, albums.genre, albums.year, albums.ROWID " + qAlbums + " ORDER BY " + order_mode );
 		}
 
-		squawk::db::db_statement_ptr stmt_artist = db->prepareStatement ( squawk::sql::QUERY_ARTIST_BY_ALBUM );
+         db::db_statement_ptr stmt_artist = db->prepareStatement ( squawk::sql::QUERY_ARTIST_BY_ALBUM );
 
 		response << ", \"albums\":[";
 		bool first_album = true;
@@ -186,7 +186,7 @@ void ApiAlbumListServlet::do_get ( http::HttpRequest & request, http::HttpRespon
 
 		response << "]}";
 
-	} catch ( squawk::db::DbException & e ) {
+    } catch (  db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not get albums, Exception:" << e.code() << "-> " << e.what() );
 		throw http::http_status::INTERNAL_SERVER_ERROR;
 

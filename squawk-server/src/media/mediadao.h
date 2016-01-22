@@ -25,6 +25,7 @@
 #include "../db/sqlite3database.h"
 
 #include "squawk.h"
+#include "didl.h"
 #include "album.h"
 #include "image.h"
 #include "media.h"
@@ -65,7 +66,11 @@ public:
 	 * @brief end database transaction
 	 */
 	void endTransaction();
-	/**
+
+
+    std::list< didl::DidlContainer > search( const int & parent, const int & start_index, const int & result_count );
+
+    /**
 	 * @brief test if file exist
 	 * @param filename the filename
 	 * @param mtime the last access date
@@ -98,7 +103,7 @@ public:
 	 * @param media_file
 	 * @return
 	 */
-	unsigned long saveFile ( const unsigned long & parent, const FileItem & file, commons::media::MediaFile & media_file );
+    size_t save_video( const size_t & parent, const FileItem & file, commons::media::MediaFile & media_file );
 	/**
 	 * @brief save audiofile
 	 * @param path_id
@@ -152,7 +157,7 @@ public:
 
 private:
 	static log4cxx::LoggerPtr logger;
-	squawk::db::db_connection_ptr db_;
+    db::db_connection_ptr db_;
 };
 } // media
 } // squawk

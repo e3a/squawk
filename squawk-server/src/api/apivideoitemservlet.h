@@ -38,12 +38,12 @@ namespace api {
 class ApiVideoItemServlet : public http::HttpServlet {
 public:
         ApiVideoItemServlet ( const std::string & path, http::HttpServletContext context ) : HttpServlet ( path ),
-                db ( squawk::db::Sqlite3Database::instance().connection ( context.parameter ( squawk::CONFIG_DATABASE_FILE ) ) ) {}
+                db ( db::Sqlite3Database::instance().connection ( context.parameter ( squawk::CONFIG_DATABASE_FILE ) ) ) {}
         ~ApiVideoItemServlet() {}
         virtual void do_get ( http::HttpRequest & request, http::HttpResponse & response ) override;
 private:
         static log4cxx::LoggerPtr logger;
-        squawk::db::db_connection_ptr db;
+        db::db_connection_ptr db;
 };
 } // api
 } // squawk

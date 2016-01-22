@@ -28,7 +28,7 @@ namespace api {
 
 void ApiUpnpEventServlet::do_get( http::HttpRequest &, http::HttpResponse & response) {
 
-    std::map< std::string, ssdp::SsdpEvent > devices = ssdp_server->get_upnp_devices();
+    std::map< std::string, didl::SsdpEvent > devices = ssdp_server->get_upnp_devices();
 
     response << "[";
     bool first_device = true;

@@ -32,7 +32,7 @@ log4cxx::LoggerPtr MediaServlet::logger ( log4cxx::Logger::getLogger ( "squawk.a
 
 void MediaServlet::do_get ( ::http::HttpRequest & request, ::http::HttpResponse & response ) {
 
-	squawk::db::db_statement_ptr stmt_song = NULL;
+	db::db_statement_ptr stmt_song = NULL;
 
 	std::string type;
 	int item_id = 0;
@@ -66,7 +66,7 @@ void MediaServlet::do_get ( ::http::HttpRequest & request, ::http::HttpResponse 
 
 				FileServlet::do_get ( request, response );
 
-			} catch ( squawk::db::DbException & e ) {
+			} catch ( db::DbException & e ) {
 				LOG4CXX_FATAL ( logger, "can not get item path: " << e.code() << ":" << e.what() )
 				throw ::http::http_status::INTERNAL_SERVER_ERROR;
 			}

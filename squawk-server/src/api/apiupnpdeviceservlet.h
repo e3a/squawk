@@ -36,12 +36,12 @@ namespace api {
  */
 class ApiUpnpDeviceServlet : public ::http::HttpServlet {
 public:
-        ApiUpnpDeviceServlet ( const std::string & path, ssdp::SSDPServerImpl * ssdp_server ) :
+        ApiUpnpDeviceServlet ( const std::string & path, didl::SSDPServerImpl * ssdp_server ) :
             HttpServlet ( path ), ssdp_server( ssdp_server ) {}
         virtual void do_get ( ::http::HttpRequest & request, ::http::HttpResponse & response );
 private:
         static log4cxx::LoggerPtr logger;
-        ssdp::SSDPServerImpl * ssdp_server;
+        didl::SSDPServerImpl * ssdp_server;
 };
 } // api
 } //squawk

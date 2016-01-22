@@ -36,7 +36,7 @@ void ApiArtistListServlet::do_get ( http::HttpRequest & request, ::http::HttpRes
 	if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "get api artist list." ); }
 
 	try {
-        squawk::db::db_statement_ptr stmt = nullptr;
+        db::db_statement_ptr stmt = nullptr;
 
         if ( request.containsAttribute ( "name" ) ) {
 
@@ -74,7 +74,7 @@ void ApiArtistListServlet::do_get ( http::HttpRequest & request, ::http::HttpRes
 
 		response << "]}";
 
-	} catch ( squawk::db::DbException & e ) {
+	} catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not get artists, Exception:" << e.code() << "-> " << e.what() );
 		throw;
 

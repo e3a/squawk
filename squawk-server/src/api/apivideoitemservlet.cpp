@@ -35,7 +35,7 @@ void ApiVideoItemServlet::do_get ( http::HttpRequest & request, http::HttpRespon
 
         try {
            //  = "select name, filename, mime_type, duration, filesize, sampleFrequency, width, height, bitrate, channels
-            squawk::db::db_statement_ptr stmt_video = db->prepareStatement ( squawk::sql::QUERY_VIDEO );
+            db::db_statement_ptr stmt_video = db->prepareStatement ( squawk::sql::QUERY_VIDEO );
             stmt_video->bind_int ( 1, video_id );
 
                 while ( stmt_video->step() ) {
@@ -51,7 +51,7 @@ void ApiVideoItemServlet::do_get ( http::HttpRequest & request, http::HttpRespon
                     ", \"ext\":\"" << http::mime::extension( stmt_video->get_string ( 2 ) ) << "\"}";
                 }
 
-        } catch ( squawk::db::DbException & e ) {
+        } catch ( db::DbException & e ) {
                 LOG4CXX_FATAL ( logger, "Can not get videos, Exception:" << e.code() << "-> " << e.what() );
                 throw http::http_status::INTERNAL_SERVER_ERROR;
 

@@ -39,7 +39,7 @@ void SongServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & 
 
             LOG4CXX_TRACE( logger, "song_id: " << song_id )
 
-            squawk::db::db_statement_ptr stmt_song = db->prepareStatement( QUERY_SONG );
+            db::db_statement_ptr stmt_song = db->prepareStatement( QUERY_SONG );
             stmt_song->bind_int( 1, song_id );
             if( stmt_song->step() ) {
                 request.uri( stmt_song->get_string(0) );
@@ -49,7 +49,7 @@ void SongServlet::do_get( ::http::HttpRequest & request, ::http::HttpResponse & 
             }
             FileServlet::do_get(request, response);
 
-        } catch( squawk::db::DbException & e ) {
+        } catch( db::DbException & e ) {
             LOG4CXX_FATAL( logger, "can not get song path: " << e.code() << ":" << e.what() )
             throw ::http::http_status::INTERNAL_SERVER_ERROR;
         }

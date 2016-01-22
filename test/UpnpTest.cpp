@@ -21,10 +21,12 @@
 #include <string>
 
 #include "../commons/commons.h"
-#include "../commons/upnp.h"
+#include "../includes/upnp.h"
 
 #include <gtest/gtest.h>
 
+
+namespace upnp {
 
 TEST( UpnpTest, ParseRequest ) {
 /*
@@ -43,8 +45,8 @@ TEST( UpnpTest, ParseRequest ) {
 </s:Envelope>
 */
     const char * request = "<?xml version=\"1.0\" encoding=\"utf-8\"?><s:Envelope xmlns:ns0=\"urn:schemas-upnp-org:service:ContentDirectory:1\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><ns0:Browse><ObjectID>0</ObjectID><BrowseFlag>BrowseMetadata</BrowseFlag><Filter>*</Filter><StartingIndex>0</StartingIndex><RequestedCount>0</RequestedCount><SortCriteria /></ns0:Browse></s:Body></s:Envelope>";
-    commons::upnp::UpnpContentDirectoryRequest command = commons::upnp::parseRequest( request );
-    EXPECT_EQ( commons::upnp::UpnpContentDirectoryRequest::BROWSE, command.type );
+    UpnpContentDirectoryRequest command = ::upnp::parseRequest( request );
+    EXPECT_EQ( UpnpContentDirectoryRequest::BROWSE, command.type );
 
     std::vector< std::string > names = command.getNames();
     EXPECT_EQ( 6, names.size() );
@@ -81,8 +83,8 @@ TEST( UpnpTest, ParseRequest2 ) {
 */
     const char * request = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?><s:Envelope s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><u:Browse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><ObjectID>0</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>*</Filter><StartingIndex>0</StartingIndex><RequestedCount>16</RequestedCount><SortCriteria></SortCriteria></u:Browse></s:Body></s:Envelope>";
 
-    commons::upnp::UpnpContentDirectoryRequest command = commons::upnp::parseRequest( request );
-    EXPECT_EQ( commons::upnp::UpnpContentDirectoryRequest::BROWSE, command.type );
+    ::upnp::UpnpContentDirectoryRequest command = commons::upnp::parseRequest( request );
+    EXPECT_EQ( ::upnp::UpnpContentDirectoryRequest::BROWSE, command.type );
 
     EXPECT_TRUE( command.contains( "ObjectID" ) );
     EXPECT_TRUE( command.contains( "BrowseFlag", "BrowseDirectChildren" ) );
@@ -105,7 +107,7 @@ TEST( UpnpTest, ParseRequestStdout ) {
 */
     const char * request = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?><s:Envelope s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><u:Browse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><ObjectID>0</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>*</Filter><StartingIndex>0</StartingIndex><RequestedCount>16</RequestedCount><SortCriteria></SortCriteria></u:Browse></s:Body></s:Envelope>";
     const char * response = "UpnpContentDirectoryRequest::\tBrowseFlag = BrowseDirectChildren\n\tFilter = *\n\tObjectID = 0\n\tRequestedCount = 16\n\tSortCriteria = \n\tStartingIndex = 0\n";
-    commons::upnp::UpnpContentDirectoryRequest command = commons::upnp::parseRequest( request );
+    ::upnp::UpnpContentDirectoryRequest command = commons::upnp::parseRequest( request );
     std::stringstream out;
     out << command;
     EXPECT_EQ( std::string( response ), out.str() );
@@ -114,8 +116,9 @@ TEST( UpnpTest, ParseRequest3 ) {
 
     const char * request = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?><s:Envelope s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><u:Browse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><ObjectID>0</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>*</Filter><StartingIndex>0</StartingIndex><RequestedCount>50</RequestedCount><SortCriteria></SortCriteria></u:Browse></s:Body></s:Envelope>";
     const char * response = "UpnpContentDirectoryRequest::\tBrowseFlag = BrowseDirectChildren\n\tFilter = *\n\tObjectID = 0\n\tRequestedCount = 50\n\tSortCriteria = \n\tStartingIndex = 0\n";
-    commons::upnp::UpnpContentDirectoryRequest command = commons::upnp::parseRequest( request );
+    ::upnp::UpnpContentDirectoryRequest command = commons::upnp::parseRequest( request );
     std::stringstream out;
     out << command;
     EXPECT_EQ( std::string( response ), out.str() );
+}
 }

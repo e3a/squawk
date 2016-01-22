@@ -33,7 +33,7 @@ void ApiAlbumItemServlet::do_get ( http::HttpRequest & request, http::HttpRespon
 		response << "{";
 
 		try {
-			squawk::db::db_statement_ptr stmt_album = db->prepareStatement ( squawk::sql::QUERY_ALBUM );
+			db::db_statement_ptr stmt_album = db->prepareStatement ( squawk::sql::QUERY_ALBUM );
 			stmt_album->bind_int ( 1, album_id );
 
 			while ( stmt_album->step() ) {
@@ -43,7 +43,7 @@ void ApiAlbumItemServlet::do_get ( http::HttpRequest & request, http::HttpRespon
 			}
 
 			//  get artists
-			squawk::db::db_statement_ptr stmt_artists = db->prepareStatement ( squawk::sql::QUERY_ARTIST_BY_ALBUM );
+			db::db_statement_ptr stmt_artists = db->prepareStatement ( squawk::sql::QUERY_ARTIST_BY_ALBUM );
 			stmt_artists->bind_int ( 1, album_id );
 			response << ", \"artists\":[";
 			bool first_artist = true;
@@ -59,7 +59,7 @@ void ApiAlbumItemServlet::do_get ( http::HttpRequest & request, http::HttpRespon
 			}
 
 			//  get songs
-			squawk::db::db_statement_ptr stmt_songs = db->prepareStatement ( squawk::sql::QUERY_SONGS );
+			db::db_statement_ptr stmt_songs = db->prepareStatement ( squawk::sql::QUERY_SONGS );
 			stmt_songs->bind_int ( 1, album_id );
 			response << "], \"songs\":[";
 			bool first_song = true;
@@ -84,7 +84,7 @@ void ApiAlbumItemServlet::do_get ( http::HttpRequest & request, http::HttpRespon
 			}
 
 			//  get images
-			squawk::db::db_statement_ptr stmt_images = db->prepareStatement ( squawk::sql::QUERY_IMAGES );
+			db::db_statement_ptr stmt_images = db->prepareStatement ( squawk::sql::QUERY_IMAGES );
 			stmt_images->bind_int ( 1, album_id );
 			response << "], \"images\":[";
 			bool first_image = true;
@@ -101,7 +101,7 @@ void ApiAlbumItemServlet::do_get ( http::HttpRequest & request, http::HttpRespon
 
 			response << "]}";
 
-		} catch ( squawk::db::DbException & e ) {
+		} catch ( db::DbException & e ) {
 			LOG4CXX_FATAL ( logger, "Can not get album by id, Exception:" << e.code() << "-> " << e.what() );
 			throw;
 		}

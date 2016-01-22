@@ -1,5 +1,4 @@
 /*
-    DB statement definiton.
     Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
@@ -26,7 +25,6 @@
 #include "sqlite3.h"
 #include "dbexception.h"
 
-namespace squawk {
 namespace db {
 
 typedef std::shared_ptr< sqlite3 > sqlite3_ptr;
@@ -101,6 +99,5 @@ private:
 	std::string statement_;
 };
 typedef std::shared_ptr< Sqlite3Statement > db_statement_ptr;
-} // db
-} // squawk
+} //namespace db
 #endif // SQLITE3STATEMENT_H

@@ -39,14 +39,14 @@ namespace api {
 class ApiArtistListServlet : public ::http::HttpServlet {
 public:
 	ApiArtistListServlet ( const std::string & path, http::HttpServletContext context ) : HttpServlet ( path ),
-		db ( squawk::db::Sqlite3Database::instance().connection ( context.parameter ( squawk::CONFIG_DATABASE_FILE ) ) ) {}
+		db ( db::Sqlite3Database::instance().connection ( context.parameter ( squawk::CONFIG_DATABASE_FILE ) ) ) {}
 	virtual void do_get ( ::http::HttpRequest & request, ::http::HttpResponse & response );
 private:
 	static log4cxx::LoggerPtr logger;
 	static std::string QUERY_ARTISTS;
 	static std::string QUERY_ARTISTS_FILTER;
 
-	squawk::db::db_connection_ptr db;
+	db::db_connection_ptr db;
 };
 } // api
 } //squawk

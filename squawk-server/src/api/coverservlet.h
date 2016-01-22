@@ -22,6 +22,7 @@
 #include "squawk.h"
 #include "http.h"
 #include "fileservlet.h"
+#include "../upnpcontentdirectorydao.h"
 
 namespace squawk {
 namespace api {
@@ -30,10 +31,14 @@ namespace api {
  */
 class CoverServlet : public http::servlet::FileServlet {
 public:
-    CoverServlet ( const std::string & path, http::HttpServletContext context ) :
-        FileServlet ( path, context.parameter ( squawk::CONFIG_TMP_DIRECTORY ) ) {}
+    CoverServlet ( const std::string & path, http::HttpServletContext context, ptr_upnp_dao upnp_cds_dao ) :
+        FileServlet ( path, context.parameter ( squawk::CONFIG_TMP_DIRECTORY ) ),
+        _upnp_cds_dao( upnp_cds_dao ), _tmp_path( context.parameter ( squawk::CONFIG_TMP_DIRECTORY ) ) {}
     ~CoverServlet() {}
     virtual void do_get ( http::HttpRequest & request, http::HttpResponse & response ) override;
+private:
+    ptr_upnp_dao _upnp_cds_dao;
+    const std::string _tmp_path;
 };
 } // api
 } // squawk

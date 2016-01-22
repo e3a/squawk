@@ -1,5 +1,4 @@
 /*
-    DB database manager definition.
     Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
@@ -20,36 +19,32 @@
 #ifndef SQLITE3DATABASE_H
 #define SQLITE3DATABASE_H
 
-#include <map>
-#include <memory>
-#include <mutex>
-#include <string>
-
 #include "sqlite3connection.h"
 
-namespace squawk {
 namespace db {
 
 typedef std::shared_ptr< Sqlite3Connection > db_connection_ptr;
-/**
- * @brief The Sqlite3Database manager class.
- */
+
+/** @brief The Sqlite3 database manager class. */
 class Sqlite3Database {
 public:
     Sqlite3Database ( const Sqlite3Database& ) = delete;
     Sqlite3Database & operator= ( const Sqlite3Database& ) = delete;
 
+    /** \brief Factory method */
     static Sqlite3Database & instance() {
         static Sqlite3Database instance;
 		return instance;
 	}
+
+    /** \brief Create a connection to the database */
 	db_connection_ptr connection ( const std::string & path );
 
 private:
     Sqlite3Database() = default;
+
 	std::map< std::string, db_connection_ptr > connections_;
 	std::mutex mtx_;
 };
-} // db
-} // squawk
+} //db
 #endif // SQLITE3DATABASE_H

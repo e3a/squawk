@@ -24,7 +24,7 @@
 #include <thread>
 #include <future>
 
-namespace ssdp {
+namespace didl {
 inline namespace asio_impl {
 
 void SSDPServerConnection::set_handler ( SSDPCallback * _handler ) {
@@ -66,7 +66,7 @@ void SSDPServerConnection::stop() {
 
 void SSDPServerConnection::send ( std::string request_line, std::map< std::string, std::string > headers ) {
 
-	std::string message = ssdp::create_header ( request_line, headers );
+	std::string message = didl::create_header ( request_line, headers );
 
 	asio::io_service io_service_;
 	asio::ip::udp::endpoint endpoint ( asio::ip::address::from_string ( multicast_address.c_str() ), multicast_port );
@@ -76,7 +76,7 @@ void SSDPServerConnection::send ( std::string request_line, std::map< std::strin
 }
 
 void SSDPServerConnection::send ( Response response ) {
-	std::string buffer = ssdp::create_header ( response.request_line, response.headers );
+	std::string buffer = didl::create_header ( response.request_line, response.headers );
 	socket.send_to (
 		asio::buffer ( buffer, buffer.length() ), sender_endpoint );
 }

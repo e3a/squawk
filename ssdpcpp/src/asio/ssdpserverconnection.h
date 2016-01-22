@@ -30,7 +30,7 @@
 
 #include "ssdp.h"
 
-namespace ssdp {
+namespace didl {
 inline namespace asio_impl {
 
 /**

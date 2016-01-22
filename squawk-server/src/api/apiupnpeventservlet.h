@@ -33,13 +33,13 @@ namespace api {
  */
 class ApiUpnpEventServlet : public http::HttpServlet {
 public:
-    ApiUpnpEventServlet ( const std::string & path, ssdp::SSDPServerImpl * ssdp_server ) :
+    ApiUpnpEventServlet ( const std::string & path, didl::SSDPServerImpl * ssdp_server ) :
         HttpServlet ( path ), ssdp_server( ssdp_server ) {}
         ~ApiUpnpEventServlet() {}
         virtual void do_get ( http::HttpRequest & request, http::HttpResponse & response ) override;
 private:
         static log4cxx::LoggerPtr logger;
-        ssdp::SSDPServerImpl * ssdp_server;
+        didl::SSDPServerImpl * ssdp_server;
 };
 } // api
 } // squawk

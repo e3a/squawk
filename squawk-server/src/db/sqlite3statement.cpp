@@ -19,7 +19,6 @@
 
 #include "sqlite3statement.h"
 
-namespace squawk {
 namespace db {
 
 std::string Sqlite3Statement::statement() const {
@@ -79,5 +78,4 @@ int Sqlite3Statement::insert() {
 void Sqlite3Statement::reset() {
 	sqlite3_reset ( stmt_.get() );
 }
-} // db
-} // squawk
+} //namespace db

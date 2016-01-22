@@ -1,5 +1,4 @@
 /*
-    DB connection definiton.
     Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
@@ -24,7 +23,6 @@
 
 #include <map>
 #include <mutex>
-#include <vector>
 
 #include "sqlite3statement.h"
 #include "dbexception.h"
@@ -33,20 +31,20 @@
 
 #include "log4cxx/logger.h"
 
-namespace squawk {
 namespace db {
 
-/**
- * \brief Connection implementation for SQLite.
- */
+/** \brief Connection implementation for SQLite. */
 class Sqlite3Connection {
 public:
+
     Sqlite3Connection ( const std::string & path );
     Sqlite3Connection ( const Sqlite3Connection& other ) = delete;
     Sqlite3Connection& operator= ( const Sqlite3Connection& ) = delete;
     ~Sqlite3Connection();
 
+    /** \brief execute a sql command on the database */
 	int exec ( const std::string & query );
+
 	/**
 	 * \brief Prepare the sql statement.
 	 * \throws DAOException throws DAOExecption
@@ -57,17 +55,22 @@ public:
 	 */
 	unsigned long last_insert_rowid();
 
+    /**
+     * \brief Count the number of rows modified.
+     * <p>Get returns the number of rows modified, inserted or deleted by the most
+     * recently completed INSERT, UPDATE or DELETE statement on the database connection.</p>
+     */
+    int last_changes_count();
+
 private:
     static log4cxx::LoggerPtr logger;
 
-	sqlite3_ptr db_;
-	std::mutex mtx_;
-	std::map< std::string, std::vector< Sqlite3Statement * > > stmt_pool;
-	/**
-	 * \brief Release a statement.
-	 */
-	void release_statement ( Sqlite3Statement * statement );
+    sqlite3_ptr _db;
+    std::mutex _mtx;
+    std::map< std::string, std::vector< Sqlite3Statement * > > _stmt_pool;
+
+    /** \brief Release a statement. */
+    void _release_statement ( Sqlite3Statement * statement );
 };
-} // db
-} // squawk
+} //namespace db
 #endif // SQLITE3CONNECTION_H

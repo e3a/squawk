@@ -22,10 +22,8 @@
 #include "squawk.h"
 
 #include "sqlite3connection.h"
-#include "sqlite3statement.h"
 #include "dbexception.h"
 
-namespace squawk {
 namespace db {
 
 log4cxx::LoggerPtr Sqlite3Connection::logger ( log4cxx::Logger::getLogger ( "squawk.db.Sqlite3Connection" ) );
@@ -38,7 +36,7 @@ Sqlite3Connection::Sqlite3Connection ( const std::string & path ) {
 		throw DbException ( res, sqlite3_errmsg ( db ) );
 	}
 
-	db_ = std::unique_ptr< sqlite3, std::function<void ( sqlite3* ) > > ( db, [] ( sqlite3 * db ) {
+    _db = std::unique_ptr< sqlite3, std::function<void ( sqlite3* ) > > ( db, [] ( sqlite3 * db ) {
 		std::cout << "delete database" << std::endl;
 		sqlite3_close ( db );
 	} );
@@ -46,54 +44,56 @@ Sqlite3Connection::Sqlite3Connection ( const std::string & path ) {
 Sqlite3Connection::~Sqlite3Connection() {
 	std::cout << "DTOR START" << std::endl;
 
-	for ( auto stmt_list : stmt_pool ) {
+    for ( auto stmt_list : _stmt_pool ) {
 		for ( auto stmt : stmt_list.second ) {
 			delete stmt;
 		}
 	}
 
-	stmt_pool.clear();
+    _stmt_pool.clear();
 	std::cout << "DTOR END" << std::endl;
 }
 int Sqlite3Connection::exec ( const std::string & query ) {
-	return sqlite3_exec ( db_.get(), query.c_str(), NULL, NULL, NULL );
+    return sqlite3_exec ( _db.get(), query.c_str(), NULL, NULL, NULL );
 }
 db_statement_ptr Sqlite3Connection::prepareStatement ( const std::string & statement ) {
-	std::lock_guard<std::mutex> lck ( mtx_ );
+    std::lock_guard<std::mutex> lck ( _mtx );
 	Sqlite3Statement * stmt = nullptr;
 
 	// search an existing statement
-	if ( stmt_pool.find ( statement ) != stmt_pool.end() &&
-			stmt_pool[statement].size() != 0 ) {
+    if ( _stmt_pool.find ( statement ) != _stmt_pool.end() &&
+            _stmt_pool[statement].size() != 0 ) {
 
-		stmt = stmt_pool[statement].back();
-		stmt_pool[statement].pop_back();
+        stmt = _stmt_pool[statement].back();
+        _stmt_pool[statement].pop_back();
 
     // create new statement
 	}  else {
 		sqlite3_stmt * sqlite3_statement;
-		int res = sqlite3_prepare ( db_.get(), statement.c_str(), -1, &sqlite3_statement, 0 );
+        int res = sqlite3_prepare ( _db.get(), statement.c_str(), -1, &sqlite3_statement, 0 );
 
 		if ( SQLITE_OK != res ) {
-			throw DbException ( res, sqlite3_errmsg ( db_.get() ) );
+            throw DbException ( res, sqlite3_errmsg ( _db.get() ) );
 		}
 
 		sqlite3_stmt_ptr sqlite3_statement_ ( sqlite3_statement, [] ( sqlite3_stmt * sqlite3_statement ) {
             std::cout << "delete sqlite3_stmt" << std::endl;
             sqlite3_finalize ( sqlite3_statement );
 		} );
-		stmt = new Sqlite3Statement ( db_, std::move ( sqlite3_statement_ ), statement );
+        stmt = new Sqlite3Statement ( _db, std::move ( sqlite3_statement_ ), statement );
 	}
 
-    return std::shared_ptr< Sqlite3Statement > ( stmt, std::bind ( &Sqlite3Connection::release_statement, this, std::placeholders::_1 ) );
+    return std::shared_ptr< Sqlite3Statement > ( stmt, std::bind ( &Sqlite3Connection::_release_statement, this, std::placeholders::_1 ) );
 }
-void Sqlite3Connection::release_statement ( Sqlite3Statement * statement ) {
-	std::lock_guard<std::mutex> lck ( mtx_ );
+void Sqlite3Connection::_release_statement ( Sqlite3Statement * statement ) {
+    std::lock_guard<std::mutex> lck ( _mtx );
 	statement->reset();
-	stmt_pool[statement->statement()].push_back ( statement );
+    _stmt_pool[statement->statement()].push_back ( statement );
 }
 unsigned long Sqlite3Connection::last_insert_rowid() {
-	return sqlite3_last_insert_rowid ( db_.get() );
+    return sqlite3_last_insert_rowid ( _db.get() );
 }
-} // db
-} // squawk
+int Sqlite3Connection::last_changes_count() {
+    return sqlite3_changes ( _db.get() );
+}
+} //namespace db

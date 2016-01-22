@@ -50,7 +50,7 @@ void ApiBrowseServlet::do_get ( http::HttpRequest & request, ::http::HttpRespons
 		}
 
 		try {
-			squawk::db::db_statement_ptr stmt_items = db->prepareStatement ( QUERY_ITEM );
+            db::db_statement_ptr stmt_items = db->prepareStatement ( QUERY_ITEM );
 			stmt_items->bind_int ( 1, id );
 			stmt_items->bind_int ( 2, type );
 
@@ -77,7 +77,7 @@ void ApiBrowseServlet::do_get ( http::HttpRequest & request, ::http::HttpRespons
 
 			stmt_items->reset();
 
-		} catch ( squawk::db::DbException & e ) {
+        } catch (  db::DbException & e ) {
 			LOG4CXX_FATAL ( logger, "Can not get albums, Exception:" << e.code() << "-> " << e.what() );
 			throw http::http_status::INTERNAL_SERVER_ERROR;
 

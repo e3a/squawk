@@ -31,7 +31,7 @@ void ApiVideoListServlet::do_get ( http::HttpRequest&, http::HttpResponse & resp
 	response << "[";
 
 	try {
-        squawk::db::db_statement_ptr stmt_video = db->prepareStatement ( squawk::sql::QUERY_VIDEOS );
+        db::db_statement_ptr stmt_video = db->prepareStatement ( squawk::sql::QUERY_VIDEOS );
 		bool first_video = true;
 
 		while ( stmt_video->step() ) {
@@ -47,7 +47,7 @@ void ApiVideoListServlet::do_get ( http::HttpRequest&, http::HttpResponse & resp
 
 		response << "]";
 
-	} catch ( squawk::db::DbException & e ) {
+	} catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not get videos, Exception:" << e.code() << "-> " << e.what() );
 		throw http::http_status::INTERNAL_SERVER_ERROR;
 

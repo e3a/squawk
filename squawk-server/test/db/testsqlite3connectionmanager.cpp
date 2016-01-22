@@ -22,11 +22,11 @@
 #include <gtest/gtest.h>
 
 TEST(TestSqlite3ConnectionManager, Singleton) {
-    ASSERT_EQ( &squawk::db::Sqlite3Database::instance(), &squawk::db::Sqlite3Database::instance() );
+    ASSERT_EQ( &db::Sqlite3Database::instance(), &db::Sqlite3Database::instance() );
 }
 TEST(TestSqlite3ConnectionManager, connection ) {
-    { squawk::db::db_connection_ptr database1 = squawk::db::Sqlite3Database::instance().connection( "aaa" );
-     { squawk::db::db_connection_ptr database2 = squawk::db::Sqlite3Database::instance().connection( "aaa" );
+    { db::db_connection_ptr database1 = db::Sqlite3Database::instance().connection( "aaa" );
+     { db::db_connection_ptr database2 = db::Sqlite3Database::instance().connection( "aaa" );
        ASSERT_EQ( 3, database1.use_count() );
      }
      ASSERT_EQ( 2, database1.use_count() );

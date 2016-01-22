@@ -1,5 +1,4 @@
 /*
-    DB database manager implementation.
     Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
@@ -19,7 +18,6 @@
 
 #include "sqlite3database.h"
 
-namespace squawk {
 namespace db {
 
 db_connection_ptr Sqlite3Database::connection ( const std::string & path ) {
@@ -31,5 +29,4 @@ db_connection_ptr Sqlite3Database::connection ( const std::string & path ) {
 
 	return connections_[ path ];
 }
-} // db
-} // squawk
+} //namespace db

@@ -1,5 +1,4 @@
 /*
-    DB Exception implementation.
     Copyright (C) 2014  <e.knecht@netwings.ch>
 
     This library is free software; you can redistribute it and/or
@@ -22,7 +21,6 @@
 
 #include <exception>
 
-namespace squawk {
 namespace db {
 /**
  * @brief The DatabaseException class
@@ -41,6 +39,5 @@ private:
     int _code;
     std::string _what;
 };
-} // db
-} // squawk
+} //namespace db
 #endif // DATABASE_H

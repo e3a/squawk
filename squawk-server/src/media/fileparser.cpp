@@ -151,15 +151,10 @@ FileParser::DIRECTORY_TYPE FileParser::_parse ( const unsigned long & path_id, c
 
 	if ( files.find ( AUDIOFILE ) != files.end() ) {
 		dir_type = MUSIC;
-
 		for ( auto & audiofile : files[ AUDIOFILE ] ) {
 
 			//parse the mediafile
 			commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( audiofile.name );
-
-			if ( media_file.getAudioStreams().size() > 1 ) {
-				LOG4CXX_WARN ( logger, "more then one audio streams (" << media_file.getAudioStreams().size() << ") found in " << audiofile.name )
-			}
 
 			//create the album if we dont have it.
 			if ( ! album.equals ( media_file.getTag ( commons::media::MediaFile::ALBUM ) ) ) {
@@ -228,18 +223,7 @@ FileParser::DIRECTORY_TYPE FileParser::_parse ( const unsigned long & path_id, c
 
 					Image image ( file.name );
 					int image_id = mediaDao->saveFile ( path_id, file, album.id(), image );
-
-					//create the thumbnails
-					std::stringstream image_stream;
-					image_stream << tmp_directory_ << "/image-" << image_id << ".jpg";
-					image.scale ( 400, 400, image_stream.str() );
-
-                    if ( file.type == AUDIO_COVER ) {
-						std::stringstream cover_stream;
-						cover_stream << tmp_directory_ << "/" << album.id() << ".jpg";
-						std::string cover_filename = cover_stream.str();
-						image.scale ( 150, 150, cover_filename );
-					}
+                    parseImage( image, tmp_directory_, image_id );
 				}
 
 		} else {
@@ -260,15 +244,13 @@ FileParser::DIRECTORY_TYPE FileParser::_parse ( const unsigned long & path_id, c
 	}
 
 	if ( files.find ( VIDEOFILE ) != files.end() ) {
-		//save file
 		for ( auto & video : files[VIDEOFILE] ) {
 
 			commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( video.name );
 
 			if ( squawk::DEBUG ) LOG4CXX_DEBUG ( logger, "save video" << video.name )
-				mediaDao->saveFile ( path_id, video, media_file );
 
-			//TODO create tumbs
+            mediaDao->save_video ( path_id, video, media_file );
 		}
 
 		files.erase ( VIDEOFILE );
@@ -307,7 +289,10 @@ std::string FileParser::get_mime_type ( const std::string & filename ) {
 	} else if ( commons::string::ends_with ( filename, ".ape", true ) ) {
 		return "audio/x-ape";
 
-	} else if ( commons::string::ends_with ( filename, ".jpg", true ) || commons::string::ends_with ( filename, ".jpeg", true ) ) {
+    } else if ( commons::string::ends_with ( filename, ".dsf", true ) ) {
+        return "audio/dsd";
+
+    } else if ( commons::string::ends_with ( filename, ".jpg", true ) || commons::string::ends_with ( filename, ".jpeg", true ) ) {
 		return "image/jpeg";
 
 	} else if ( commons::string::ends_with ( filename, ".gif", true ) ) {
@@ -343,6 +328,25 @@ std::string FileParser::get_mime_type ( const std::string & filename ) {
 		return "text/plain";
 
 	} else { return std::string ( "application/octet-stream" ); }
+}
+void FileParser::parseImage( Image & image, const std::string & prefix, int image_id ) {
+    //create the thumbnails
+    std::stringstream image_stream;
+    image_stream << prefix << "/tn-" << image_id << ".jpg";
+    image.scale ( 160, 160, image_stream.str() );
+
+    {
+    std::stringstream cover_stream;
+    cover_stream << prefix << "/sm-" << image_id << ".jpg";
+    std::string cover_filename = cover_stream.str();
+    image.scale ( 480, 480, cover_filename );
+    }
+    {
+    std::stringstream cover_stream;
+    cover_stream << prefix << "/lrg-" << image_id << ".jpg";
+    std::string cover_filename = cover_stream.str();
+    image.scale ( 768, 768, cover_filename );
+    }
 }
 } // media
 } // squawk

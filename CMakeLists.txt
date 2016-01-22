@@ -52,7 +52,7 @@ if (build_tests)
     #include_directories(${ROOT} ${SQUAWK_INCLUDES} ${Boost_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS} includes)
     include_directories(${ROOT} ${SQUAWK_INCLUDES} ${GTEST_INCLUDE_DIRS} includes)
     add_executable(testmain test/CommonsStringTest.cpp test/MediaTest.cpp
-                            test/XmlEncodeTest.cpp test/XmlParseTest.cpp test/XmlWriterTest.cpp test/UpnpTest.cpp )
+                            test/XmlEncodeTest.cpp test/XmlParseTest.cpp test/XmlWriterTest.cpp )
 #    target_link_libraries(testmain pthread)
     target_link_libraries(testmain
         ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} ${LIBS})

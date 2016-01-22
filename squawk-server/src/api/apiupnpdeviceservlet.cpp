@@ -29,13 +29,13 @@ namespace api {
 
 void ApiUpnpDeviceServlet::do_get( http::HttpRequest &, http::HttpResponse & response) {
 
-    std::map< std::string, ssdp::SsdpEvent > devices = ssdp_server->getUpnpDevices( "upnp:rootdevice" );
+    std::map< std::string, didl::SsdpEvent > devices = ssdp_server->getUpnpDevices( "upnp:rootdevice" );
 
     response << "[";
     bool first_device = true;
     for( auto & event : devices ) {
         try {
-            ssdp::UpnpDevice device = ssdp_server->deviceDescription( event.second );
+            didl::UpnpDevice device = ssdp_server->deviceDescription( event.second );
             if(first_device) first_device = false;
             else response << ",";
             response << "{";

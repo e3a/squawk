@@ -24,17 +24,14 @@ namespace squawk {
 namespace api {
 
 void CoverServlet::do_get ( http::HttpRequest & request, http::HttpResponse & response ) {
-
 	int cover_id = 0;
-	bool result = match ( request.uri(), &cover_id );
+    std::string type;
+    bool result = match ( request.uri(), &cover_id );
 
 	if ( result && cover_id > 0 ) {
-
-		std::stringstream ss;
-		ss << std::string ( "/" ) << cover_id  << std::string ( ".jpg" );
-		request.uri ( ss.str() );
-
-		FileServlet::do_get ( request, response );
+        std::string path = _upnp_cds_dao->albumArtUri( cover_id ).path();
+        request.uri ( path.substr( _tmp_path.length() ) );
+        FileServlet::do_get ( request, response );
 
 	} else {
         throw http::http_status::BAD_REQUEST;

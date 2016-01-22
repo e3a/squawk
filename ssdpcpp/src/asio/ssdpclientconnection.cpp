@@ -20,7 +20,7 @@
 #include "ssdpclientconnection.h"
 #include "http.h"
 
-namespace ssdp {
+namespace didl {
 inline namespace asio_impl {
 
 void SSDPClientConnection::send ( const std::string & request_line, const std::map< std::string, std::string > & headers ) {

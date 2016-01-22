@@ -1,8 +1,4 @@
 /*
-    Logger Event Listener
-
-    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
-
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
@@ -18,13 +14,19 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "loggereventlistener.h"
+#include <string>
+
+#include <gtest/gtest.h>
+
+#include "../upnpcontentdirectoryparser.h"
 
 namespace squawk {
+TEST(TestUpnpContentDirectoryParser, ParseMultidiscName) {
 
-log4cxx::LoggerPtr LoggerEventListener::logger(log4cxx::Logger::getLogger("squawk.LoggerEventListener"));
-  
-void LoggerEventListener::ssdpEvent( didl::SSDPEventListener::EVENT_TYPE type, std::string  client_ip, didl::SsdpEvent device ) {
-  LOG4CXX_INFO(logger, "SSDP:" << (type==didl::SSDPEventListener::ANNOUNCE ? "ANNOUNCE:" : "BYE:") << client_ip << ":" << device.usn() );
+    ASSERT_TRUE( UpnpContentDirectoryParser::_multidisc_name( "cd1" ) );
+    ASSERT_TRUE( UpnpContentDirectoryParser::_multidisc_name( "CD01" ) );
+    ASSERT_FALSE( UpnpContentDirectoryParser::_multidisc_name( "Some Other CD Name" ) );
 }
-}
+}//squawk
+
+

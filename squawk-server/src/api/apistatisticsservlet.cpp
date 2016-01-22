@@ -27,13 +27,13 @@ void ApiStatisticsServlet::do_get ( http::HttpRequest &, http::HttpResponse & re
     response << "{";
     try {
         //Get the Albums Count
-        squawk::db::db_statement_ptr stmt_albums = db->prepareStatement( squawk::sql::QUERY_ALBUMS_COUNT );
+        db::db_statement_ptr stmt_albums = db->prepareStatement( squawk::sql::QUERY_ALBUMS_COUNT );
         while( stmt_albums->step() ) {
             response << "\"albums\":" << std::to_string( stmt_albums->get_int(0) );
         }
 
         //Get the Artist Count
-        squawk::db::db_statement_ptr stmt_artists = db->prepareStatement( squawk::sql::QUERY_ARTISTS_COUNT );
+        db::db_statement_ptr stmt_artists = db->prepareStatement( squawk::sql::QUERY_ARTISTS_COUNT );
         while( stmt_artists->step() ) {
             response << ", \"artists\":" << std::to_string(stmt_artists->get_int(0));
         }
@@ -41,7 +41,7 @@ void ApiStatisticsServlet::do_get ( http::HttpRequest &, http::HttpResponse & re
         //Get the Files Count
         response << ", \"audiofiles\":{";
         bool first_audiofile = true;
-        squawk::db::db_statement_ptr stmt_audiofiles = db->prepareStatement( squawk::sql::QUERY_AUDIOFILES_COUNT );
+        db::db_statement_ptr stmt_audiofiles = db->prepareStatement( squawk::sql::QUERY_AUDIOFILES_COUNT );
         while( stmt_audiofiles->step() ) {
             if( first_audiofile ){
                 first_audiofile = false;
@@ -52,7 +52,7 @@ void ApiStatisticsServlet::do_get ( http::HttpRequest &, http::HttpResponse & re
         //Get the Files Count
         response << "}, \"types\":{";
         bool first_mimetype = true;
-        squawk::db::db_statement_ptr stmt_type = db->prepareStatement( squawk::sql::QUERY_TYPES_COUNT );
+        db::db_statement_ptr stmt_type = db->prepareStatement( squawk::sql::QUERY_TYPES_COUNT );
         while( stmt_type->step() ) {
             if( first_mimetype ){
                 first_mimetype = false;
@@ -66,7 +66,7 @@ void ApiStatisticsServlet::do_get ( http::HttpRequest &, http::HttpResponse & re
             response << std::to_string(stmt_type->get_int(1));
         }
         response << "}}";
-    } catch( squawk::db::DbException & e) {
+    } catch( db::DbException & e) {
         LOG4CXX_FATAL(logger, "Can not get statistic, Exception:" << e.code() << "-> " << e.what());
         throw;
     } catch( ... ) {

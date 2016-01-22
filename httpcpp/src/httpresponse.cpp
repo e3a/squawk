@@ -55,7 +55,7 @@ HttpResponse & HttpResponse::operator<< ( const std::string & str ) {
 }
 
 void HttpResponse::set_istream ( std::istream * is ) {
-    std::cout << "set stream im response" << std::endl;
+    //TODO std::cout << "set stream im response" << std::endl;
 
 	if ( body_istream ) {
 		std::cerr << "body input stream can only be set once." << std::endl;
@@ -174,7 +174,7 @@ std::string HttpResponse::get_message_header() {
 	}
 
 	if ( size_ > 0 ) {
-		std::cout << "set size:" << size_ << std::endl;
+        //TODO std::cout << "set size:" << size_ << std::endl;
 		ss << header::CONTENT_LENGTH << std::string ( ": " ) << std::to_string ( size_ ) << LINE_BREAK;
 	}
 

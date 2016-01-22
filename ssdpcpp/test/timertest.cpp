@@ -24,7 +24,7 @@
 #include <gtest/gtest.h>
 
 
-namespace ssdp {
+namespace didl {
 TEST( TimerTest, ParseTimeTest ) {
 
     auto time = parse_keep_alive( "max-age=1800" );

@@ -29,7 +29,7 @@ namespace media {
 
 log4cxx::LoggerPtr MediaDao::logger ( log4cxx::Logger::getLogger ( "squawk.media.MediaDao" ) );
 
-MediaDao::MediaDao ( const std::string & database_file ) : db_ ( squawk::db::Sqlite3Database::instance().connection ( database_file ) ) {
+MediaDao::MediaDao ( const std::string & database_file ) : db_ ( db::Sqlite3Database::instance().connection ( database_file ) ) {
 
 	//create tables if they dont exist
 	for ( auto & stmt : squawk::sql::CREATE_STATEMENTS ) {
@@ -38,7 +38,7 @@ MediaDao::MediaDao ( const std::string & database_file ) : db_ ( squawk::db::Sql
 		try {
 			db_->prepareStatement ( stmt )->step();
 
-		} catch ( squawk::db::DbException & e ) {
+        } catch ( db::DbException & e ) {
 			LOG4CXX_FATAL ( logger, "create table, Exception:" << e.code() << "-> " << e.what() );
 			throw;
 		}
@@ -49,7 +49,7 @@ void MediaDao::startTransaction() {
 	try {
 		db_->exec ( "BEGIN;" );
 
-	} catch ( squawk::db::DbException & e ) {
+    } catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "create statements, Exception:" << e.code() << "-> " << e.what() );
 		throw;
 	}
@@ -57,11 +57,16 @@ void MediaDao::startTransaction() {
 void MediaDao::endTransaction() {
 	db_->exec ( "END;" );
 }
+
+std::list< didl::DidlContainer > search( const int & parent, const int & start_index, const int & result_count ) {
+
+}
+
 bool MediaDao::exist ( const std::string & filename, const long & mtime, long const & size, const bool & update ) {
 	bool found = false;
 
 	try {
-		squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::QUERY_EXIST_FILE );
+        db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::QUERY_EXIST_FILE );
 		stmt->bind_text ( 1, filename );
 		stmt->bind_int ( 2, size );
 		stmt->bind_int ( 3, mtime );
@@ -71,14 +76,14 @@ bool MediaDao::exist ( const std::string & filename, const long & mtime, long co
 			found = true;
 
 			if ( update ) {
-				squawk::db::db_statement_ptr stmtUpdate = db_->prepareStatement ( squawk::sql::UPDATE_FILE );
+                db::db_statement_ptr stmtUpdate = db_->prepareStatement ( squawk::sql::UPDATE_FILE );
 				stmtUpdate->bind_int ( 1, time ( 0 ) );
 				stmtUpdate->bind_int ( 2, result );
 				stmtUpdate->update();
 			}
 		}
 
-	} catch ( squawk::db::DbException & e ) {
+    } catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not update file, Exception:" << e.code() << "-> " << e.what() );
 		throw;
 	}
@@ -89,13 +94,13 @@ unsigned long MediaDao::saveFile ( const unsigned long & parent, const FileItem 
 	if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "save imagefile:" << file.name ); }
 
 	try {
-		squawk::db::db_statement_ptr stmt_get_image = db_->prepareStatement ( squawk::sql::QUERY_FILE );
+        db::db_statement_ptr stmt_get_image = db_->prepareStatement ( squawk::sql::QUERY_FILE );
 		stmt_get_image->bind_text ( 1, file.name );
 
 		if ( stmt_get_image->step() ) {
 			int image_id = stmt_get_image->get_int ( 0 );
 
-			squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::UPDATE_FILE_IMAGE );
+            db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::UPDATE_FILE_IMAGE );
 
 			stmt->bind_int ( 1, parent );
 			stmt->bind_int ( 2, file.mtime );
@@ -110,7 +115,7 @@ unsigned long MediaDao::saveFile ( const unsigned long & parent, const FileItem 
 			return image_id;
 
 		} else {
-			squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::INSERT_FILE_IMAGE );
+            db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::INSERT_FILE_IMAGE );
 			stmt->bind_int ( 1, parent );
 			stmt->bind_text ( 2, file.name );
 			stmt->bind_int ( 3, file.mtime );
@@ -124,21 +129,21 @@ unsigned long MediaDao::saveFile ( const unsigned long & parent, const FileItem 
 			return db_->last_insert_rowid();
 		}
 
-	} catch ( squawk::db::DbException & e ) {
+    } catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not save imagefile, Exception:" << e.code() << "-> " << e.what() );
 		throw;
 	}
 }
-unsigned long MediaDao::saveFile ( const unsigned long & parent, const FileItem & file, commons::media::MediaFile & media_file ) {
+size_t MediaDao::save_video( const size_t & parent, const FileItem & file, commons::media::MediaFile & media_file ) {
 	if ( squawk::DEBUG ) LOG4CXX_TRACE ( logger, "save video:" << file.name )
 		try {
-			squawk::db::db_statement_ptr stmt_get_audio = db_->prepareStatement ( squawk::sql::QUERY_FILE );
+            db::db_statement_ptr stmt_get_audio = db_->prepareStatement ( squawk::sql::QUERY_FILE );
 			stmt_get_audio->bind_text ( 1, file.name );
 
 			if ( stmt_get_audio->step() ) {
 				int video_id = stmt_get_audio->get_int ( 0 );
 
-				squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::UPDATE_FILE_VIDEO );
+                db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::UPDATE_FILE_VIDEO );
 
 				stmt->bind_int ( 1, parent );
 				stmt->bind_int ( 2, file.mtime );
@@ -177,7 +182,7 @@ unsigned long MediaDao::saveFile ( const unsigned long & parent, const FileItem 
 				return video_id;
 
 			} else {
-				squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::INSERT_FILE_VIDEO );
+                db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::INSERT_FILE_VIDEO );
 				stmt->bind_int ( 1, parent );
 				stmt->bind_text ( 2, file.name );
 				stmt->bind_int ( 3, file.mtime );
@@ -214,7 +219,7 @@ unsigned long MediaDao::saveFile ( const unsigned long & parent, const FileItem 
 				return db_->last_insert_rowid();
 			}
 
-		} catch ( squawk::db::DbException & e ) {
+        } catch ( db::DbException & e ) {
 			LOG4CXX_FATAL ( logger, "Can not save videofile, Exception:" << e.code() << "-> " << e.what() );
 			throw;
 		}
@@ -227,7 +232,7 @@ squawk::media::Album MediaDao::getAlbum ( const std::string & path ) {
 	squawk::media::Album album;
 
 	try {
-		squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::QUERY_GET_ALBUM_BY_PATH );
+        db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::QUERY_GET_ALBUM_BY_PATH );
 		stmt->bind_text ( 1, path );
 
 		while ( stmt->step() ) {
@@ -237,7 +242,7 @@ squawk::media::Album MediaDao::getAlbum ( const std::string & path ) {
 			album.id ( stmt->get_int ( 3 ) );
 		}
 
-	} catch ( squawk::db::DbException & e ) {
+    } catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not get album by path, Exception:" << e.code() << "-> " << e.what() );
 		throw;
 	}
@@ -251,7 +256,7 @@ unsigned long MediaDao::save ( squawk::media::Album & album ) {
 
 	try {
 
-		squawk::db::db_statement_ptr stmt_album_id = db_->prepareStatement ( squawk::sql::QUERY_GET_ALBUM_BY_PATH );
+        db::db_statement_ptr stmt_album_id = db_->prepareStatement ( squawk::sql::QUERY_GET_ALBUM_BY_PATH );
 		stmt_album_id->bind_text ( 1, album.cleanPath() );
 
 		if ( stmt_album_id->step() ) {
@@ -262,7 +267,7 @@ unsigned long MediaDao::save ( squawk::media::Album & album ) {
 
 		if ( album_id == 0 ) {
 
-			squawk::db::db_statement_ptr stmt_insert_album = db_->prepareStatement ( squawk::sql::QUERY_INSERT_ALBUM );
+            db::db_statement_ptr stmt_insert_album = db_->prepareStatement ( squawk::sql::QUERY_INSERT_ALBUM );
 			stmt_insert_album->bind_text ( 1, album.cleanPath() );
 			stmt_insert_album->bind_text ( 2, album.name() );
 			stmt_insert_album->bind_text ( 3, album.genre() );
@@ -276,7 +281,7 @@ unsigned long MediaDao::save ( squawk::media::Album & album ) {
 			//and save the artist mappings
 			for ( auto & artist : album.artists() ) {
 				if ( squawk::DEBUG ) LOG4CXX_TRACE ( logger, "save artists: album_id:" << album_id << " artist_id:" << artist.id() )
-					squawk::db::db_statement_ptr stmt_insert_album_mapping = db_->prepareStatement ( squawk::sql::QUERY_INSERT_ALBUM_ARTIST_MAPPING );
+                    db::db_statement_ptr stmt_insert_album_mapping = db_->prepareStatement ( squawk::sql::QUERY_INSERT_ALBUM_ARTIST_MAPPING );
 
 				stmt_insert_album_mapping->bind_int ( 1, album_id );
 				stmt_insert_album_mapping->bind_int ( 2, artist.id() );
@@ -284,7 +289,7 @@ unsigned long MediaDao::save ( squawk::media::Album & album ) {
 			}
 		}
 
-	} catch ( squawk::db::DbException & e ) {
+    } catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not save album, Exception:" << e.code() << "-> " << e.what() );
 		throw;
 	}
@@ -296,7 +301,7 @@ unsigned long MediaDao::save ( Artist & artist ) {
 		unsigned long artist_id = 0;
 
 	try {
-		squawk::db::db_statement_ptr stmt_artist_id = db_->prepareStatement ( squawk::sql::QUERY_ARTIST_BY_CLEAN_NAME );
+        db::db_statement_ptr stmt_artist_id = db_->prepareStatement ( squawk::sql::QUERY_ARTIST_BY_CLEAN_NAME );
 		stmt_artist_id->bind_text ( 1, artist.cleanName() );
 
 		if ( stmt_artist_id->step() ) {
@@ -305,7 +310,7 @@ unsigned long MediaDao::save ( Artist & artist ) {
 
 		if ( artist_id == 0 ) {
 			if ( squawk::DEBUG ) LOG4CXX_TRACE ( logger, "save artist: \"" << artist.name() << "\", clean_name: \"" << artist.cleanName() << "\"" )
-				squawk::db::db_statement_ptr stmt_insert_artist = db_->prepareStatement ( squawk::sql::INSERT_ARTIST );
+                db::db_statement_ptr stmt_insert_artist = db_->prepareStatement ( squawk::sql::INSERT_ARTIST );
 
 			stmt_insert_artist->bind_text ( 1, artist.name() );
 			stmt_insert_artist->bind_text ( 2, artist.cleanName() );
@@ -314,26 +319,30 @@ unsigned long MediaDao::save ( Artist & artist ) {
 			artist_id = db_->last_insert_rowid();
 		}
 
-	} catch ( squawk::db::DbException & e ) {
+    } catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not save artist, Exception:" << e.code() << "-> " << e.what() );
 		throw;
 	}
 
 	return artist_id;
 }
-void MediaDao::saveFile ( const unsigned long & path_id, const std::string & filename, const long & mtime, const long & size,
+
+
+
+
+void MediaDao::saveFile ( const size_t & parent_id, const std::string & filename, const long & mtime, const long & size,
 						  const unsigned long & album_id, const squawk::media::Song & song ) {
 
 	if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "save audiofile:" << filename ); }
 
 	try {
-		squawk::db::db_statement_ptr stmt_audiofile = db_->prepareStatement ( squawk::sql::QUERY_AUDIOFILE_BY_FILENAME );
+        db::db_statement_ptr stmt_audiofile = db_->prepareStatement ( squawk::sql::QUERY_AUDIOFILE_BY_FILENAME );
 		stmt_audiofile->bind_text ( 1, filename );
 
 		if ( stmt_audiofile->step() ) {
 
-			squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::UPDATE_AUDIOFILE );
-			stmt->bind_int ( 1, path_id );
+            db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::UPDATE_AUDIOFILE );
+            stmt->bind_int ( 1, parent_id );
 			stmt->bind_int ( 2, size );
 			stmt->bind_int ( 3, mtime );
 			stmt->bind_int ( 4, std::time ( 0 ) );
@@ -353,8 +362,8 @@ void MediaDao::saveFile ( const unsigned long & path_id, const std::string & fil
 
 		} else {
 
-			squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::INSERT_AUDIOFILE );
-			stmt->bind_int ( 1, path_id );
+            db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::INSERT_AUDIOFILE );
+            stmt->bind_int ( 1, parent_id );
 			stmt->bind_text ( 2, filename );
 			stmt->bind_int ( 3, size );
 			stmt->bind_int ( 4, mtime );
@@ -373,7 +382,7 @@ void MediaDao::saveFile ( const unsigned long & path_id, const std::string & fil
 			stmt->insert();
 		}
 
-	} catch ( squawk::db::DbException & e ) {
+    } catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not save audiofile, Exception:" << e.code() << "-> " << e.what() );
 		throw;
 	}
@@ -384,7 +393,7 @@ unsigned long MediaDao::save ( const unsigned long parent, const std::string & n
 	int directory_id = 0;
 
 	try {
-		squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::QUERY_DIRECTORY );
+        db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::QUERY_DIRECTORY );
 		stmt->bind_int ( 1, parent );
 		stmt->bind_text ( 2, path );
 
@@ -392,7 +401,7 @@ unsigned long MediaDao::save ( const unsigned long parent, const std::string & n
 			directory_id = stmt->get_int ( 0 );
 
 		} else {
-			squawk::db::db_statement_ptr stmtCreate = db_->prepareStatement ( squawk::sql::INSERT_DIRECTORY );
+            db::db_statement_ptr stmtCreate = db_->prepareStatement ( squawk::sql::INSERT_DIRECTORY );
 			stmtCreate->bind_text ( 1, name );
 			stmtCreate->bind_int ( 2, parent );
 			stmtCreate->bind_int ( 3, DIRECTORY );
@@ -403,7 +412,7 @@ unsigned long MediaDao::save ( const unsigned long parent, const std::string & n
 			directory_id = db_->last_insert_rowid();
 		}
 
-	} catch ( squawk::db::DbException & e ) {
+    } catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not get or create path, Exception:" << e.code() << "-> " << e.what() );
 		throw;
 	}
@@ -415,13 +424,13 @@ unsigned long MediaDao::saveFile ( const unsigned long & path_id, const FileItem
 
 	try {
 
-		squawk::db::db_statement_ptr stmt_get_image = db_->prepareStatement ( squawk::sql::QUERY_IMAGE_BY_FILENAME );
+        db::db_statement_ptr stmt_get_image = db_->prepareStatement ( squawk::sql::QUERY_IMAGE_BY_FILENAME );
 		stmt_get_image->bind_text ( 1, file.name );
 
 		if ( stmt_get_image->step() ) {
 			int image_id = stmt_get_image->get_int ( 0 );
 
-			squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::UPDATE_IMAGE );
+            db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::UPDATE_IMAGE );
 			stmt->bind_int ( 1, path_id );
 			stmt->bind_int ( 2, album );
 			stmt->bind_int ( 3, file.mtime );
@@ -437,7 +446,7 @@ unsigned long MediaDao::saveFile ( const unsigned long & path_id, const FileItem
 
 		} else {
 
-			squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::INSERT_IMAGE );
+            db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::INSERT_IMAGE );
 			stmt->bind_int ( 1, path_id );
 			stmt->bind_int ( 2, album );
 			stmt->bind_text ( 3, file.name );
@@ -452,7 +461,7 @@ unsigned long MediaDao::saveFile ( const unsigned long & path_id, const FileItem
 			return db_->last_insert_rowid();
 		}
 
-	} catch ( squawk::db::DbException & e ) {
+    } catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not save imagefile, Exception:" << e.code() << "-> " << e.what() );
 		throw;
 	}
@@ -462,13 +471,13 @@ void MediaDao::saveFile ( const unsigned long & parent, const FileItem & file, c
 
     try {
 
-        squawk::db::db_statement_ptr stmt_get_book = db_->prepareStatement ( squawk::sql::QUERY_FILE );
+        db::db_statement_ptr stmt_get_book = db_->prepareStatement ( squawk::sql::QUERY_FILE );
         stmt_get_book->bind_text ( 1, file.name );
 
         if ( stmt_get_book->step() ) {
             int image_id = stmt_get_book->get_int ( 0 );
 
-            squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::UPDATE_BOOK );
+            db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::UPDATE_BOOK );
 
             stmt->bind_int ( 1, parent );
             stmt->bind_text ( 2, file.name );
@@ -485,7 +494,7 @@ void MediaDao::saveFile ( const unsigned long & parent, const FileItem & file, c
 
         } else {
 
-            squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::INSERT_BOOK );
+            db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::INSERT_BOOK );
             stmt->bind_int ( 1, parent );
             stmt->bind_text ( 2, file.name );
             stmt->bind_int ( 3, file.mtime );
@@ -499,7 +508,7 @@ void MediaDao::saveFile ( const unsigned long & parent, const FileItem & file, c
             // TODO return db_->last_insert_rowid();
         }
 
-    } catch ( squawk::db::DbException & e ) {
+    } catch ( db::DbException & e ) {
         LOG4CXX_FATAL ( logger, "Can not save book, Exception:" << e.code() << "-> " << e.what() );
         throw;
     }
@@ -508,20 +517,20 @@ void MediaDao::sweep ( long mtime ) {
 	if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "sweep:" ); }
 
 	try {
-		squawk::db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::SWEEP_FILES );
+        db::db_statement_ptr stmt = db_->prepareStatement ( squawk::sql::SWEEP_FILES );
         stmt->bind_int( 1, mtime );
         stmt->update();
 
-		squawk::db::db_statement_ptr stmt_delete_album = db_->prepareStatement ( squawk::sql::DELETE_ALBUM );
+        db::db_statement_ptr stmt_delete_album = db_->prepareStatement ( squawk::sql::DELETE_ALBUM );
         stmt_delete_album->update();
 
-        squawk::db::db_statement_ptr stmt_orphan_artist_mappings = db_->prepareStatement ( squawk::sql::DELETE_ORPHAN_ARTIST_MAPPINGS );
+        db::db_statement_ptr stmt_orphan_artist_mappings = db_->prepareStatement ( squawk::sql::DELETE_ORPHAN_ARTIST_MAPPINGS );
         stmt_orphan_artist_mappings->update();
 
-        squawk::db::db_statement_ptr stmt_orphan_artist = db_->prepareStatement ( squawk::sql::DELETE_ORPHAN_ARTIST );
+        db::db_statement_ptr stmt_orphan_artist = db_->prepareStatement ( squawk::sql::DELETE_ORPHAN_ARTIST );
         stmt_orphan_artist->update();
 
-	} catch ( squawk::db::DbException & e ) {
+    } catch ( db::DbException & e ) {
 		LOG4CXX_FATAL ( logger, "Can not sweep files, Exception:" << e.code() << "-> " << e.what() );
 		throw;
 

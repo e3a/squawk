@@ -30,6 +30,9 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include "http.h"
+#include "upnp2.h"
+
 namespace squawk {
 namespace sql {
 
@@ -60,11 +63,13 @@ static const std::string QUERY_ARTIST_BY_ALBUM = "select artist.ROWID, artist.na
 static const std::string QUERY_ARTIST_BY_CLEAN_NAME = "select ROWID from tbl_cds_artists where clean_name = ?";
 static const std::string QUERY_COUNT_ARTISTS = "select count(*) from tbl_cds_artists";
 static const std::string QUERY_ARTIST = "select ROWID, name from tbl_cds_artists order by clean_name LIMIT ?, ?";
+static const std::string QUERY_COVER = "select ROWID from tbl_cds_files where type = 5 and album_id = ?";
+
 
 /* get albums by artists TODO remove */
 static const std::string SQL_ARTIST_ALBUM = "select album.name, album.year, album.ROWID " \
         "from tbl_cds_albums album, tbl_cds_artists_albums m, tbl_cds_artists artist " \
-        "where artist.ROWID = ? and album.ROWID = m.album_id and artist.ROWID = m.artist_id LIMIT ?,?";
+        "where artist.ROWID = ? and album.ROWID = m.album_id and artist.ROWID = m.artist_id LIMIT ?,?"; /* used 1 */
 
 /* get new albums TODO */
 static const std::string SQL_ALBUM_NEW = "select DISTINCT album.name, album.year, album.ROWID from tbl_cds_albums album, tbl_cds_files song where album.ROWID = song.album_id ORDER BY song.mtime desc LIMIT 0, 100";
@@ -82,7 +87,7 @@ static const std::string SQL_ALBUM_SONG = "select songs.ROWID, songs.name, songs
         "songs.duration, songs.bitrate, songs.sampleFrequency, songs.bits_per_sample, songs.channels, " \
         "songs.mime_type, songs.disc, songs.mtime, songs.filesize " \
         "from tbl_cds_files songs, tbl_cds_albums album where songs.type = 3 and album.ROWID = ? and " \
-        "album.ROWID = songs.album_id order by songs.disc, songs.track";
+        "album.ROWID = songs.album_id order by songs.disc, songs.track LIMIT ?, ?";
 
 /* QUERY BOOKS AND ALL ITEMS */
 static const std::string QUERY_BOOKS = "select ROWID, name, filename, mime_type from tbl_cds_files where type=4 order by name";

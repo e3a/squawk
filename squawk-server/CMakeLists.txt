@@ -5,7 +5,8 @@ project(squawk-server)
 
 find_package(GoogleTest REQUIRED)
 
-find_package(Boost REQUIRED)
+find_package(Boost 1.54.0 COMPONENTS filesystem system)
+set(LIBS ${LIBS} ${Boost_LIBRARIES})
 
 # find_package(Flac++ REQUIRED)
 find_package(Poppler REQUIRED cpp)
@@ -17,31 +18,32 @@ set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
 find_package(CURLpp REQUIRED)
 set(LIBS ${LIBS} ${CURLPP_LIBRARIES})
 
-# find_package(Lame REQUIRED)
-# set(LIBS ${LIBS} ${LAME_LIBRARY})
-# find_package(LibMagic REQUIRED)
-# set(LIBS ${LIBS} ${LibMagic_LIBRARY})  
-
 set(LIBS ${CMAKE_BINARY_DIR}/httpcpp/libhttpcpp.a ${LIBS})
 set(LIBS ${CMAKE_BINARY_DIR}/ssdpcpp/libssdpcpp.a ${LIBS})
 
-include_directories(${ROOT} ${SQUAWK_INCLUDES} ${POPPLER_INCLUDE_DIRS} ${OPENSSL_INCLUDES} ${CURLPP_INCLUDE_DIRS} includes)
-#include_directories(${ROOT} ${SQLITE3_INCLUDE_DIR}
-#  ${FLAC++_INCLUDE_DIR} ${TINYXML_INCLUDE_DIR} ${LIBXML2_INCLUDE_DIR} ${LOG4CXX_INCLUDE_DIR}
-#  ${PCREPP_INCLUDE_DIR} ${SQUAWK_INCLUDES} ${LAME_INCLUDE_DIR} includes)
-#link_directories(${Boost_LIBRARY_DIR})
+include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${SQUAWK_INCLUDES} ${POPPLER_INCLUDE_DIRS} ${OPENSSL_INCLUDES} ${CURLPP_INCLUDE_DIRS} includes src/upnp )
 
-set(UTILS src/utils/pdfparser.cpp src/utils/amazonfacade.cpp)
+set(UTILS src/utils/pdfparser.cpp src/utils/amazonfacade.cpp src/utils/image.cpp )
 set(SQUAWK src/squawkconfig.cpp src/loggereventlistener.cpp)
-set(DATABASE src/db/sqlite3statement.cpp src/db/sqlite3connection.cpp src/db/sqlite3database.cpp)
+set(DATABASE src/db/dbexception.h src/db/sqlite3statement.cpp src/db/sqlite3connection.cpp src/db/sqlite3database.cpp)
 set(MEDIA src/media/image.cpp src/media/album.cpp  src/media/mediadao.cpp src/media/fileparser.cpp)
 set(API src/api/apibrowseservlet.cpp src/api/apialbumlistservlet.cpp src/api/apialbumitemservlet.cpp src/api/apiartistlistservlet.cpp
         src/api/apivideolistservlet.cpp src/api/apivideoitemservlet.cpp src/api/mediaservlet.cpp src/api/coverservlet.cpp
         src/api/apiupnpeventservlet.cpp src/api/apiupnpdeviceservlet.cpp src/api/apistatisticsservlet.cpp src/api/apibooklistservlet.cpp)
 set(SERVLET src/servlet/imageservlet.cpp src/servlet/songservlet.cpp)
-set(UPNP src/upnp/upnpconnectionmanager.cpp src/upnp/upnpmediaservlet.cpp src/upnp/upnpxmldescription.cpp src/upnp/upnpcontentdirectory.cpp
-         src/upnp/upnpmusicdirectorymodule.cpp src/upnp/upnpvideodirectory.cpp src/upnp/upnpfiledirectory.cpp src/upnp/upnpimagedirectory.cpp )
-#         src/upnp/upnpwriter.cpp )
+set(UPNP src/upnp/didl.h src/upnp/upnp2.h
+         src/upnpconnectionmanager.cpp
+         src/upnpcontentdirectory.cpp
+         src/upnpcontentdirectoryapi.cpp
+         src/upnpcontentdirectorydao.cpp
+         src/upnpcontentdirectoryfile.cpp
+         src/upnpcontentdirectoryimage.cpp
+         src/upnpcontentdirectorymusic.cpp
+         src/upnpcontentdirectoryparser.cpp
+         src/upnpcontentdirectoryvideo.cpp
+         src/upnpmediaservlet.cpp
+         src/upnpxmldescription.cpp
+)
 
 set(SOURCES ${UTILS} ${SQUAWK} ${DATABASE} ${MEDIA} ${HTTP_SERVER} ${API} ${SERVLET} ${UPNP})
 
@@ -73,10 +75,15 @@ if (build_tests)
         # TODO use from http_cpp test/upnp/httpparsetest.cpp
         # TODO use from http_cpp test/http/httpparsertest.cpp
         test/http/mimetypetest.cpp
-        test/upnp/TestParseConnectionManager.cpp
         test/utils/testamazonfacade.cpp
         test/utils/testisbnparser.cpp
         test/db/testsqlite3connectionmanager.cpp
+
+        test/upnp/TestParseConnectionManager.cpp
+        test/upnp/didltest.cpp
+        test/upnp/upnptest.cpp
+        test/testupnpcontentdirectoryparser.cpp
+
         ${SOURCES})
     target_link_libraries(testmain_server pthread)
     target_link_libraries(testmain_server

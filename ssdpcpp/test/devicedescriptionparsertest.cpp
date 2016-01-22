@@ -127,7 +127,7 @@
     "</root>"
 
 
-namespace ssdp {
+namespace didl {
 TEST( DeviceDescriptionParserTest, SimpleXML ) {
 
     SSDPServerImpl server("127.0.0.1", "255.255.255.0", 1900);

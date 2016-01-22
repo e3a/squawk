@@ -60,6 +60,7 @@ private:
 	DIRECTORY_TYPE _parse ( const unsigned long & path_id, const std::string & basepath, const std::string & path );
 
 	static std::string get_mime_type ( const std::string & filename );
+    void parseImage( Image & image, const std::string & prefix, int image_id );
 };
 }
 }

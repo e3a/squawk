@@ -26,12 +26,12 @@
 #include "log4cxx/logger.h"
 
 namespace squawk {
-class LoggerEventListener : public ssdp::SSDPEventListener {
+class LoggerEventListener : public didl::SSDPEventListener {
 public:
   LoggerEventListener() {};
   virtual ~LoggerEventListener() {};
   
-  void ssdpEvent( ssdp::SSDPEventListener::EVENT_TYPE type, std::string  client_ip, ssdp::SsdpEvent device );
+  void ssdpEvent( didl::SSDPEventListener::EVENT_TYPE type, std::string  client_ip, didl::SsdpEvent device );
 
 private:
   static log4cxx::LoggerPtr logger;

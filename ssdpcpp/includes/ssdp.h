@@ -81,7 +81,7 @@ ssdp_server->stop();
 </pre>
  *
  */
-namespace ssdp {
+namespace didl {
 
 static const bool DEBUG = true;
 
@@ -147,7 +147,7 @@ inline time_t parse_keep_alive(const std::string & cache_control ) {
     if( commons::string::starts_with (cache_control_clean, UPNP_OPTION_MAX_AGE ) ) {
         time = boost::lexical_cast<time_t> ( cache_control_clean.substr ( UPNP_OPTION_MAX_AGE.size() ) );
 
-    } else if( ssdp::DEBUG ) {
+    } else if( didl::DEBUG ) {
         std::cerr << "wrong cache control format: " << cache_control << std::endl;
     }
     return time;
@@ -269,7 +269,7 @@ public:
     /**
       * Create the json stream.
       */
-    friend std::ostream& operator<< ( std::ostream& out, const ssdp::SsdpEvent & upnp_device ) {
+    friend std::ostream& operator<< ( std::ostream& out, const didl::SsdpEvent & upnp_device ) {
             out << "{\"host\":\"" << commons::string::escape_json ( upnp_device.host_ ) << "\",\"location\":\"" << commons::string::escape_json ( upnp_device.location_ ) << "\",\"nt\":\"" << commons::string::escape_json ( upnp_device.nt_ ) << "\"," <<
                     "\"nts\":\"" << commons::string::escape_json ( upnp_device.nts_ ) << "\",\"server\":\"" << commons::string::escape_json ( upnp_device.server_ ) << "\",\"usn\":\"" << commons::string::escape_json ( upnp_device.usn_ ) << "\"," <<
                     "\"last_seen\":" << upnp_device.last_seen_ << ",\"cache_control\":" << upnp_device.cache_control_ << "}";

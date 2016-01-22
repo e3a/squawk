@@ -20,14 +20,14 @@
 #include <string>
 #include <map>
 #include "squawk.h"
-#include "upnp.h"
+#include "upnp2.h"
 #include <gtest/gtest.h>
 
 TEST(ConnectionManagerTest, TestParseConnectionType) {
 
     std::string request = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?><s:Envelope s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><u:GetProtocolInfo xmlns:u=\"urn:schemas-upnp-org:service:ConnectionManager:1\"/></s:Body></s:Envelope>";
-    commons::upnp::UpnpContentDirectoryRequest upnp_command = commons::upnp::parseRequest( request );
+    ::upnp::UpnpContentDirectoryRequest upnp_command = ::upnp::parseRequest( request );
 
-    EXPECT_EQ( commons::upnp::UpnpContentDirectoryRequest::PROTOCOL_INFO, upnp_command.type);
+    EXPECT_EQ( ::upnp::UpnpContentDirectoryRequest::PROTOCOL_INFO, upnp_command.type);
 }
 
