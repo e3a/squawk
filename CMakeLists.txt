@@ -8,14 +8,15 @@ option(build_tests "Build all squawk unit tests." ON)
 option(CMAKE_COMPILER_IS_GNUCXX "is the compiler gnucxx" OFF)
 SET(TESTFILES "/home/e3a/testfiles" CACHE TESTFILES "The path to the testfiles.")
 SET(ASIO_PATH "${CMAKE_SOURCE_DIR}/contrib/asio-1.10.6/" CACHE ASIO_PATH "The path to asio header files.")
-SET(BOWER_COMPONENTS "angular-animate" "angular-aside" "angular-bootstrap" "angular-route" "angular-sanitize" "bootstrap" "ngGallery" "videogular" "dirPagination" "font-awesome")
+SET(BOWER_COMPONENTS "angular-animate" "angular-aside" "angular-bootstrap" "angular-route" "angular-sanitize" "bootstrap" "ngGallery" "videogular"
+                     "dirPagination" "font-awesome" "api-console" "jquery" "angular-utils-pagination")
 
 project (squawk)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-std=c++11)
 endif()
-set(CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG} -O0)
+set(CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG} -O0 -g)
 add_definitions(-DASIO_STANDALONE)
 add_definitions(-DTESTFILES="${TESTFILES}/")
 add_definitions(-DCMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}/")
@@ -35,24 +36,24 @@ set(LIBS ${LIBS} ${IMLIB2_LIBRARIES})
 #find_package(LibAVCodec COMPONENTS avformat avcodec avutil avresample)
 find_package(LibAVCodec COMPONENTS avformat avcodec avutil)
 set(LIBS ${LIBS} ${AVCODEC_LIBRARIES})
+find_package(Boost 1.54.0 COMPONENTS filesystem system)
+set(LIBS ${LIBS} ${Boost_LIBRARIES})
 set(LIBS ${LIBS} -luuid -lpthread -lm) #needed for ubuntu
 
 SET( SQUAWK_INCLUDES ${CMAKE_SOURCE_DIR}/commons ${CMAKE_SOURCE_DIR}/httpcpp/includes ${CMAKE_SOURCE_DIR}/ssdpcpp/includes
-     ${ASIO_PATH}/include/ ${LIBXML2_INCLUDE_DIR} ${IMLIB2_INCLUDE_DIR} ${AVCODEC_INCLUDES})
+     ${Boost_INCLUDE_DIRS} ${ASIO_PATH}/include/ ${LIBXML2_INCLUDE_DIR} ${IMLIB2_INCLUDE_DIR} ${AVCODEC_INCLUDES}
+     ${CMAKE_SOURCE_DIR}/external/fmt-3.0.0)
 
+add_subdirectory (external/fmt-3.0.0/)
 add_subdirectory (httpcpp)
 add_subdirectory (ssdpcpp)
 add_subdirectory (squawk-server)
-
-add_executable(media mediafile.cpp)
-target_link_libraries(media ${LIBS})
 
 if (build_tests)
     enable_testing()
     #include_directories(${ROOT} ${SQUAWK_INCLUDES} ${Boost_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS} includes)
     include_directories(${ROOT} ${SQUAWK_INCLUDES} ${GTEST_INCLUDE_DIRS} includes)
-    add_executable(testmain test/CommonsStringTest.cpp test/MediaTest.cpp
-                            test/XmlEncodeTest.cpp test/XmlParseTest.cpp test/XmlWriterTest.cpp )
+    add_executable(testmain test/XmlParseTest.cpp test/XmlWriterTest.cpp )
 #    target_link_libraries(testmain pthread)
     target_link_libraries(testmain
         ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} ${LIBS})

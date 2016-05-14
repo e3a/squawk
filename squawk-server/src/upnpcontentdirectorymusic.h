@@ -19,29 +19,20 @@
 #define UPNPMUSICDIRECTORYMODULE_H
 
 #include "squawk.h"
-
 #include "upnpcontentdirectory.h"
-#include "upnpcontentdirectorydao.h"
-
-#include "log4cxx/logger.h"
 
 namespace squawk {
 
 /** \brief SOAP cds music containers */
 class UpnpContentDirectoryMusic : public ContentDirectoryModule {
 public:
-    UpnpContentDirectoryMusic( http::HttpServletContext context, ptr_upnp_dao upnp_cds_dao ) : _upnp_cds_dao( upnp_cds_dao ),
-        _http_uri( "http://" + ( context.containsParameter( squawk::CONFIG_HTTP_IP ) ? context.parameter( squawk::CONFIG_HTTP_IP ) : "0.0.0.0" ) + ":" +
-                   ( context.containsParameter( squawk::CONFIG_HTTP_PORT ) ? context.parameter( squawk::CONFIG_HTTP_PORT ) : "80" ) + "/" ) {}
-
-    virtual int getRootNode( didl::DidlWriter * didl_element );
+    UpnpContentDirectoryMusic() {}
+    virtual int getRootNode( didl::DidlXmlWriter * didl_element );
     virtual bool match( upnp::UpnpContentDirectoryRequest * parseRequest );
-    virtual std::tuple<size_t, size_t> parseNode( didl::DidlWriter * didl_element, upnp::UpnpContentDirectoryRequest * parseRequest );
+    virtual std::tuple<size_t, size_t> parseNode( didl::DidlXmlWriter * didl_element, upnp::UpnpContentDirectoryRequest * parseRequest );
 
 private:
     static log4cxx::LoggerPtr logger;
-    ptr_upnp_dao _upnp_cds_dao;
-    const std::string _http_uri;
 };
 }
 #endif // UPNPMUSICDIRECTORYMODULE_H

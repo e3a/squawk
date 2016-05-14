@@ -19,9 +19,8 @@ if (build_tests)
    add_executable(testmain_ssdp test/testmain.cpp
                   test/devicedescriptionparsertest.cpp
                   test/headerparsetest.cpp
-                  test/timertest.cpp
-                  ${SOURCES})
-   target_link_libraries(testmain_ssdp ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} pthread)
+                  test/timertest.cpp)
+   target_link_libraries(testmain_ssdp ssdpcpp ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} pthread)
    add_test(ssdp-tests testmain_ssdp)
    add_custom_target(unittest ssdp-tests)
 endif()

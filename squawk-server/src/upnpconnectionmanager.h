@@ -20,15 +20,7 @@
 #ifndef UPNPCONNECTIONMANAGER_H
 #define UPNPCONNECTIONMANAGER_H
 
-#include <list>
-#include <map>
-#include <string>
-
-#include "http.h"
-#include "upnp2.h"
-#include "xml.h"
-
-#include "log4cxx/logger.h"
+#include "squawk.h"
 
 namespace squawk {
 
@@ -37,8 +29,6 @@ namespace squawk {
  */
 class UpnpConnectionManager : public http::HttpServlet {
 public:
-    UpnpConnectionManager( const std::string & path, http::HttpServletContext ) : HttpServlet(path) {}
-
     UpnpConnectionManager( const std::string & path ) : HttpServlet(path) {}
     virtual void do_post(::http::HttpRequest & request, ::http::HttpResponse & response);
     virtual void do_default( const std::string & method, http::HttpRequest & request, http::HttpResponse & response );

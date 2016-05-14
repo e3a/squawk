@@ -17,34 +17,43 @@
 */
 
 #include "upnpcontentdirectoryvideo.h"
-
-#include "http.h"
+#include "squawkserver.h"
+#include "upnpcontentdirectorydao.h"
 
 namespace squawk {
 
-log4cxx::LoggerPtr UpnpContentDirectoryVideo::logger( log4cxx::Logger::getLogger( "squawk.upnp.UpnpVideoDirectory" ) );
+log4cxx::LoggerPtr UpnpContentDirectoryVideo::logger( log4cxx::Logger::getLogger( "squawk.UpnpContentDirectoryVideo" ) );
 
 bool UpnpContentDirectoryVideo::match( ::upnp::UpnpContentDirectoryRequest * request ) {
-    return ContentDirectoryModule::matchObjectId( request, "video" );
+    return ContentDirectoryModule::matchObjectId( request, "/movies/" );
 }
-int UpnpContentDirectoryVideo::getRootNode( ::didl::DidlWriter * didl_element ) {
+int UpnpContentDirectoryVideo::getRootNode( ::didl::DidlXmlWriter * didl_element ) {
     didl_element->container( "/movies/", "", didl::DidlContainer( 0, 0,"Movies", "/movies/0", 0, 0, 0 /*TODO get child count */ ) );
     didl_element->container( "/series/", "", didl::DidlContainer( 0, 0,"Series", "/series/0", 0, 0, 0 /*TODO get child count */ ) );
     return 2;
 }
-std::tuple<size_t, size_t> UpnpContentDirectoryVideo::parseNode( didl::DidlWriter * didl_element, ::upnp::UpnpContentDirectoryRequest * request ) {
+std::tuple<size_t, size_t> UpnpContentDirectoryVideo::parseNode( didl::DidlXmlWriter * didl_element, ::upnp::UpnpContentDirectoryRequest * request ) {
 
-    std::tuple< size_t, size_t > res_;
-    /* ----------- Root Node ----------- */
-    if( request->contains( "ObjectID" ) && request->getValue( "ObjectID" ) == "video.movies" ) {
+    size_t start_index_ = std::stoi( request->getValue( upnp::START_INDEX ) );
+    size_t request_count_ = std::stoi( request->getValue( upnp::REQUESTED_COUNT ) );
+    if( request_count_ == 0 ) request_count_ = 128;
+    size_t returned_ = 0, total = 0;
+    int parent_id_ = ContentDirectoryModule::item_id( request );
 
-//TODO        videos( std::bind((void(didl::DidlElement::*)(didl::DidlMovie))&didl::DidlElement::write, didl_element, std::placeholders::_1 ) );
-//TODO        int video_count = videoCount();
-//        res_ = std::tuple< size_t, size_t >( video_count, video_count );
+    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "Request Movie: parent=" << parent_id_ << ", start_index=" << start_index_ << ", request_count=" << request_count_ );
 
-   } else {
-        LOG4CXX_WARN(logger,"unknown request: " << request->getValue( "ObjectID" ) );
-   }
-    return res_;
+    try {
+        std::list< didl::DidlMovie > item_list =
+            SquawkServer::instance()->dao()->objects< didl::DidlMovie >( start_index_, request_count_ );
+
+        for( auto & item : item_list ) {
+            didl_element->write( "/movies/", "/movies/", SquawkServer::instance()->dao()->object<didl::DidlMovie>( item.id() ) );
+        }
+    } catch( db::DbException & e ) {
+        LOG4CXX_FATAL(logger, "Can not get files, Movies:" << e.code() << "-> " << e.what());
+    } catch( ... ) {
+        LOG4CXX_FATAL(logger, "Other Excpeption in get movies.");
+    }
+    return( std::tuple< size_t, size_t >( returned_, total ) );
 }
 }

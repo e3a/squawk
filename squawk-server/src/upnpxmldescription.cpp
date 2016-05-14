@@ -18,14 +18,13 @@
 */
 
 #include "upnpxmldescription.h"
-
-#include "xml.h"
+#include "squawkserver.h"
 
 using namespace std;
 
 namespace squawk {
 
-log4cxx::LoggerPtr UpnpXmlDescription::logger(log4cxx::Logger::getLogger("squawk.upnp.UpnpXmlDescription"));
+log4cxx::LoggerPtr UpnpXmlDescription::logger(log4cxx::Logger::getLogger("squawk.UpnpXmlDescription"));
 
 void UpnpXmlDescription::do_get(::http::HttpRequest&, ::http::HttpResponse & response) {
 
@@ -52,7 +51,7 @@ void UpnpXmlDescription::do_get(::http::HttpRequest&, ::http::HttpResponse & res
     writer.element( device_node, "", "modelNumber", "1" );
     writer.element( device_node, "", "modelURL", "http://" );
     writer.element( device_node, "", "serialNumber", "123456" );
-    writer.element( device_node, "", "UDN", "uuid:" + uuid );
+    writer.element( device_node, "", "UDN", "uuid:" + SquawkServer::instance()->config()->uuid() );
 
     commons::xml::Node dlna_node = writer.element( device_node, "", "X_DLNADOC", "DMS-1.50" );
     writer.ns( dlna_node, "urn:schemas-dlna-org:device-1-0", "dlna", true );

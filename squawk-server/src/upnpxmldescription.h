@@ -20,12 +20,7 @@
 #ifndef UPNPXMLDESCRIPTION_H
 #define UPNPXMLDESCRIPTION_H
 
-#include <string>
-
-#include "http.h"
 #include "squawk.h"
-
-#include "log4cxx/logger.h"
 
 namespace squawk {
 
@@ -44,12 +39,10 @@ public:
      * @param path The servlet path
      * @param config the SquawkConfig class
      */
-    UpnpXmlDescription( const std::string & path, http::HttpServletContext context ) : HttpServlet( path ),
-        uuid( context.parameter( squawk::CONFIG_UUID ) ) {}
+    UpnpXmlDescription( const std::string & path ) : HttpServlet( path ) {}
     virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
 private:
     static log4cxx::LoggerPtr logger;
-    std::string uuid;
 };
-}
+}//squawk
 #endif // UPNPXMLDESCRIPTION_H

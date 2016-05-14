@@ -20,7 +20,6 @@
 #include <array>
 #include <string>
 
-#include "../commons/commons.h"
 #include "../commons/xml.h"
 
 #include <gtest/gtest.h>

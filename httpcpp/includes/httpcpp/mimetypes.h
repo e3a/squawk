@@ -27,8 +27,8 @@ namespace http {
  */
 namespace mime {
 
-enum MIME_TYPE { GIF = 0, HTM = 1, HTML = 2, JPEG = 3, PNG = 4, CSS = 5, JS = 6, MPEG = 7, FLAC = 8, VORBIS = 9, MUSEPACK = 10, JSON = 11, TEXT = 12, XML = 13, AVI = 14,
-                                 MP4 = 15, MKV = 16, VIDEOMPEG = 17, MOV = 18, WMV = 19, VTT = 20, PDF=21, TXT=22
+enum MIME_TYPE { GIF = 0, HTM = 1, HTML = 2, JPEG = 3, PNG = 4, CRTWO = 5, CSS = 6, JS = 7, MPEG = 8, FLAC = 9, VORBIS = 10, MUSEPACK = 11, JSON = 12, TEXT = 13, XML = 14, AVI = 15,
+                                 MP4 = 16, MKV = 17, VIDEOMPEG = 18, MOV = 19, WMV = 20, VTT = 21, PDF=22, TXT=23
 			   };
 
 static struct mapping {
@@ -39,8 +39,9 @@ static struct mapping {
 	{ "htm", "text/html" },
 	{ "html", "text/html" },
 	{ "jpg", "image/jpeg" },
-	{ "png", "image/png" },
-	{ "css", "text/css" },
+        { "png", "image/png" },
+        { "cr2", "image/x-canon-cr2" },
+        { "css", "text/css" },
 	{ "js", "text/javascript" },
 	{ "mp3", "audio/mpeg" },
 	{ "flac", "audio/x-flac" },

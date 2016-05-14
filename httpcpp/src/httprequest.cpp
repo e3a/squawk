@@ -87,13 +87,13 @@ bool HttpRequest::isPersistent() {
 		   parameters_.find ( header::CONNECTION ) != parameters_.end() &&
 		   parameters_[ header::CONNECTION ] == "keep-alive";
 }
-void HttpRequest::setPersistend ( bool persistent ) {
-	if ( persistent )
-	{ parameters_[header::CONNECTION] = "keep-alive"; }
+//TODO void HttpRequest::setPersistend ( bool persistent ) {
+//	if ( persistent )
+//	{ parameters_[header::CONNECTION] = "keep-alive"; }
 
-	else
-	{ parameters_[header::CONNECTION] = "close"; }
-}
+//	else
+//	{ parameters_[header::CONNECTION] = "close"; }
+//}
 void HttpRequest::parameter ( const std::string & name, const std::string & value ) {
 	parameters_[name] = value;
 }
@@ -123,8 +123,8 @@ std::string HttpRequest::attribute ( const std::string & name ) {
 bool HttpRequest::containsAttribute ( const std::string & name ) {
 	return attributes_.find ( name ) != attributes_.end();
 }
-std::vector<std::string> HttpRequest::attributeNames() {
-	std::vector< std::string > result;
+std::list<std::string> HttpRequest::attributeNames() {
+    std::list< std::string > result;
 
 	for ( auto r : attributes_ )
 	{ result.push_back ( r.first ); }

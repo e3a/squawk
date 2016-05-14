@@ -21,7 +21,7 @@
 #include <list>
 #include <string>
 
-#include "../commons/media.h"
+#include "../../src/utils/media.h"
 
 #include <gtest/gtest.h>
 

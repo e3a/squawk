@@ -19,7 +19,7 @@
 
 #include <string>
 #include <map>
-#include "squawk.h"
+#include "../squawk.h"
 #include "upnp2.h"
 #include <gtest/gtest.h>
 

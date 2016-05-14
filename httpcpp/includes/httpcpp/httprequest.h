@@ -110,7 +110,7 @@ public:
 	 * @param persistent
 	 * @return
 	 */
-	void setPersistend ( bool persistent );
+//TODO	void setPersistend ( bool persistent );
 	/**
 	 * @brief Set a request parameter.
 	 * @param name
@@ -161,7 +161,7 @@ public:
 	 * @brief Get the request attribute names.
 	 * @return
 	 */
-	std::vector<std::string> attributeNames();
+        std::list<std::string> attributeNames();
 	/**
 	 * @brief Get a copy of the request parameter map.
 	 * @return

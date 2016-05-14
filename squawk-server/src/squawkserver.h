@@ -20,50 +20,60 @@
 #ifndef SQUAWKSERVER_H
 #define SQUAWKSERVER_H
 
-#include <memory>
-#include <thread>
+// #include "squawk.h"
 
-#include "squawkconfig.h"
-//TODO remve #include "media/fileparser.h"
-
-#include "upnpcontentdirectorydao.h"
-#include "upnpcontentdirectoryparser.h"
-
-#include "ssdp.h"
 #include "loggereventlistener.h"
+#include "squawkconfig.h"
+
+namespace squawk {
+//forward declaration of class - make it a friend in DidlObject.
+class UpnpContentDirectoryDao;
+//forward declaration of class - make it a friend in DidlObject.
+class UpnpContentDirectoryParser;
 
 /**
  * @brief The SquawkServer Class
  */
 class SquawkServer {
   public:
-    /**
-     * @brief Create new Squawk Server.
-     * @param squawk_config The configuration Object.
-     */
-    SquawkServer(squawk::SquawkConfig * squawk_config) : squawk_config(squawk_config) {}
+    SquawkServer(SquawkServer const&) = delete;
+    SquawkServer & operator=(SquawkServer const&) = delete;
     virtual ~SquawkServer() {}
+
+    static std::shared_ptr< SquawkServer > instance() {
+        static auto _server = std::shared_ptr< SquawkServer >( new SquawkServer() );
+        return _server;
+    }
 
     /**
      * @brief Start the Server.
      */
-    void start();
+    void start( squawk::SquawkConfig * squawk_config );
+
     /**
      * @brief Stop the Server.
      */
     void stop();
 
+    squawk::ptr_squawk_config config() const { return _squawk_config; }
+    std::shared_ptr< squawk::UpnpContentDirectoryDao > dao() const { return _upnp_cds_dao; }
+    db::db_connection_ptr db() const {
+        return db::Sqlite3Database::instance().connection( _squawk_config->databaseFile() );
+    }
+
   private:
-    squawk::ptr_upnp_dao _upnp_cds_dao;
+    SquawkServer() {}
+
+    //TODO unused db::ptr_connection _database;
+    squawk::ptr_squawk_config _squawk_config;
+    std::shared_ptr< squawk::UpnpContentDirectoryDao > _upnp_cds_dao;
+
     std::shared_ptr<squawk::UpnpContentDirectoryParser> _upnp_file_parser;
 
-    //TODO std::thread http_thread;
-    squawk::SquawkConfig * squawk_config = nullptr;
-    db::Sqlite3Connection * database = nullptr;
     http::WebServer * web_server = nullptr;
     didl::SSDPServerImpl * ssdp_server = nullptr;
     
     std::unique_ptr<squawk::LoggerEventListener> ssdp_event_logger;
 };
-
+}//namespace squawk
 #endif // SQUAWKSERVER_H

@@ -72,5 +72,6 @@ private:
     /** \brief Release a statement. */
     void _release_statement ( Sqlite3Statement * statement );
 };
+typedef std::shared_ptr< Sqlite3Connection > ptr_connection;
 } //namespace db
 #endif // SQLITE3CONNECTION_H

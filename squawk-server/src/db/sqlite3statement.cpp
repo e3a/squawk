@@ -43,7 +43,9 @@ int Sqlite3Statement::get_int ( const int & position ) {
 	return sqlite3_value_int ( sql3_msgid );
 }
 std::string Sqlite3Statement::get_string ( const int & position ) {
-	return std::string ( reinterpret_cast<const char*> ( sqlite3_column_text ( stmt_.get(),position ) ) );
+    const unsigned char * text = sqlite3_column_text ( stmt_.get(),position );
+    if( text == nullptr ) return std::string();
+    else return std::string ( reinterpret_cast<const char*> ( text ) );
 }
 bool Sqlite3Statement::step() {
 	int step = sqlite3_step ( stmt_.get() );

@@ -23,6 +23,9 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <sys/utsname.h>
+
+#include <boost/algorithm/string.hpp>
 
 #include "ssdp.h"
 #include "ssdpserverconnection.h"
@@ -35,6 +38,21 @@
 #include <curlpp/Options.hpp>
 
 namespace didl {
+
+inline std::string uname() {
+  struct utsname uts;
+  uname(&uts);
+  std::ostringstream system;
+  system << uts.sysname << "/" << uts.version;
+  return system.str();
+};
+inline std::string time_string() {
+  time_t rawtime;
+  time (&rawtime);
+  std::string str_time = std::string( std::ctime ( &rawtime ) );
+  boost::trim( str_time );
+  return str_time;
+};
 
 SSDPServerImpl::SSDPServerImpl ( const std::string & uuid, const std::string & multicast_address, const int & multicast_port ) :
 	uuid ( uuid ), multicast_address ( multicast_address ), multicast_port ( multicast_port ) {
@@ -147,10 +165,10 @@ void SSDPServerImpl::search ( const std::string & service ) {
 	std::async ( std::launch::async, [this, &service]() {
 
 		std::map< std::string, std::string > map;
-        map[http::header::HOST] = multicast_address + std::string ( ":" ) + commons::string::to_string<int> ( multicast_port );
-		map[commons::string::to_upper ( UPNP_HEADER_ST )] = service;
-		map[commons::string::to_upper ( UPNP_HEADER_MX )] = "2";
-		map[commons::string::to_upper ( UPNP_HEADER_MAN )] = UPNP_STATUS_DISCOVER;
+        map[http::header::HOST] = multicast_address + std::string ( ":" ) + std::to_string( multicast_port );
+        map[boost::to_upper_copy( UPNP_HEADER_ST )] = service;
+        map[boost::to_upper_copy( UPNP_HEADER_MX )] = "2";
+        map[boost::to_upper_copy( UPNP_HEADER_MAN )] = UPNP_STATUS_DISCOVER;
         map[http::header::CONTENT_LENGTH] = std::string ( "0" );
 
 		SSDPClientConnection connection ( this, multicast_address, multicast_port );
@@ -161,13 +179,13 @@ void SSDPServerImpl::search ( const std::string & service ) {
 std::map< std::string, std::string > SSDPServerImpl::create_response ( const std::string & nt, const std::string & location ) {
 
 	std::map< std::string, std::string > map;
-    map[http::header::CACHE_CONTROL] = UPNP_OPTION_MAX_AGE + commons::string::to_string<int> ( ANNOUNCE_INTERVAL );
+    map[http::header::CACHE_CONTROL] = UPNP_OPTION_MAX_AGE + std::to_string( ANNOUNCE_INTERVAL );
 	map[UPNP_HEADER_LOCATION] = location;
-	map[UPNP_HEADER_SERVER] = commons::system::uname() + std::string ( " DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0" ); //TODO
-	map[commons::string::to_upper ( UPNP_HEADER_ST )] = nt;
-	map[commons::string::to_upper ( UPNP_HEADER_USN )] = std::string ( "uuid:" ) + uuid + std::string ( "::" ) + nt;
-	map[commons::string::to_upper ( UPNP_HEADER_EXT )] = "";
-    map[http::header::DATE] = commons::system::time_string();
+    map[UPNP_HEADER_SERVER] = uname() + std::string ( " DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0" ); //TODO
+    map[boost::to_upper_copy( UPNP_HEADER_ST )] = nt;
+    map[boost::to_upper_copy( UPNP_HEADER_USN )] = std::string ( "uuid:" ) + uuid + std::string ( "::" ) + nt;
+    map[boost::to_upper_copy( UPNP_HEADER_EXT )] = "";
+    map[http::header::DATE] = time_string();
     map[http::header::CONTENT_LENGTH] = std::string ( "0" );
 
 	return map;
@@ -175,15 +193,15 @@ std::map< std::string, std::string > SSDPServerImpl::create_response ( const std
 void SSDPServerImpl::send_anounce ( const std::string & nt, const std::string & location ) {
 
 	std::map< std::string, std::string > map;
-    map[http::header::HOST] = multicast_address + std::string ( ":" ) + commons::string::to_string<int> ( multicast_port );
-    map[http::header::CACHE_CONTROL] = UPNP_OPTION_MAX_AGE + commons::string::to_string<int> ( ANNOUNCE_INTERVAL );
-	map[commons::string::to_upper ( UPNP_HEADER_LOCATION )] = location;
-	map[commons::string::to_upper ( UPNP_HEADER_SERVER )] = commons::system::uname() + " " + USER_AGENT;
-	map[commons::string::to_upper ( UPNP_HEADER_NT )] = nt;
-	map[commons::string::to_upper ( UPNP_HEADER_USN )] = "uuid:" + uuid + "::" + nt;
-	map[commons::string::to_upper ( UPNP_HEADER_NTS )] = UPNP_STATUS_ALIVE;
-	map[commons::string::to_upper ( UPNP_HEADER_EXT )] = std::string ( "" );
-	map[commons::string::to_upper ( UPNP_HEADER_DATE )] = commons::system::time_string();
+    map[http::header::HOST] = multicast_address + std::string ( ":" ) + std::to_string( multicast_port );
+    map[http::header::CACHE_CONTROL] = UPNP_OPTION_MAX_AGE + std::to_string( ANNOUNCE_INTERVAL );
+    map[boost::to_upper_copy( UPNP_HEADER_LOCATION )] = location;
+    map[boost::to_upper_copy( UPNP_HEADER_SERVER )] = uname() + " " + USER_AGENT;
+    map[boost::to_upper_copy( UPNP_HEADER_NT )] = nt;
+    map[boost::to_upper_copy( UPNP_HEADER_USN )] = "uuid:" + uuid + "::" + nt;
+    map[boost::to_upper_copy( UPNP_HEADER_NTS )] = UPNP_STATUS_ALIVE;
+    map[boost::to_upper_copy( UPNP_HEADER_EXT )] = std::string ( "" );
+    map[boost::to_upper_copy( UPNP_HEADER_DATE )] = time_string();
     map[http::header::CONTENT_LENGTH] = std::string ( "0" );
 
 	connection->send ( SSDP_HEADER_REQUEST_LINE, map );
@@ -191,13 +209,13 @@ void SSDPServerImpl::send_anounce ( const std::string & nt, const std::string & 
 void SSDPServerImpl::send_suppress ( const std::string & nt ) {
 
 	std::map< std::string, std::string > map;
-    map[http::header::HOST] = multicast_address + std::string ( ":" ) + commons::string::to_string<int> ( multicast_port );
-	map[commons::string::to_upper ( UPNP_HEADER_NT )] = nt;
-	map[commons::string::to_upper ( UPNP_HEADER_USN )] = "uuid:" + uuid + "::" + nt;
-	map[commons::string::to_upper ( UPNP_HEADER_NTS )] = UPNP_STATUS_BYE;
-	map[commons::string::to_upper ( UPNP_HEADER_SERVER )] = commons::system::uname() + " " + USER_AGENT;
-	map[commons::string::to_upper ( UPNP_HEADER_EXT )] = std::string ( "" );
-	map[commons::string::to_upper ( UPNP_HEADER_DATE )] = commons::system::time_string();
+    map[http::header::HOST] = multicast_address + std::string ( ":" ) + std::to_string( multicast_port );
+    map[boost::to_upper_copy( UPNP_HEADER_NT )] = nt;
+    map[boost::to_upper_copy( UPNP_HEADER_USN )] = "uuid:" + uuid + "::" + nt;
+    map[boost::to_upper_copy( UPNP_HEADER_NTS )] = UPNP_STATUS_BYE;
+    map[boost::to_upper_copy( UPNP_HEADER_SERVER )] = uname() + " " + USER_AGENT;
+    map[boost::to_upper_copy( UPNP_HEADER_EXT )] = std::string ( "" );
+    map[boost::to_upper_copy( UPNP_HEADER_DATE )] = time_string();
     map[http::header::CONTENT_LENGTH] = std::string ( "0" );
 
 	connection->send ( SSDP_HEADER_REQUEST_LINE, map );

@@ -21,18 +21,14 @@
 #define HTTP_H
 
 #include <array>
-#include <functional>
 #include <iomanip>
 #include <iostream>
+#include <list>
 #include <map>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <thread>
-#include <time.h>
-#include <unordered_map>
-#include <utility>
-#include <vector>
 
 #include <boost/algorithm/string.hpp>
 
@@ -166,8 +162,8 @@ inline std::string escape_xml(std::string str) {
     }
     return ss.str();
 }
-} // utils
-} // http
+}//namespace utils
+}//namespace http
 
 #include "httpcpp/mimetypes.h"
 #include "httpcpp/httpstatus.h"
@@ -178,7 +174,6 @@ inline std::string escape_xml(std::string str) {
 #include "httpcpp/httprequestparser.h"
 #include "httpcpp/ihttpclientconnection.h"
 #include "httpcpp/httpclient.h"
-#include "httpcpp/httpservletcontext.h"
 #include "httpcpp/httpservlet.h"
 #include "httpcpp/httprequesthandler.h"
 #include "httpcpp/ihttpserver.h"

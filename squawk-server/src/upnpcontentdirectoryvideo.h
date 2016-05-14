@@ -19,29 +19,20 @@
 #define UPNPVIDEODIRECTORY_H
 
 #include "squawk.h"
-
 #include "upnpcontentdirectory.h"
-#include "upnpcontentdirectorydao.h"
-
-#include "log4cxx/logger.h"
 
 namespace squawk {
 
 class UpnpContentDirectoryVideo : public ContentDirectoryModule {
 public:
-    UpnpContentDirectoryVideo( http::HttpServletContext context, ptr_upnp_dao upnp_cds_dao ) :
-        _upnp_cds_dao( upnp_cds_dao ), http_address_( context.parameter( squawk::CONFIG_HTTP_IP ) ),
-        http_port_( context.parameter( squawk::CONFIG_HTTP_PORT ) ) {}
+    UpnpContentDirectoryVideo() {}
 
-    virtual int getRootNode( ::didl::DidlWriter * didl_element );
+    virtual int getRootNode( ::didl::DidlXmlWriter * didl_element );
     virtual bool match( ::upnp::UpnpContentDirectoryRequest * parseRequest );
-    virtual std::tuple<size_t, size_t> parseNode( didl::DidlWriter * didl_element, ::upnp::UpnpContentDirectoryRequest * parseRequest );
+    virtual std::tuple<size_t, size_t> parseNode( didl::DidlXmlWriter * didl_element, ::upnp::UpnpContentDirectoryRequest * parseRequest );
 
 private:
     static log4cxx::LoggerPtr logger;
-    ptr_upnp_dao _upnp_cds_dao;
-    std::string http_address_;
-    std::string http_port_;
 
 //    /* get video count */
 //    static constexpr const char * SQL_VIDEO_COUNT = "select count(*) from tbl_cds_files where type=2";
@@ -63,10 +54,10 @@ private:
 //        return count;
 //    }
 
-//    /* get videos */
+      /* get videos */
 //    static constexpr const char * SQL_VIDEOS = \
-//            "select ROWID, name, mime_type, duration, filesize, sampleFrequency, " \
-//            "width, height, bitrate, channels from tbl_cds_files where type=2 order by name";
+            "select ROWID, name, mime_type, duration, filesize, sampleFrequency, " \
+            "width, height, bitrate, channels from tbl_cds_files where type=2 order by name";
 //    void videos( std::function<void(didl::DidlMovie)> callback ) {
 //        try {
 //            db::db_statement_ptr stmt_videos = db->prepareStatement( SQL_VIDEOS );

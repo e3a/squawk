@@ -1,7 +1,4 @@
 /*
-    Media servlet header file.
-    Copyright (C) 2013  e.knecht@netwings.ch
-
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -19,29 +16,20 @@
 #ifndef UPNPMEDIASERVLET_H
 #define UPNPMEDIASERVLET_H
 
-#include "http.h"
 #include "squawk.h"
-#include "fileservlet.h"
-
-#include "db/sqlite3database.h"
-#include "db/sqlite3connection.h"
-#include "db/sqlite3statement.h"
-
-#include "log4cxx/logger.h"
 
 namespace squawk {
 
 class UpnpMediaServlet : public http::HttpServlet {
 public:
-    UpnpMediaServlet( const std::string & path, http::HttpServletContext context ) : HttpServlet(path),
-        db(db::Sqlite3Database::instance().connection( context.parameter( squawk::CONFIG_DATABASE_FILE ) ) ) {}
-    virtual void do_get( ::http::HttpRequest & request, ::http::HttpResponse & response );
-    virtual void do_head( ::http::HttpRequest & request, ::http::HttpResponse & response );
+    UpnpMediaServlet ( const std::string & path ) : HttpServlet ( path ) {}
+    virtual void do_get ( http::HttpRequest & request, http::HttpResponse & response );
+    virtual void do_head ( http::HttpRequest & request, http::HttpResponse & response );
 private:
     static log4cxx::LoggerPtr logger;
-    std::string path; //TODO not set
-    void getFile( ::http::HttpRequest & request, ::http::HttpResponse & response );
-    db::db_connection_ptr db;
+
+    void _process_file ( http::HttpRequest & request, http::HttpResponse & response );
+    void _dlna_headers ( http::HttpRequest & request, http::HttpResponse & response );
 };
-}
+}//namespace squawk
 #endif // UPNPMEDIASERVLET_H

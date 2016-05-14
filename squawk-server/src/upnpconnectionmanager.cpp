@@ -19,12 +19,9 @@
 
 #include "upnpconnectionmanager.h"
 
-#include "commons.h"
-#include "squawk.h"
-
 namespace squawk {
 
-log4cxx::LoggerPtr UpnpConnectionManager::logger(log4cxx::Logger::getLogger("squawk.upnp.UpnpConnectionManager"));
+log4cxx::LoggerPtr UpnpConnectionManager::logger(log4cxx::Logger::getLogger("squawk.UpnpConnectionManager"));
 
 void UpnpConnectionManager::do_post(::http::HttpRequest & request, ::http::HttpResponse & response) {
 

@@ -48,10 +48,17 @@ HttpResponse::~HttpResponse() {
     }
 };
 
+HttpResponse & HttpResponse::operator<< ( const size_t & t ) {
+    std::stringstream str;
+    str << t;
+    body_stream << str.str();
+    size_ += str.str().length();
+    return *this;
+}
 HttpResponse & HttpResponse::operator<< ( const std::string & str ) {
-	body_stream << str;
-	size_ += str.length();
-	return *this;
+    body_stream << str;
+    size_ += str.length();
+    return *this;
 }
 
 void HttpResponse::set_istream ( std::istream * is ) {

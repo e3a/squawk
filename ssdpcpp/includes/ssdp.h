@@ -27,7 +27,6 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <commons.h>
 #include <http.h>
 
 #include "gtest/gtest_prod.h"
@@ -144,7 +143,7 @@ inline bool check_timeout(const time_t & last_seen_, const double & cache_contro
 inline time_t parse_keep_alive(const std::string & cache_control ) {
     time_t time = 0;
     std::string cache_control_clean = boost::erase_all_copy( cache_control, " " );
-    if( commons::string::starts_with (cache_control_clean, UPNP_OPTION_MAX_AGE ) ) {
+    if( cache_control_clean.find( UPNP_OPTION_MAX_AGE ) == 0 ) {
         time = boost::lexical_cast<time_t> ( cache_control_clean.substr ( UPNP_OPTION_MAX_AGE.size() ) );
 
     } else if( didl::DEBUG ) {
@@ -268,10 +267,11 @@ public:
 
     /**
       * Create the json stream.
+      * //TODO JSON ESCAPE || is it used?
       */
     friend std::ostream& operator<< ( std::ostream& out, const didl::SsdpEvent & upnp_device ) {
-            out << "{\"host\":\"" << commons::string::escape_json ( upnp_device.host_ ) << "\",\"location\":\"" << commons::string::escape_json ( upnp_device.location_ ) << "\",\"nt\":\"" << commons::string::escape_json ( upnp_device.nt_ ) << "\"," <<
-                    "\"nts\":\"" << commons::string::escape_json ( upnp_device.nts_ ) << "\",\"server\":\"" << commons::string::escape_json ( upnp_device.server_ ) << "\",\"usn\":\"" << commons::string::escape_json ( upnp_device.usn_ ) << "\"," <<
+            out << "{\"host\":\"" << upnp_device.host_ << "\",\"location\":\"" << upnp_device.location_ << "\",\"nt\":\"" << upnp_device.nt_ << "\"," <<
+                    "\"nts\":\"" <<  upnp_device.nts_ << "\",\"server\":\"" << upnp_device.server_ << "\",\"usn\":\"" << upnp_device.usn_ << "\"," <<
                     "\"last_seen\":" << upnp_device.last_seen_ << ",\"cache_control\":" << upnp_device.cache_control_ << "}";
             return out;
     }

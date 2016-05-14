@@ -19,8 +19,6 @@
 
 #include <sqlite3.h>
 
-#include "squawk.h"
-
 #include "sqlite3connection.h"
 #include "dbexception.h"
 

@@ -20,7 +20,6 @@
 #include <array>
 #include <string>
 
-#include "../commons/commons.h" //TODO remove commons
 #include "upnp2.h"
 
 #include <gtest/gtest.h>

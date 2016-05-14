@@ -20,11 +20,7 @@
 #ifndef SQUAWKCONFIG_H
 #define SQUAWKCONFIG_H
 
-#include <algorithm>
-#include <map>
-#include <ostream>
-#include <string>
-#include <vector>
+#include "squawk.h"
 
 namespace squawk {
 
@@ -55,13 +51,15 @@ public:
     /** @brief the web server document root */
     std::string docRoot();
     /** @brief the list of media directories */
-    std::vector< std::string > mediaDirectories();
+    std::list< std::string > mediaDirectories();
     /** @brief the configuration file */
     std::string configFile();
     /** @brief the servers uuid */
     std::string uuid();
+    /** @brief the cover name*/
+    std::list< std::string > coverNames();
 
-    std::map< std::string, std::vector< std::string > > getMap() {
+    std::map< std::string, std::list< std::string > > getMap() const {
         return store;
     }
 
@@ -103,7 +101,8 @@ public:
     }
 
 private:
-    std::map< std::string, std::vector< std::string > > store;
+    static const std::string HELP_TEXT;
+    std::map< std::string, std::list< std::string > > store;
 
     /**
      * @brief Add value to store.
@@ -120,7 +119,7 @@ private:
             store[ key ].push_back( value );
 
         } else {
-            std::vector< std::string > list;
+            std::list< std::string > list;
             list.push_back( value );
             store[ key ] = list;
         }
@@ -135,9 +134,11 @@ private:
     std::string CONFIG_TMP_DIRECTORY = "tmp-directory";
     std::string CONFIG_LOCAL_LISTEN_ADDRESS = "local-address";
     std::string CONFIG_UUID = "uuid";
+    std::string CONFIG_COVER_NAMES = "cover-names";
     std::string CONFIG_FILE = "config-file";
     std::string CONFIG_MEDIA_DIRECTORY = "media-directory";
     std::string CONFIG_HTTP_DOCROOT = "http-docroot";
 };
+typedef std::shared_ptr< SquawkConfig > ptr_squawk_config;
 }
 #endif // SQUAWKCONFIG_H

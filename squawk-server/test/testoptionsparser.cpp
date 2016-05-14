@@ -19,7 +19,7 @@
 
 #include <string>
 #include <map>
-#include "commons.h"
+
 #include "../src/squawkconfig.h"
 #include <gtest/gtest.h>
 
@@ -69,7 +69,7 @@ TEST(SquawkParseOptions, TestAllOptions) {
     EXPECT_EQ(std::string("/foo/bar.xml"), config.configFile() );
     ASSERT_TRUE(config.rescan);
     EXPECT_EQ(std::string("/foo/bar.logger"), config.logger() );
-    EXPECT_EQ(std::string("/foo/bar"), config.mediaDirectories()[0] );
+    EXPECT_EQ(std::string("/foo/bar"), config.mediaDirectories().front() );
     EXPECT_EQ(std::string("127.0.0.1"), config.httpAddress() );
     EXPECT_EQ(8080, config.httpPort() );
     EXPECT_EQ(std::string("/foo/bar/docroot"), config.docRoot() );
@@ -138,8 +138,9 @@ TEST(SquawkParseOptions, TestDefaultOptions) {
     EXPECT_EQ(std::string("/foo/bar.xml"), config.configFile() );
 
     EXPECT_EQ(2, config.mediaDirectories().size() );
-    EXPECT_EQ(std::string("/foo/bar"), config.mediaDirectories()[0] );
-    EXPECT_EQ(std::string("/foo/bar2"), config.mediaDirectories()[1] );
+
+    EXPECT_EQ(std::string("/foo/bar"),  *(config.mediaDirectories().begin() ) );
+    EXPECT_EQ(std::string("/foo/bar2"), *(++config.mediaDirectories().begin() ) );
 
     EXPECT_EQ(std::string("127.0.0.1"), config.httpAddress());
     EXPECT_EQ(8080, config.httpPort());
@@ -167,7 +168,7 @@ TEST(SquawkParseOptions, TestMergedOptions) {
 
     EXPECT_EQ(std::string("127.0.0.1"), config.httpAddress());
 
-    EXPECT_EQ(std::string("/home/media"), config.mediaDirectories()[0] );
+    EXPECT_EQ(std::string("/home/media"), config.mediaDirectories().front() );
     EXPECT_EQ(8080, config.httpPort());
     EXPECT_EQ(std::string("/usr/local/var/lib/squawk/www"), config.docRoot() );
     EXPECT_EQ(std::string("/usr/local/var/lib/squawk/squawk.db"), config.databaseFile() );

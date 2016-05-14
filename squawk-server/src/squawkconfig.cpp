@@ -19,21 +19,9 @@
 
 #include "squawkconfig.h"
 
-#include <stdlib.h>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <uuid/uuid.h>
+namespace squawk {
 
-#include "commons.h"
-#include "xml.h"
-
-//TODO remove
-#include <unistd.h>
-
-
-#define HELP_TEXT std::string("Options description: \n" \
+const std::string SquawkConfig::HELP_TEXT = "Options description: \n" \
 "\t-v [ --version ]         print version string\n" \
 "\t--help                   produce help message\n" \
 "\t-r [ --rescan ]          rescan database at startup.\n" \
@@ -48,47 +36,49 @@
 "\t--tmp-directory arg      temporary directory\n" \
 "\t--local-address arg      multicast local IP\n" \
 "\t--multicast-address arg  multicast address\n" \
-"\t--multicast-port arg     multicast port\n ")
-
-namespace squawk {
+"\t--multicast-port arg     multicast port\n " \
+"\t--cover-names arg        names to use as cover (without extension)\n ";
 
 std::string SquawkConfig::logger() {
     if(  store.find( CONFIG_LOGGER_PROPERTIES ) != store.end() ) {
-        return store[ CONFIG_LOGGER_PROPERTIES ][0];
+        return store[ CONFIG_LOGGER_PROPERTIES ].front();
     } else return std::string();
 }
 std::string SquawkConfig::multicastAddress() {
-    return store[ CONFIG_MULTICAST_ADDRESS ][0];
+    return store[ CONFIG_MULTICAST_ADDRESS ].front();
 }
 int SquawkConfig::multicastPort() {
-    return commons::string::parse_string<int>( store[ CONFIG_MULTICAST_PORT ][0] );
+    return std::stoi( store[ CONFIG_MULTICAST_PORT ].front() );
 }
 std::string SquawkConfig::httpAddress() {
-    return store[ CONFIG_HTTP_IP ][0];
+    return store[ CONFIG_HTTP_IP ].front();
 }
 int SquawkConfig::httpPort() {
-    return commons::string::parse_string<int>( store[ CONFIG_HTTP_PORT ][0] );
+    return std::stoi( store[ CONFIG_HTTP_PORT ].front() );
 }
 std::string SquawkConfig::localListenAddress() {
-    return store[ CONFIG_LOCAL_LISTEN_ADDRESS ][0];
+    return store[ CONFIG_LOCAL_LISTEN_ADDRESS ].front();
 }
 std::string SquawkConfig::tmpDirectory() {
-    return store[ CONFIG_TMP_DIRECTORY ][0];
+    return store[ CONFIG_TMP_DIRECTORY ].front();
 }
 std::string SquawkConfig::databaseFile() {
-    return store[ CONFIG_DATABASE_FILE ][0];
+    return store[ CONFIG_DATABASE_FILE ].front();
 }
 std::string SquawkConfig::docRoot() {
-    return store[ CONFIG_HTTP_DOCROOT ][0];
+    return store[ CONFIG_HTTP_DOCROOT ].front();
 }
-std::vector< std::string > SquawkConfig::mediaDirectories() {
+std::list< std::string > SquawkConfig::mediaDirectories() {
     return store[ CONFIG_MEDIA_DIRECTORY ];
 }
 std::string SquawkConfig::configFile() {
-    return store[ CONFIG_FILE ][0];
+    return store[ CONFIG_FILE ].front();
 }
 std::string SquawkConfig::uuid() {
-    return store[ CONFIG_UUID ][0];
+    return store[ CONFIG_UUID ].front();
+}
+std::list< std::string > SquawkConfig::coverNames() {
+    return store[ CONFIG_COVER_NAMES];
 }
 
 bool SquawkConfig::validate() {
@@ -125,6 +115,9 @@ bool SquawkConfig::validate() {
         char buffer[37];
         uuid_unparse((unsigned char *)&out, buffer);
         setValue( CONFIG_UUID, std::string(buffer) );
+    } if(store.find( CONFIG_COVER_NAMES ) == store.end()) {
+        setValue( CONFIG_COVER_NAMES, "cover" );
+        setValue( CONFIG_COVER_NAMES, "front" );
     }
     return valid;
 }
@@ -156,7 +149,14 @@ void SquawkConfig::save(const std::string & filename) const {
                 writer.element( directories, "", itr.first, dir );
             }
         } else {
-            writer.element( root_node, "", itr.first, itr.second[0] );
+            bool is_first_ = true;
+            std::stringstream ss;
+            for( auto & item_ : itr.second ) {
+                if( is_first_ ) { is_first_ = false; }
+                else { ss << ","; }
+                ss << item_;
+            }
+            writer.element( root_node, "", itr.first, ss.str() );
         }
     }
     writer.write( filename, true );
@@ -197,6 +197,12 @@ bool SquawkConfig::parse(int ac, const char* av[]) {
                 setValue(CONFIG_MULTICAST_ADDRESS, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--multicast-port")) {
                 setValue(CONFIG_MULTICAST_PORT, std::string(av[++i]));
+            } else if(std::string(av[i]) == std::string("--cover-names")) {
+                boost::char_separator<char> sep(", ");
+                boost::tokenizer< boost::char_separator<char> > tokens( std::string( av[++i] ), sep);
+                BOOST_FOREACH (const string& t, tokens) {
+                    setValue(CONFIG_COVER_NAMES, t );
+                }
             }
         } else {
             std::cerr << "parameter not set for key " << std::string(av[i]) << std::endl;
@@ -205,4 +211,4 @@ bool SquawkConfig::parse(int ac, const char* av[]) {
     }
     return valid;
 }
-}
+}//namespace squawk

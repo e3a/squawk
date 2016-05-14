@@ -109,7 +109,8 @@ public:
 	//DEPRECATED
 	std::string get_message_header();
 
-	HttpResponse & operator<< ( const std::string & str );
+        HttpResponse & operator<< ( const std::string & str );
+        HttpResponse & operator<< ( const size_t & t );
 
 	friend std::ostream& operator<< ( std::ostream& out, const http::HttpResponse & response ) {
 		out << response.protocol_ << "/" << response.http_version_major << "." << response.http_version_minor << " " << parse_status ( response.status_ ) << "\n";

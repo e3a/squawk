@@ -18,18 +18,16 @@
 #ifndef UPNPCONTENTDIRECTORY_H
 #define UPNPCONTENTDIRECTORY_H
 
-#include <algorithm>
-#include <list>
-#include <map>
-#include <string>
-
-#include "http.h"
-#include "upnp2.h"
 #include "squawk.h"
-
-#include "log4cxx/logger.h"
+#include "squawkserver.h"
 
 namespace squawk {
+
+inline std::string http_uri( const std::string & suffix = "" ) {
+    std::stringstream ss;
+    ss << "http://" << SquawkServer::instance()->config()->httpAddress() << ":" << SquawkServer::instance()->config()->httpPort() << "/" << suffix;
+    return ss.str();
+}
 
 /**
  * Content Directory Module
@@ -40,9 +38,9 @@ class ContentDirectoryModule {
      * @brief getRootNode
      * @return the number of objects.
      */
-    virtual int getRootNode( didl::DidlWriter * didl_element ) = 0;
+    virtual int getRootNode( didl::DidlXmlWriter * didl_element ) = 0;
     virtual bool match( upnp::UpnpContentDirectoryRequest * parseRequest ) = 0;
-    virtual std::tuple<size_t, size_t> parseNode( didl::DidlWriter * didl_element, upnp::UpnpContentDirectoryRequest * parseRequest ) = 0;
+    virtual std::tuple<size_t, size_t> parseNode( didl::DidlXmlWriter * didl_element, upnp::UpnpContentDirectoryRequest * parseRequest ) = 0;
 
     /**
      * @brief Get int from request path.
@@ -57,7 +55,7 @@ class ContentDirectoryModule {
                 std::find_if( str_id_.begin(), str_id_.end(),
                     [](char c) { return !std::isdigit(c); } ) == str_id_.end() ) {
 
-                /*Not Empty and numeric*/
+                /*Not empty and numeric*/
                 return std::stoi( str_id_ );
             } else return 0;
         } else return 0;
@@ -81,7 +79,7 @@ class ContentDirectoryModule {
         } else return false;
     }
     static size_t epoch_time( const size_t year ) {
-        struct tm st_year_ = { 0 };
+        struct tm st_year_ = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         st_year_.tm_hour = 0;   st_year_.tm_min = 0; st_year_.tm_sec = 0;
         st_year_.tm_mon = 0; st_year_.tm_mday = 1;
         st_year_.tm_year = year - 1900;
@@ -98,8 +96,7 @@ class ContentDirectoryModule {
  */
 class UpnpContentDirectory : public http::HttpServlet {
 public:
-    UpnpContentDirectory( const std::string & path, http::HttpServletContext context ) :
-        HttpServlet( path ), uuid( context.parameter( squawk::CONFIG_UUID ) ) {}
+    UpnpContentDirectory( const std::string & path ) : HttpServlet( path ) {}
 
     void registerContentDirectoryModule( std::unique_ptr< ContentDirectoryModule > modules );
     /** TODO doees this work? */
@@ -110,11 +107,10 @@ public:
 
 private:
     static log4cxx::LoggerPtr logger;
-    const std::string uuid;
     std::list< std::unique_ptr< ContentDirectoryModule > > _modules;
 
     void browse( commons::xml::XMLWriter * xmlWriter, upnp::UpnpContentDirectoryRequest * upnp_command );
     void notify( std::list< int > update_ids );
 };
-}
+}//namespace squawk
 #endif // UPNPCONTENTDIRECTORY_H

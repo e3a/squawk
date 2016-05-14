@@ -24,7 +24,6 @@
 #include "pcrecpp.h"
 
 #include "pdfparser.h"
-#include "squawk.h"
 
 std::string PdfParser::parsePdf( const std::string & filename ) {
 
@@ -42,7 +41,6 @@ std::string PdfParser::parsePdf( const std::string & filename ) {
             return isbn_;
         }
     }
-    if( squawk::DEBUG )
-        { std::cerr << "no ISBN found in: " << filename << std::endl; }
+    std::cerr << "no ISBN found in: " << filename << std::endl;
     return "";
 }

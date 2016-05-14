@@ -1,13 +1,15 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 
-#include "commons.h"
-
 #include <cstring>
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <map>
 #include <vector>
+
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -27,6 +29,32 @@ namespace commons {
  * @brief Media Utilities.
  */
 namespace media {
+
+inline std::string time_to_string(int playtime) {
+  int _seconds = playtime;
+  std::stringstream ss;
+  if(_seconds > 3600) {
+    int hours = _seconds / 3600;
+    if(hours < 10) {
+      ss << "0";
+    }
+    ss << hours << ":";
+    _seconds = _seconds - (hours * 3600);
+  } else ss << "00:";
+  if(_seconds > 60) {
+    int minutes = _seconds / 60;
+    if(minutes < 10) {
+      ss << "0";
+    }
+    ss << minutes << ":";
+    _seconds = _seconds - (minutes * 60);
+  } else ss << "00:";
+  if(_seconds < 10) {
+    ss << "0";
+  }
+  ss << _seconds << ".000";
+  return ss.str();
+}
 
 enum class CODEC {
     MPEG1 = 0,
@@ -460,7 +488,7 @@ public:
      * @brief bitrate
      * @return
      */
-    int bitrate() { return _bitrate; }
+    int bitrate() const { return _bitrate; }
     /**
      * @brief bitrate
      * @param bitrate
@@ -470,7 +498,7 @@ public:
      * @brief bitsPerSample
      * @return
      */
-    int bitsPerSample() { return _bits_per_sample; }
+    int bitsPerSample() const { return _bits_per_sample; }
     /**
      * @brief bitsPerSample
      * @param bits_per_sample
@@ -480,7 +508,7 @@ public:
      * @brief channels
      * @return
      */
-    int channels() { return _channels; }
+    int channels() const { return _channels; }
     /**
      * @brief channels
      * @param channels
@@ -490,7 +518,7 @@ public:
      * @brief codec id
      * @return
      */
-    CODEC codec() { return _codec; }
+    CODEC codec() const { return _codec; }
     /**
      * @brief codec id
      * @param codec
@@ -500,7 +528,7 @@ public:
      * @brief sampleFrequency
      * @return
      */
-    int sampleFrequency() { return _sample_frequency; }
+    int sampleFrequency() const { return _sample_frequency; }
     /**
      * @brief sampleFrequency
      * @param sample_frequency
@@ -510,7 +538,7 @@ public:
      * @brief dlna profile
      * @return
      */
-    DLNA_PROFILE dlnaProfile() { return _dlna_profile; }
+    DLNA_PROFILE dlnaProfile() const { return _dlna_profile; }
     /**
      * @brief dlna profile
      * @param dlna profile
@@ -545,7 +573,7 @@ public:
      * @brief bitrate
      * @return
      */
-    int bitrate() { return _bitrate; }
+    int bitrate() const { return _bitrate; }
     /**
      * @brief bitrate
      * @param bitrate
@@ -555,7 +583,7 @@ public:
      * @brief codec type
      * @return
      */
-    CODEC codec() { return _codec; }
+    CODEC codec() const { return _codec; }
     /**
      * @brief codec type
      * @param codec
@@ -565,7 +593,7 @@ public:
      * @brief height
      * @return
      */
-    int height() { return _height; }
+    int height() const { return _height; }
     /**
      * @brief height
      * @param height
@@ -575,7 +603,7 @@ public:
      * @brief width
      * @return
      */
-    int width() { return _width; }
+    int width() const { return _width; }
     /**
      * @brief width
      * @param width
@@ -613,7 +641,7 @@ public:
      * @brief duration
      * @return
      */
-    int duration() { return _duration; }
+    int duration() const { return _duration; }
     /**
      * @brief duration
      * @param duration
@@ -623,7 +651,7 @@ public:
      * @brief size
      * @return
      */
-    int size() { return commons::filesystem::filesize( filename ); }
+    int size() { return boost::filesystem::file_size( filename ); }
     /**
      * @brief name
      * @return
@@ -643,14 +671,14 @@ public:
      * @brief getAudioStreams
      * @return
      */
-    std::vector<AudioStream> getAudioStreams() {
+    std::vector<AudioStream> getAudioStreams() const {
         return audio_streams;
     }
     /**
      * @brief getVideoStreams
      * @return
      */
-    std::vector<VideoStream> getVideoStreams() {
+    std::vector<VideoStream> getVideoStreams() const {
         return video_streams;
     }
     /**
@@ -673,7 +701,7 @@ public:
      * @brief tagNames
      * @return
      */
-    std::vector<TAG> tagNames() {
+    std::vector<TAG> tagNames() const {
         std::vector<TAG> result;
         for(auto & itrTag : tags ) {
             result.push_back( itrTag.first );
@@ -685,7 +713,7 @@ public:
      * @param name tag key
      * @return
      */
-    bool hasTag( const TAG & key ) {
+    bool hasTag( const TAG & key ) const {
         return tags.find( key ) != tags.end();
     }
 
@@ -694,7 +722,7 @@ public:
      */
     friend std::ostream& operator <<(std::ostream &os, const MediaFile &obj) {
         os <<  "MediaFile::" << std::endl;
-        os << " duration: " <<  commons::string::time_to_string( obj._duration ) << std::endl;
+        os << " duration: " <<  time_to_string( obj._duration ) << std::endl;
         os << "Meta Information: " << std::endl;
         for( auto & iter : obj.audio_streams ) std::cout << iter;
         for( auto & iter : obj.video_streams ) std::cout << iter;
@@ -726,14 +754,13 @@ public:
 
         AVFormatContext *fmt_ctx = NULL;
         AVCodecContext *input_codec_context = NULL;
-        AVDictionaryEntry *tag = NULL;
 
         av_register_all();
-
         open_input_file(filename.c_str(), &fmt_ctx );
 	
         /** Make sure that there is only one stream in the input file. */
         if ( fmt_ctx->nb_streams > 0 ) {
+            AVDictionaryEntry *tag = NULL;
             media_file.duration( fmt_ctx->duration / AV_TIME_BASE ); //set the playlength
             for( unsigned int i=0; i<fmt_ctx->nb_streams; i++ ) { //TODO remove output
                 std::cout << "input stream " << i << ", type: " << fmt_ctx->streams[i]->codec->codec_type << std::endl;
@@ -850,33 +877,33 @@ public:
                 std::cout << tag->key << ":"<< tag->value << std::endl;
                 if(std::strcmp(tag->key, "TITLE")==0 ||
                         std::strcmp(tag->key, "title")==0) {
-                    media_file.addTag( MediaFile::TITLE, commons::string::trim( tag->value ) );
+                    media_file.addTag( MediaFile::TITLE, boost::trim_copy( std::string( tag->value ) ) );
                 } else if(std::strcmp(tag->key, "ARTIST")==0 ||
                           std::strcmp(tag->key, "artist")==0 ||
                           std::strcmp(tag->key, "album_artist")==0 ||
                           std::strcmp(tag->key, "ALBUM ARTIST")==0 ||
                           std::strcmp(tag->key, "ENSEMBLE")==0 ||
                           std::strcmp(tag->key, "PERFORMER")==0) {
-                    media_file.addTag( MediaFile::ARTIST, commons::string::trim( tag->value ) );
+                    media_file.addTag( MediaFile::ARTIST, boost::trim_copy( std::string( tag->value ) ) );
                 } else if(std::strcmp(tag->key, "COMPOSER")==0) {
-                    media_file.addTag( MediaFile::COMPOSER, commons::string::trim( tag->value ) );
+                    media_file.addTag( MediaFile::COMPOSER, boost::trim_copy( std::string( tag->value ) ) );
                 } else if(std::strcmp(tag->key, "ALBUM")==0 ||
                           std::strcmp(tag->key, "album")==0) {
-                    media_file.addTag( MediaFile::ALBUM, commons::string::trim( tag->value ) );
+                    media_file.addTag( MediaFile::ALBUM, boost::trim_copy( std::string( tag->value ) ) );
                 } else if(std::strcmp(tag->key, "DATE")==0 ||
                           std::strcmp(tag->key, "date")==0 ||
                           std::strcmp(tag->key, "RELEASEYEAR")==0) {
-                    media_file.addTag( MediaFile::YEAR, commons::string::trim( tag->value ) );
+                    media_file.addTag( MediaFile::YEAR, boost::trim_copy( std::string( tag->value ) ) );
                 } else if(std::strcmp(tag->key, "track")==0) {
-                    media_file.addTag( MediaFile::TRACK, commons::string::trim( tag->value ) );
+                    media_file.addTag( MediaFile::TRACK, boost::trim_copy( std::string( tag->value ) ) );
                 } else if(std::strcmp(tag->key, "GENRE")==0 ||
                           std::strcmp(tag->key, "genre")==0) {
-                    media_file.addTag( MediaFile::GENRE, commons::string::trim( tag->value ) );
+                    media_file.addTag( MediaFile::GENRE, boost::trim_copy( std::string( tag->value ) ) );
                 } else if(std::strcmp(tag->key, "disc")==0) {
-                    media_file.addTag( MediaFile::DISC, commons::string::trim( tag->value ) );
+                    media_file.addTag( MediaFile::DISC, boost::trim_copy( std::string( tag->value ) ) );
                 } else if(std::strcmp(tag->key, "COMMENT")==0 ||
                           std::strcmp(tag->key, "DESCRIPTION")==0) {
-                    media_file.addTag( MediaFile::COMMENT, commons::string::trim( tag->value ) );
+                    media_file.addTag( MediaFile::COMMENT, boost::trim_copy( std::string( tag->value ) ) );
                 } else if(std::strcmp(tag->key, "TRACKTOTAL")!=0 &&
                           std::strcmp(tag->key, "TLEN")!=0 &&
                           std::strcmp(tag->key, "encoded_by")!=0 &&
@@ -895,9 +922,9 @@ public:
                           std::strcmp(tag->key, "ENGINEER")!=0 &&
                           std::strcmp(tag->key, "ORIGINATOR")!=0 &&
                           std::strcmp(tag->key, "DISCTOTAL")!=0 &&
-                          commons::string::starts_with(std::string(tag->key), "DISCOGS_") &&
-                          commons::string::starts_with(std::string(tag->key), "REPLAYGAIN_") &&
-                          ! commons::string::starts_with(std::string(tag->key), "Unknown Frame:")) {
+                          std::strcmp(tag->key, "DISCOGS_")!=0 &&
+                          std::strcmp(tag->key, "REPLAYGAIN_")!=0 &&
+                          std::strcmp(tag->key, "Unknown Frame:")!=0 ) {
                     std::cout << " * " << tag->key << " = " << tag->value << std::endl;
                 }
             }
@@ -919,10 +946,10 @@ private:
         return std::string( error_buffer );
     }
 
-    /** get the media information **/
-    static void getMediaInformation() {
+    /** TODO get the media information **/
+//    static void getMediaInformation() {
 
-    }
+//    }
 
     static CODEC convertCodec( const AVCodecID & codec_id ) {
       if( codec_id == AV_CODEC_ID_MP1 )
@@ -959,7 +986,7 @@ private:
 
         /** Open the input file to read from it. */
         if ((error = avformat_open_input(input_format_context, filename, NULL, NULL)) < 0) {
-            throw MediaException( MediaException::FILE_EXCEPTION, "unable to open media file: " + get_error_text(error));
+            throw MediaException( MediaException::FILE_EXCEPTION, "unable to open media file: " + std::string( filename ) + " " + get_error_text(error));
         }
 
         /** Get information on the input file (number of streams etc.). */

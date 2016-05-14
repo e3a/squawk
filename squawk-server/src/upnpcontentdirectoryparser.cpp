@@ -1,61 +1,54 @@
 #include "upnpcontentdirectoryparser.h"
 
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
-
-#include "upnpcontentdirectory.h"
-
+#include "utils/media.h"
 #include "utils/image.h"
-#include "media.h"
-#include "utils/pdfparser.h"
+#include "squawkserver.h"
+#include "upnpcontentdirectorydao.h"
 
 namespace squawk {
 log4cxx::LoggerPtr UpnpContentDirectoryParser::logger ( log4cxx::Logger::getLogger ( "squawk.UpnpContentDirectoryParser" ) );
 
-/** \brief get the mime-type from the boost path object. */
-inline http::mime::MIME_TYPE mime_type ( const boost::filesystem::path & path ) {
-    std::string ext_ = path.extension().string();
-
-    if ( ext_.length() > 0 && ext_.find ( "." ) == 0 )
-    { ext_ = ext_.substr ( 1, ext_.length() -1 ); } // remove the dot
-
-    boost::algorithm::to_lower ( ext_ );
-
-    return http::mime::mime_type ( ext_ );
-}
-
-UpnpContentDirectoryParser::UpnpContentDirectoryParser ( http::HttpServletContext & context, ptr_upnp_dao upnp_container_dao ) :
-    _upnp_container_dao ( upnp_container_dao ),
-    _tmp_directory ( context.parameter ( squawk::CONFIG_TMP_DIRECTORY ) ) {
-
-    if ( ! boost::filesystem::is_directory ( _tmp_directory + "/AlbumArtUri" ) ) {
-        boost::filesystem::create_directory ( _tmp_directory + "/AlbumArtUri" );
+UpnpContentDirectoryParser::UpnpContentDirectoryParser () {
+    if ( ! boost::filesystem::is_directory ( SquawkServer::instance()->config()->tmpDirectory() + "/AlbumArtUri" ) ) {
+        boost::filesystem::create_directory ( SquawkServer::instance()->config()->tmpDirectory() + "/AlbumArtUri" );
+    }
+    if ( ! boost::filesystem::is_directory ( SquawkServer::instance()->config()->tmpDirectory() + "/Resource" ) ) {
+        boost::filesystem::create_directory ( SquawkServer::instance()->config()->tmpDirectory() + "/Resource" );
     }
 }
 
-
-void UpnpContentDirectoryParser::parse ( std::vector< std::string > paths ) {
+void UpnpContentDirectoryParser::parse ( std::list< std::string > paths ) {
     long start_time = std::time ( 0 );
     statistic.clear();
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();
-    _upnp_container_dao->startTransaction();
+    SquawkServer::instance()->dao()->startTransaction();
 
     for ( auto & path : paths ) {
         if ( boost::filesystem::is_directory ( path ) ) {
-            if ( squawk::DEBUG ) LOG4CXX_DEBUG ( logger, "import files:" << path )
-                _parse ( 0, path );
+                didl::DidlContainer parent_(0, 0, "ROOT", "/", 0, 0, 0, true );
+                _parse ( parent_, path );
 
         } else {
-            LOG4CXX_WARN ( logger, path << "is not a directory." )
+            LOG4CXX_WARN ( logger, path << "is not a directory." ) //TODO exception
         }
     }
+
+    SquawkServer::instance()->dao()->sweep ( start_time );
+
+    SquawkServer::instance()->dao()->endTransaction();
+
+//    SquawkServer::instance()->dao()->startTransaction();
+
+//    _import_audio( didl::DidlContainer ( 0, 0, "Root", "", 0, 0, 0 ) );
+//    _import_movies( didl::DidlContainer ( 0, 0, "Root", "", 0, 0, 0 ) );
+//    _import_images( didl::DidlContainer ( 0, 0, "Root", "", 0, 0, 0 ) );
+
+//    SquawkServer::instance()->dao()->endTransaction();
 
     //output statistic
     end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end-start;
-
-    _upnp_container_dao->sweep ( start_time );
 
     std::stringstream ss;
     int sum = 0;
@@ -69,252 +62,474 @@ void UpnpContentDirectoryParser::parse ( std::vector< std::string > paths ) {
     ss << "Total:\t" << sum << std::endl;
     ss << "Time:\t" << elapsed_seconds.count() << std::endl;
     LOG4CXX_INFO ( logger, ss.str() )
-
-//        for( auto root_node_ : _upnp_container_dao->objects( 0, 0, 0 ) ) {
-    _import_audio ( didl::DidlContainer ( 0, 0, "Root", "", 0, 0, 0 ) );
-    _import_movies ( didl::DidlContainer ( 0, 0, "Root", "", 0, 0, 0 ) );
-//        }
-
-    _upnp_container_dao->endTransaction();
 }
 
 void UpnpContentDirectoryParser::_import_audio ( const didl::DidlObject object ) {
-    bool audiofiles_imported_ = false;
-    std::string album_name_, artist_, composer_, genre_;
-    size_t year_;
+    if(squawk::DEBUG ) LOG4CXX_DEBUG( logger, "import audio:" << object )
 
-    //Loop and parse the tracks in this album
-    for ( auto & album_ : _upnp_container_dao->albums ( object.id(), 0, 0 ) ) {
-        for ( auto & track_ : _upnp_container_dao->tracks ( album_.id(), 0, 0 ) ) {
+//    //Loop and parse the tracks in this album
+//    for ( auto & album_ : SquawkServer::instance()->dao()->children<didl::DidlContainerAlbum> ( object.id(), 0, 0 ) ) {
+//        bool audiofiles_imported_ = false;
+//        std::string album_name_, artist_, composer_, genre_;
+//        size_t year_ = 0  ;
+//        for ( auto & track_ : SquawkServer::instance()->dao()->children<didl::DidlMusicTrack> ( album_.id(), 0, 0 ) ) {
 
-            if ( !track_.import() ) {
+//            if ( !track_.import() ) {
 
-                audiofiles_imported_ = true;
-                //Get the track information
-                commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( track_.path() );
-                album_name_ = media_file.getTag ( commons::media::MediaFile::ALBUM );
-                artist_ = _upnp_container_dao->artist ( media_file.getTag ( commons::media::MediaFile::ARTIST ) ).cleanName();
-                composer_ = _upnp_container_dao->artist ( media_file.getTag ( commons::media::MediaFile::COMPOSER ) ).cleanName();
-                genre_ = media_file.getTag ( commons::media::MediaFile::GENRE );
+//                audiofiles_imported_ = true;
+//                //Get the track information
+//                commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( track_.path() );
+//                album_name_ = media_file.getTag ( commons::media::MediaFile::ALBUM );
+//                artist_ = SquawkServer::instance()->dao()->artist ( media_file.getTag ( commons::media::MediaFile::ARTIST ) ).cleanName();
+//                composer_ = SquawkServer::instance()->dao()->artist ( media_file.getTag ( commons::media::MediaFile::COMPOSER ) ).cleanName();
+//                genre_ = media_file.getTag ( commons::media::MediaFile::GENRE );
 
-                year_ = ContentDirectoryModule::epoch_time( std::stoi( media_file.getTag ( commons::media::MediaFile::YEAR ) ) );
+//                std::string str_year_ = media_file.getTag ( commons::media::MediaFile::YEAR );
+//                if( !str_year_.empty() && std::all_of(str_year_.begin(), str_year_.end(), ::isdigit) ) { //when str_year is number
+//                    year_ = ContentDirectoryModule::epoch_time( std::stoi( str_year_ ) );
+//                }
 
-                //TODO disc_, comment_
+//                size_t track_number_ = 0;
+//                std::string str_track_ = media_file.getTag ( commons::media::MediaFile::TRACK );
+//                if( !str_track_.empty() && std::all_of(str_track_.begin(), str_track_.end(), ::isdigit) ) { //when is number
+//                    track_number_ = std::stoi ( str_track_ );
+//                }
 
-                //Get mime-type
-                boost::filesystem::path file_path_ ( track_.path() );
-                std::string type_ = http::mime::mime_type( mime_type( file_path_ ) );
+//                //TODO disc_, comment_
 
-                //Create the audio item
-                std::list< didl::DidlResource > audio_item_res;
-                for ( auto & stream_ : media_file.getAudioStreams() ) {
-                    audio_item_res.push_back ( didl::DidlResource ( 0, 0, "", "", std::map< didl::DidlResource::UPNP_RES_ATTRIBUTES, std::string > ( {
-                        { didl::DidlResource::bitrate, std::to_string ( stream_.bitrate() ) },
-                        { didl::DidlResource::bitsPerSample, std::to_string ( stream_.bitsPerSample() ) },
-                        { didl::DidlResource::nrAudioChannels, std::to_string ( stream_.channels() ) },
-                        { didl::DidlResource::duration, std::to_string ( media_file.duration() ) },
-                        { didl::DidlResource::sampleFrequency, std::to_string ( stream_.sampleFrequency() ) },
-                        { didl::DidlResource::mimeType, type_ },
-                        /* TODO { didl::dlnaProfile, stream_.dlnaProfile() } */
-                    } ) ) );
-                }
+//                //Get mime-type
+//                boost::filesystem::path file_path_ ( track_.path() );
 
-                //And save the track
-                _upnp_container_dao->save ( didl::DidlMusicTrack (
-                                                track_.id(), track_.parentId(),
-                                                media_file.getTag ( commons::media::MediaFile::TITLE ),
-                                                track_.path(), track_.mtime(), track_.objectUdpateId(),
-                                                boost::filesystem::file_size ( file_path_ ), type_, track_.rating(), year_,
-                                                std::stoi ( media_file.getTag ( commons::media::MediaFile::TRACK ) ),
-                                                track_.playbackCount(), track_.contributor(), artist_, genre_, album_name_,
-                                                track_.lastPlaybackTime(), audio_item_res, true ) );
-            }
-        } //loop tracks
+//                //Create the audio item
+//                std::list< didl::DidlResource > audio_item_res;
+//                for ( auto & stream_ : media_file.getAudioStreams() ) {
+//                    audio_item_res.push_back ( didl::DidlResource ( 0, 0, xxx "", "", std::map< didl::DidlResource::UPNP_RES_ATTRIBUTES, std::string > ( {
+//                        { didl::DidlResource::bitrate, std::to_string ( stream_.bitrate() ) },
+//                        { didl::DidlResource::bitsPerSample, std::to_string ( stream_.bitsPerSample() ) },
+//                        { didl::DidlResource::nrAudioChannels, std::to_string ( stream_.channels() ) },
+//                        { didl::DidlResource::duration, std::to_string ( media_file.duration() ) },
+//                        { didl::DidlResource::sampleFrequency, std::to_string ( stream_.sampleFrequency() ) },
+//                        { didl::DidlResource::mimeType, track_.mimeType() },
+//                        /* TODO { didl::dlnaProfile, stream_.dlnaProfile() } */
+//                    } ) ) );
+//                }
 
-        //Correct album and save image
-        if ( audiofiles_imported_ ) {
+//                //And save the track
 
-            std::list< size_t > album_id_( { album_.id() } );
+//                SquawkServer::instance()->dao()->save ( didl::DidlMusicTrack (
+//                                                track_.id(), track_.parentId(),
+//                                                media_file.getTag ( commons::media::MediaFile::TITLE ),
+//                                                track_.path(), track_.mtime(), track_.objectUdpateId(),
+//                                                boost::filesystem::file_size ( file_path_ ), track_.mimeType(),
+//                                                audio_item_res, track_.rating(), year_, track_number_,
+//                                                track_.playbackCount(), track_.contributor(), artist_, genre_,
+//                                                album_name_, track_.lastPlaybackTime(), true ) );
+//            }
+//        } //loop tracks
 
-            //When the pathname suggests a multidisc album
-            if ( UpnpContentDirectoryParser::_multidisc_name ( album_.title() ) ) {
+//        //Correct album and save image
+//        if ( audiofiles_imported_ ) {
 
-                //Set object to album and album to container
-                _upnp_container_dao->save ( didl::DidlContainer (
-                    album_.id(), album_.parentId(), album_.title(), album_.path(), album_.mtime(), album_.objectUdpateId(), 0 ) );
-                //set parent to album
-                _upnp_container_dao->save ( didl::DidlContainerAlbum (
-                    object.id(), object.parentId(), album_name_, object.path(), object.mtime(), 0, 0, 0, year_, 0, composer_,
-                    artist_, genre_, std::list< didl::DidlAlbumArtUri >(), true ) );
+//            //When there were no audiofiles, continue with the remaining containers
+//            std::list< didl::DidlAlbumArtUri > album_uri_list_;
+//            for ( auto & image_ : SquawkServer::instance()->dao()->children<didl::DidlPhoto> ( album_.id(), 0, 0 ) ) {
+//                if ( _cover ( image_.title() ) ) {
+//                    size_t image_album_id_ = album_.id();
+//                    album_uri_list_.push_back(
+//                        didl::DidlAlbumArtUri( 0, image_album_id_,
+//                        SquawkServer::instance()->config()->tmpDirectory() + "/AlbumArtUri/tn_" + std::to_string( image_album_id_ ) + ".jpg",
+//                        "", "JPEG_TN" ) );
 
-                album_id_.push_back( object.id() );
+//                        _scale_image ( "JPEG_TN", image_.path(), image_album_id_, SquawkServer::instance()->config()->tmpDirectory() + "/AlbumArtUri" );
+//                }
+//            }//loop images
 
-/*TODO                for ( auto & image_ : _upnp_container_dao->photos ( album.id(), 0, 0 ) ) {
-                    if ( _cover ( image_.title() ) ) {
-                        _scale_image ( "JPEG_TN", image_.path(), object.id(), _tmp_directory + "/AlbumArtUri" );
-                        _upnp_container_dao->save ( didl::DidlAlbumArtUri( 0, object_.id(),
-                            _tmp_directory + "/AlbumArtUri/tn_" + std::to_string( album_.id() ) + ".jpg",
-                            "/art/tn_" + std::to_string( album_.id() ) + ".jpg", "JPEG_TN" ) );
-                    } */
-            } else {
-                _upnp_container_dao->save ( didl::DidlContainerAlbum (
-                    album_.id(), album_.parentId(), album_name_, album_.path(), album_.mtime(), 0, 0, 0, year_, 0, composer_,
-                    artist_, genre_, std::list< didl::DidlAlbumArtUri >(), true ) );
-            }
+//            SquawkServer::instance()->dao()->save ( didl::DidlContainerAlbum (
+//                album_.id(), album_.parentId(), album_name_, album_.path(), album_.mtime(), 0, 0, 0, year_, 0, composer_,
+//                artist_, genre_, album_uri_list_, true ) );
 
-            //When there were no audiofiles, continue with the remaining containers
-            if( audiofiles_imported_ ) {
-                for( auto id : album_id_ ) {
-                    for ( auto & image_ : _upnp_container_dao->photos ( id, 0, 0 ) ) {
+//        }//audiofile imported
+//    }//loop albums
 
-                        if ( _cover ( image_.title() ) ) {
-                            size_t image_album_id_ = album_id_.back();
-                                _upnp_container_dao->save ( didl::DidlAlbumArtUri( 0, image_album_id_,
-                                _tmp_directory + "/AlbumArtUri/tn_" + std::to_string( image_album_id_ ) + ".jpg",
-                                "", "JPEG_TN" ) );
+//    //Continue with the child containers
+//    for ( auto & container_ : SquawkServer::instance()->dao()->children<didl::DidlContainer> ( object.id(), 0, 0 ) ) {
+//        _import_audio ( container_ );
+//    }
+}
 
+didl::DidlMusicTrack inline UpnpContentDirectoryParser::_import_track ( const didl::DidlItem & track  ) {
+    //Get the track information
+    commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( track.path() );
+    std::string album_name_ = media_file.getTag ( commons::media::MediaFile::ALBUM );
+    std::string artist_ = SquawkServer::instance()->dao()->artist ( media_file.getTag ( commons::media::MediaFile::ARTIST ) ).cleanName();
+    std::string composer_ = SquawkServer::instance()->dao()->artist ( media_file.getTag ( commons::media::MediaFile::COMPOSER ) ).cleanName();
+    std::string genre_ = media_file.getTag ( commons::media::MediaFile::GENRE );
+    unsigned long year_;
 
-                                _scale_image ( "JPEG_TN", image_.path(), image_album_id_, _tmp_directory + "/AlbumArtUri" );
-                        }
-                    }//loop images
-                }//loop id's
-            }//end import cover image
-        }//audiofile imported
-    }//loop albums
-
-    //Continue with the child containers
-    for ( auto & container_ : _upnp_container_dao->containers ( object.id(), 0, 0 ) ) {
-        _import_audio ( container_ );
+    std::string str_year_ = media_file.getTag ( commons::media::MediaFile::YEAR );
+    if( !str_year_.empty() && std::all_of(str_year_.begin(), str_year_.end(), ::isdigit) ) { //when str_year is number
+        year_ = ContentDirectoryModule::epoch_time( std::stoi( str_year_ ) );
     }
+
+    size_t track_number_ = 0;
+    std::string str_track_ = media_file.getTag ( commons::media::MediaFile::TRACK );
+    if( !str_track_.empty() && std::all_of(str_track_.begin(), str_track_.end(), ::isdigit) ) { //when is number
+        track_number_ = std::stoi ( str_track_ );
+    }
+
+    //TODO disc_, comment_
+
+    //Create the audio item
+    std::list< didl::DidlResource > audio_item_res;
+    for ( auto & stream_ : media_file.getAudioStreams() ) {
+        audio_item_res.push_back ( didl::DidlResource ( 0, 0, track.size(), "" /*uri*/, track.path(), "protocolInfo", "dlnaProfile", track.mimeType(),
+            std::map< didl::DidlResource::UPNP_RES_ATTRIBUTES, std::string > ( {
+                { didl::DidlResource::bitrate, std::to_string ( stream_.bitrate() ) },
+                { didl::DidlResource::bitsPerSample, std::to_string ( stream_.bitsPerSample() ) },
+                { didl::DidlResource::nrAudioChannels, std::to_string ( stream_.channels() ) },
+                { didl::DidlResource::duration, std::to_string ( media_file.duration() ) },
+                { didl::DidlResource::sampleFrequency, std::to_string ( stream_.sampleFrequency() ) }
+        } ) ) );
+    }
+
+    //And save the track
+
+    return SquawkServer::instance()->dao()->save ( didl::DidlMusicTrack (
+                                    track.id(), track.parentId(),
+                                    media_file.getTag ( commons::media::MediaFile::TITLE ),
+                                    track.path(), track.mtime(), track.objectUdpateId(),
+                                    boost::filesystem::file_size ( track.path() ), track.mimeType(),
+                                    audio_item_res, 0 /*rating*/, year_, track_number_,
+                                    0 /*playbackCount*/, composer_, artist_, genre_,
+                                    album_name_, 0 /*lastPlaybackTime*/, false ) );
 }
 
 void UpnpContentDirectoryParser::_import_movies ( const didl::DidlObject object ) {
+    if(squawk::DEBUG ) LOG4CXX_DEBUG( logger, "import movies" )
 
-    for ( auto & movie_ : _upnp_container_dao->movies ( object.id(), 0, 0 ) ) {
-        std::cout << "+++ found video:" << movie_.id() << ":" << movie_.title() << std::endl;
+    for ( auto & movie_ : SquawkServer::instance()->dao()->children<didl::DidlMovie>( object.id(), 0, 0 ) ) {
+        if( ! movie_.import() ) {
+            std::cout << "+++ found video:" << movie_.id() << ":" << movie_.title() << std::endl;
 
-        commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( movie_.path() );
-        boost::filesystem::path file_path_ ( movie_.path() );
-        std::string type_ = http::mime::mime_type( mime_type( file_path_ ) );
+            commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( movie_.path() );
+            boost::filesystem::path file_path_ ( movie_.path() );
 
-        didl::DidlMovie( 0, object.id(), movie_.title(), movie_.path(), movie_.mtime(), 0,
-                         boost::filesystem::file_size ( file_path_ ), type_, true );
-
+            SquawkServer::instance()->dao()->save(
+                didl::DidlMovie( 0, object.id(), movie_.title(), movie_.path(), movie_.mtime(), 0,
+                                 boost::filesystem::file_size ( file_path_ ), movie_.mimeType(), std::list<didl::DidlResource>(), true )
+                );
+        }
     }//loop videos
 
     //Continue with the child containers
-    for ( auto & container_ : _upnp_container_dao->containers ( object.id(), 0, 0 ) ) {
+    for ( auto & container_ : SquawkServer::instance()->dao()->children<didl::DidlContainer> ( object.id(), 0, 0 ) ) {
         _import_movies ( container_ );
     }
 }
-void UpnpContentDirectoryParser::_import_images () {
-//    for ( auto & image_ : _upnp_container_dao->photos( object.id(), 0, 0 ) ) {
-//        std::cout << "+++ found Image:" << image_.id() << ":" << image_.title() << std::endl;
+
+void UpnpContentDirectoryParser::_import_movie ( const didl::DidlItem & movie ) {
+    if(squawk::DEBUG ) LOG4CXX_DEBUG( logger, "import movies" )
+
+    commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( movie.path() );
+    boost::filesystem::path file_path_ ( movie.path() );
+
+    /* TODO add resources */
+    SquawkServer::instance()->dao()->save(
+        didl::DidlMovie( 0, movie.id(), movie.title(), movie.path(), movie.mtime(), 0,
+                         boost::filesystem::file_size ( file_path_ ), movie.mimeType(), std::list<didl::DidlResource>(), true )
+        );
+}
+
+void UpnpContentDirectoryParser::_import_images ( const didl::DidlObject /* object */ ) {
+//    if(squawk::DEBUG ) LOG4CXX_TRACE( logger, "import_images:" << object )
+//    for ( auto & image_ : SquawkServer::instance()->dao()->children<didl::DidlPhoto>( object.id(), 0, 0 ) ) {
+//        if ( !image_.import() ) {
+//            if(squawk::DEBUG ) LOG4CXX_TRACE( logger, "import_image:" << image_ )
+//            std::list<didl::DidlResource> resources_;
+//            std::string image_meta_resolution, image_meta_mime_type_, image_meta_color_depth_;
+//            {
+//                image::Image image_meta_( image_.path() );
+
+//                std::stringstream s_resolution_;
+//                s_resolution_ << image_meta_.width() << "x" << image_meta_.height();
+//                image_meta_resolution = s_resolution_.str();
+
+//                image_meta_mime_type_ = image_meta_.mimeType();
+//                image_meta_color_depth_ = image_meta_.colorDepth();
+//            }
+//            _scale_image ( "JPEG_TN", image_.path(), image_.id(), SquawkServer::instance()->config()->tmpDirectory() + "/Resource" );
+//            resources_.push_back ( didl::DidlResource ( 0, 0, "", "", std::map< didl::DidlResource::UPNP_RES_ATTRIBUTES, std::string > ( {
+//                { didl::DidlResource::resolution, image_meta_resolution },
+//                { didl::DidlResource::mimeType, image_meta_mime_type_ },
+//                { didl::DidlResource::colorDepth, image_meta_color_depth_ },
+//                { didl::DidlResource::size, std::to_string( boost::filesystem::file_size( SquawkServer::instance()->config()->tmpDirectory() + "/Resource/tn_" + std::to_string( image_.id() ) + ".jpg" ) ) },
+//                { didl::DidlResource::dlnaProfile, "JPEG_TN" }
+//            })));
+//            SquawkServer::instance()->dao()->save(
+//                        didl::DidlPhoto( image_.id(), image_.parentId(), image_.title(), image_.path(), image_.mtime(),
+//                                         image_.objectUdpateId(), image_.size(), image_.mimeType(), resources_, true ) );
+//        }
+//    }
+
+//    //Continue with the child containers
+//    for ( auto & container_ : SquawkServer::instance()->dao()->children<didl::DidlContainer> ( object.id(), 0, 0 ) ) {
+//        _import_images( container_ );
 //    }
 }
+
+void UpnpContentDirectoryParser::_import_photo( const didl::DidlItem & photo ) {
+    if(squawk::DEBUG ) LOG4CXX_TRACE( logger, "import_image:" << photo )
+
+    std::list<didl::DidlResource> resources_;
+
+    std::hash<std::string> hash_fn;
+
+    image::Image image_meta_( photo.path() );
+
+    std::stringstream s_resolution_;
+    s_resolution_ << image_meta_.width() << "x" << image_meta_.height();
+    http::mime::MIME_TYPE mime_type = http::mime::mime_type( image_meta_.mimeType() );
+
+    //create a resized preview when the photo is to large
+    if( image_meta_.width() > 768 || image_meta_.height() > 768 ) {
+        std::stringstream cover_filename_hash_;
+        cover_filename_hash_ << SquawkServer::instance()->config()->tmpDirectory() + "/Resource/lrg_" << hash_fn( photo.path() ) << ".jpg";
+        image_meta_.scale ( 768, 768, cover_filename_hash_.str() );
+        resources_.push_back ( didl::DidlResource(
+                    0, photo.id(),
+                    boost::filesystem::file_size( cover_filename_hash_.str() ) /*size*/, "", cover_filename_hash_.str(),
+                    "" /*protocolInfo*/, "JPEG_LRG", http::mime::mime_type( http::mime::JPEG ),
+                    std::map< didl::DidlResource::UPNP_RES_ATTRIBUTES, std::string >( {
+                        { didl::DidlResource::resolution, "768x768" },
+                        { didl::DidlResource::colorDepth, image_meta_.colorDepth() } })
+        ));
+    }
+    //create a resized preview thumbnail
+    std::stringstream cover_filename_hash_;
+    cover_filename_hash_ << SquawkServer::instance()->config()->tmpDirectory() + "/Resource/tn_" << hash_fn( photo.path() ) << ".jpg";
+    image_meta_.scale ( 160, 160, cover_filename_hash_.str() );
+    resources_.push_back ( didl::DidlResource(
+                0, photo.id(),
+                boost::filesystem::file_size( cover_filename_hash_.str() ) /*size*/, "", cover_filename_hash_.str(),
+                "" /*protocolInfo*/, "JPEG_TN", http::mime::mime_type( http::mime::JPEG ),
+                std::map< didl::DidlResource::UPNP_RES_ATTRIBUTES, std::string > ( {
+                    { didl::DidlResource::resolution, "160x160" },
+                    { didl::DidlResource::colorDepth, image_meta_.colorDepth() }
+       }))
+    );
+    //save the original resource
+    resources_.push_back ( didl::DidlResource(
+                0, photo.id(),
+                boost::filesystem::file_size( photo.path() ) /*size*/, "", photo.path(),
+                "" /*protocolInfo*/, "XXX_" + s_resolution_.str(), http::mime::mime_type( mime_type ),
+                std::map< didl::DidlResource::UPNP_RES_ATTRIBUTES, std::string > ( {
+                    { didl::DidlResource::resolution, s_resolution_.str() },
+                    { didl::DidlResource::colorDepth, image_meta_.colorDepth() }
+       }))
+    );
+
+    SquawkServer::instance()->dao()->save(
+                didl::DidlPhoto( photo.id(), photo.parentId(), photo.title(), photo.path(), photo.mtime(),
+                                 photo.objectUdpateId(), photo.size(), photo.mimeType(), resources_, true ) );
+}
+
 void UpnpContentDirectoryParser::_import_books () {
+    if( squawk::DEBUG ) LOG4CXX_DEBUG( logger, "import books" )
 
 }
 
-void UpnpContentDirectoryParser::_parse ( const unsigned long & path_id, const std::string & path ) {
+void UpnpContentDirectoryParser::_import_ebook ( const didl::DidlItem & ebook ) {
+    if( squawk::DEBUG ) LOG4CXX_DEBUG( logger, "import:" << ebook )
+
+}
+
+UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse ( didl::DidlContainer & parent, const std::string & path ) {
+
+    boost::filesystem::path _fs_path ( path );
+    std::string container_stem_ = _fs_path.stem().string();
 
     //save the directory
-    boost::filesystem::path _file_path ( path );
-    _upnp_container_dao->touch ( path, boost::filesystem::last_write_time ( _file_path ) );
-    didl::DidlObject container = didl::DIDL_CONTAINER_EMPTY;
-
-    bool has_audiofiles_ = false;
-    boost::filesystem::directory_iterator end_itr;
-
-    for ( boost::filesystem::directory_iterator itr ( _file_path ); itr != end_itr; ++itr ) {
-
-        std::string filename_ = itr->path().filename().string();
-        std::string stem_ = itr->path().stem().string();
-        std::string filepath_ = path + "/" + filename_;
-
-        if ( boost::filesystem::is_regular_file ( itr->status() ) ) {
-
-            unsigned long mtime_ = boost::filesystem::last_write_time ( itr->path() );
-            std::string type = http::mime::mime_type ( mime_type ( itr->path() ) );
-
-            //Update the statistic
-            statistic[type] = ( statistic.find ( type ) != statistic.end() ?
-                                statistic.find ( type )->second + 1 : 1 );
-
-            if ( _upnp_container_dao->touch ( filepath_, mtime_ ) == 0 ) {
-
-                //Search object tyoe
-                didl::DIDL_CLASS cls;
-
-                if ( commons::string::starts_with ( type, "audio/" ) ) {
-                    cls = didl::objectItemAudioItemMusicTrack;
-                    has_audiofiles_ = true;
-
-                } else if ( commons::string::starts_with ( type, "image/" ) ) {
-                    cls = didl::objectItemImageItemPhoto;
-
-                } else if ( commons::string::starts_with ( type, "video/" ) ) {
-                    cls = didl::objectItemVideoItemMovie;
-
-                } else if ( type == "application/pdf" ) {
-                    // TODO cls == didl::DidlBook;
-                    cls = didl::objectItem; //TODO remove
-
-                } else {
-                    cls = didl::objectItem;
-                    LOG4CXX_INFO ( logger, "can not find object type for:" << type << ":" << filename_ )
-                }
-
-                if( container.id() == 0 || ( cls == didl::objectItemAudioItemMusicTrack && container.cls() != didl::objectContainerAlbumMusicAlbum ) ) {
-                    didl::DIDL_CLASS container_type_ = didl::objectContainer;
-                    if(  cls == didl::objectItemAudioItemMusicTrack ) {
-                        container_type_ = didl::objectContainerAlbumMusicAlbum;
-                    }
-                    container = _upnp_container_dao->save ( didl::DidlObject ( container_type_, 0, path_id,
-                                                    _file_path.filename().string(), path,
-                                                    boost::filesystem::last_write_time ( _file_path ), 0, true ) );
-                }
-
-                _upnp_container_dao->save ( didl::DidlObject ( cls, 0 /*new id*/,
-                                            container.id(), stem_, filepath_,
-                                            mtime_, 0, false ) );
-            }
-
-        } else if ( boost::filesystem::is_directory ( itr->status() ) ) {
-            _parse ( container.id(), filepath_ );
-
-        } else {
-            LOG4CXX_WARN ( logger, "path is neither a reqular file nor a directory:" << path )
-        }
-
-        if ( has_audiofiles_ )
-            //Update as music album
-            _upnp_container_dao->save ( didl::DidlObject ( didl::objectContainerAlbumMusicAlbum, container.id(), container.parentId(),
-                                        container.title(), container.path(), container.mtime(), 0, false ) );
+    didl::DidlContainer container_ = SquawkServer::instance()->dao()->object<didl::DidlContainer>( path );
+    if( container_.id() == 0 ) {
+        container_ = SquawkServer::instance()->dao()->save( didl::DidlContainer( 0, parent.id(), _fs_path.stem().string(), path, 0, 0, 0, true ) );
 
     }
+
+    bool parent_changed_ = false;
+    DIDL_PARSE_TYPES container_type_ = DIDL_PARSE_TYPES::container;
+
+    didl::DidlContainerAlbum album_;
+    didl::DidlContainerPhotoAlbum photo_album_;
+    std::list< didl::DidlAlbumArtUri > albumArtUri_;
+
+    std::list< std::string > child_directories_;
+
+    if( squawk::DEBUG ) LOG4CXX_TRACE( logger, "Parse Path:" << container_ )
+
+    //search for regular files
+    boost::filesystem::directory_iterator end_itr;
+    for ( boost::filesystem::directory_iterator itr ( _fs_path ); itr != end_itr; ++itr ) {
+        std::string item_filepath_ = path + "/" + itr->path().filename().string();
+        std::string mime_type_ = http::mime::mime_type ( _mime_type( itr->path().extension().string() ) );
+
+        //Update the statistic
+        statistic[mime_type_] = ( statistic.find ( mime_type_ ) != statistic.end() ?
+                                  statistic.find ( mime_type_ )->second + 1 : 1 );
+
+        if ( boost::filesystem::is_regular_file ( itr->status() ) ) {
+            if( SquawkServer::instance()->dao()->touch ( item_filepath_, boost::filesystem::last_write_time ( itr->path() ) ) == 0 ) {
+                std::string item_stem_ = itr->path().stem().string();
+                auto file_type_ = _file_type( mime_type_ );
+                didl::DidlItem item_ (
+                    file_type_, 0, container_.id(), item_stem_, item_filepath_,
+                    boost::filesystem::last_write_time ( itr->path() ), 0,
+                    boost::filesystem::file_size( itr->path() ), mime_type_, std::list<didl::DidlResource>(), false );
+
+                 if( file_type_ == didl::objectItemAudioItemMusicTrack ) {
+                     //parse and save audiofile
+                     didl::DidlMusicTrack track_ = _import_track( item_ );
+
+                     if( ! UpnpContentDirectoryParser::_multidisc_name ( container_stem_ ) ) {
+                         parent_changed_ = true;
+                         container_type_ = DIDL_PARSE_TYPES::music_album;
+                         album_ = didl::DidlContainerAlbum(
+                                    container_.id(), container_.parentId(), track_.album(),
+                                    container_.path(), container_.mtime(), 0, 0, 0,
+                                    track_.year(), 0, track_.contributor(), track_.artist(),
+                                    track_.genre(), std::list< didl::DidlAlbumArtUri >(), false );
+                     } else {
+                         //XXX is multidisc folder
+                         //XXX actual dir is not a album
+                         //XXX change parent to album
+                         parent_changed_ = true;
+                         container_type_ = DIDL_PARSE_TYPES::multidisc;
+                         didl::DidlContainer _multidisc_container = SquawkServer::instance()->dao()->object<didl::DidlContainer>( container_.parentId() );
+                         album_ =  didl::DidlContainerAlbum( _multidisc_container.id(), _multidisc_container.parentId(), track_.album(),
+                                                             _multidisc_container.path(), _multidisc_container.mtime(), 0, 0, 0,
+                                                             track_.year(), 0, track_.contributor(), track_.artist(),
+                                                             track_.genre(), std::list< didl::DidlAlbumArtUri >(), false );
+                     }
+                 } else if( file_type_ == didl::objectItemImageItemPhoto ) {
+                     _import_photo( item_ );
+                     if( container_type_ == DIDL_PARSE_TYPES::container ) {
+                         parent_changed_ = true;
+                         container_type_ = DIDL_PARSE_TYPES::photo_album;
+                         photo_album_ = didl::DidlContainerPhotoAlbum( container_.id(), container_.parentId(), container_stem_, container_.path(),
+                                                                       container_.mtime(), container_.objectUdpateId(), 0, 0, 0 /*aear*/, 0, "", "",
+                                                                       "", std::list< didl::DidlAlbumArtUri >(), false );
+                     }
+                     if ( _cover ( item_stem_ ) ) {
+                        albumArtUri_.push_back(
+                            didl::DidlAlbumArtUri( 0, 0,
+                                SquawkServer::instance()->config()->tmpDirectory() + "/AlbumArtUri/" + std::to_string( container_.id() ) + ".jpg", "URI", "JPEG_TN" ) );
+                        _scale_image ( "JPEG_TN", item_filepath_, container_.id(), SquawkServer::instance()->config()->tmpDirectory() + "/AlbumArtUri" );
+                     }
+
+                 } else if( file_type_ == didl::objectItemVideoItemMovie ) {
+                     _import_movie( item_ );
+                 } else if( file_type_ == didl::objectItemEBook ) {
+                     _import_ebook( item_ );
+                 } else {
+                     SquawkServer::instance()->dao()->save( item_ );
+                }
+            }
+        } else if ( boost::filesystem::is_directory ( itr->status() ) ) {
+            child_directories_.push_back( item_filepath_ );
+
+        } else {
+            LOG4CXX_WARN ( logger, "path is neither a reqular file nor a directory:" << path ) //TODO exception
+        }
+    }//end directory iterator (_parent_changed, child_directories)
+
+    if( parent_changed_ ) {
+        if( container_type_ == DIDL_PARSE_TYPES::music_album ||
+            container_type_ == DIDL_PARSE_TYPES::multidisc ) {
+            SquawkServer::instance()->dao()->save( didl::DidlContainerAlbum(album_.id(), album_.parentId(), album_.title(), album_.path(),
+                                                                            album_.mtime(), album_.objectUdpateId(), album_.childCount(),
+                                                                            album_.rating(), album_.year(), album_.playbackCount(),
+                                                                            album_.contributor(), album_.artist(), album_.genre(),
+                                                                            albumArtUri_, false ) );
+        } else if( container_type_ == DIDL_PARSE_TYPES::photo_album ) {
+            SquawkServer::instance()->dao()->save( photo_album_ );
+        } else {
+            SquawkServer::instance()->dao()->save( container_ );
+        }
+    }
+
+    //continue with childrem
+    bool is_multidisc_ = false;
+    for( auto s : child_directories_ ) {
+        DIDL_PARSE_TYPES child_type = _parse ( container_, s );
+        if( child_type == DIDL_PARSE_TYPES::multidisc ) {
+            is_multidisc_ = true;
+        }
+    }
+    if( is_multidisc_ && parent_changed_ ) {
+        didl::DidlContainerAlbum album__ = SquawkServer::instance()->dao()->object<didl::DidlContainerAlbum>( container_.id() );
+        SquawkServer::instance()->dao()->save( didl::DidlContainerAlbum(album__.id(), album__.parentId(), album__.title(), album__.path(),
+                                                                        album__.mtime(), album__.objectUdpateId(), album__.childCount(),
+                                                                        album__.rating(), album__.year(), album__.playbackCount(),
+                                                                        album__.contributor(), album__.artist(), album__.genre(),
+                                                                        albumArtUri_, false ) );
+        std::list<didl::DidlContainerPhotoAlbum> photo_album__ = SquawkServer::instance()->dao()->children<didl::DidlContainerPhotoAlbum>( container_.id(), 0, 0 );
+        for( auto photo : photo_album__ ) {
+            SquawkServer::instance()->dao()->save( didl::DidlContainer(photo.id(), photo.parentId(), photo.title(), photo.path(),
+                                                                            photo.mtime(), photo.objectUdpateId(), 0, false ) );
+
+        }
+    }
+    return container_type_;
 }
 
 //create the thumbnails
-void UpnpContentDirectoryParser::_scale_image ( const std::string & profile, const std::string & path, int image_id, const std::string & target ) {
+/**
+ * @brief UpnpContentDirectoryParser::_scale_image
+ * @param profile
+ * @param path
+ * @param image_id
+ * @param target
+ * @return the filename of the new file.
+ */
+std::string UpnpContentDirectoryParser::_scale_image ( const std::string & profile, const std::string & path, int image_id, const std::string & target ) {
     image::Image image ( path );
 
-    if ( profile == "JPEG_TN" ) { //TODO DLNA TYPES
-        std::stringstream image_stream;
-        image_stream << target << "/tn_" << image_id << ".jpg";
-        image.scale ( 160, 160, image_stream.str() );
+    std::stringstream cover_stream;
+    if ( profile == "JPEG_TN" ) { //TODO ONLY TN USED, move to callers
+        cover_stream << target << "/" << image_id << ".jpg";
+        image.scale ( 160, 160, cover_stream.str() );
 
     } else if ( profile == "JPEG_SM" ) {
-        std::stringstream cover_stream;
         cover_stream << target << "/sm_" << image_id << ".jpg";
         std::string cover_filename = cover_stream.str();
         image.scale ( 480, 480, cover_filename );
 
     } else if ( profile == "JPEG_LRG" ) {
-        std::stringstream cover_stream;
         cover_stream << target << "/lrg_" << image_id << ".jpg";
         std::string cover_filename = cover_stream.str();
         image.scale ( 768, 768, cover_filename );
     }
+    return cover_stream.str();
+}
+std::string UpnpContentDirectoryParser::_clean_name( const std::string & name ) {
+    std::string s = name;
+
+    std::string allowed = "+-()";
+    s.erase( remove_if(s.begin(), s.end(), [&allowed](const char& c) {
+            return allowed.find(c) != string::npos;
+    }), s.end());
+
+    boost::algorithm::trim( s );
+    boost::algorithm::to_lower( s );
+
+    if( s.rfind("the ", 0) == 0)
+        s.erase(0, 4);
+    if( s.rfind("die ", 0) == 0)
+        s.erase(0, 4);
+    if( s.rfind("das ", 0) == 0)
+        s.erase(0, 4);
+    if( s.rfind("der ", 0) == 0)
+        s.erase(0, 4);
+
+    return s;
 }
 }//namespace squawk

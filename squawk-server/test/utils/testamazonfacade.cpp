@@ -17,7 +17,7 @@
 #include <string>
 #include <map>
 
-#include "../src/utils/amazonfacade.h"
+#include "../../src/utils/amazonfacade.h"
 
 #include <gtest/gtest.h>
 

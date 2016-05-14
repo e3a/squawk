@@ -64,7 +64,12 @@ public:
 	 * @return mime-type
 	 */
 	std::string mimeType();
-	/**
+    /**
+     * @brief the image color depth
+     * @return color depth
+     */
+    std::string colorDepth();
+    /**
 	 * @brief write new scaled image
 	 * @param width new image width
 	 * @param height new image height

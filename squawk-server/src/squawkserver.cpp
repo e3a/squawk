@@ -19,7 +19,6 @@
 
 #include "squawkserver.h"
 
-#include <squawk.h>
 
 #include <string>
 #include <iostream>
@@ -27,29 +26,11 @@
 #include <exception>
 #include <signal.h>
 
-#include <boost/filesystem.hpp>
 
-#include "http.h"
 #include "fileservlet.h"
 
-
-#include "api/apialbumlistservlet.h"
-#include "api/apiartistlistservlet.h"
-#include "api/apialbumitemservlet.h"
-#include "api/apibooklistservlet.h"
-#include "api/apistatisticsservlet.h"
-#include "api/apivideolistservlet.h"
-#include "api/apivideoitemservlet.h"
-#include "api/mediaservlet.h"
-#include "api/coverservlet.h"
-#include "api/apibrowseservlet.h"
-#include "api/apiupnpeventservlet.h"
-#include "api/apiupnpdeviceservlet.h"
-#include "servlet/imageservlet.h"
-#include "servlet/songservlet.h"
-
-#include "upnpconnectionmanager.h"
 #include "upnpcontentdirectory.h"
+#include "upnpcontentdirectoryapi.h"
 #include "upnpcontentdirectorydao.h"
 #include "upnpcontentdirectoryfile.h"
 #include "upnpcontentdirectoryimage.h"
@@ -58,40 +39,42 @@
 #include "upnpcontentdirectoryvideo.h"
 #include "upnpmediaservlet.h"
 #include "upnpxmldescription.h"
+#include "upnpcontentdirectorydao.h"
+#include "upnpcontentdirectoryparser.h"
+#include "upnpconnectionmanager.h"
 
-#include "log4cxx/logger.h"
-#include "log4cxx/basicconfigurator.h"
-#include "log4cxx/propertyconfigurator.h"
-#include "log4cxx/helpers/exception.h"
+namespace squawk {
+void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
 
-void SquawkServer::start() {
+    _squawk_config = std::shared_ptr< squawk::SquawkConfig >(squawk_config);
+
     ssdp_event_logger = 
       std::unique_ptr<squawk::LoggerEventListener>( new squawk::LoggerEventListener() );
   
     // create the server
-    http::HttpServletContext context( squawk_config->getMap() );
-    _upnp_cds_dao = std::shared_ptr< squawk::UpnpContentDirectoryDao >( new squawk::UpnpContentDirectoryDao( context ) );
-    _upnp_file_parser = std::shared_ptr< squawk::UpnpContentDirectoryParser >( new squawk::UpnpContentDirectoryParser( context, _upnp_cds_dao ) );
+    _upnp_cds_dao = std::shared_ptr< squawk::UpnpContentDirectoryDao >( new squawk::UpnpContentDirectoryDao() );
+    _upnp_file_parser = std::shared_ptr< squawk::UpnpContentDirectoryParser >( new squawk::UpnpContentDirectoryParser() );
 
+    //Setup and start the SSDP server
+    ssdp_server = new didl::SSDPServerImpl(
+    squawk_config->uuid(),
+    squawk_config->multicastAddress(),
+    squawk_config->multicastPort() );
 
-    //Setup and start the DLNA server
-    /*
-    ContentDirectoryModule * musicDirectory = new squawk::UpnpMusicDirectoryModule( context );
-    ContentDirectoryModule * videoDirectory = new squawk::UpnpVideoDirectory( context );
-    ContentDirectoryModule * imageDirectory = new squawk::UpnpImageDirectory( context );
-    ContentDirectoryModule * fileDirectory = new squawk::UpnpFileDirectory( context );
-    content_directory->registerContentDirectoryModule(musicDirectory);
-    content_directory->registerContentDirectoryModule(videoDirectory);
-    content_directory->registerContentDirectoryModule(imageDirectory);
-    content_directory->registerContentDirectoryModule(fileDirectory);
-*/
+    //register namespaces
+    ssdp_server->register_namespace(squawk_config->uuid(), std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(didl::NS_ROOT_DEVICE, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(didl::NS_MEDIASERVER, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(didl::NS_CONTENT_DIRECTORY, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+//    ssdp_server->register_namespace(ssdp::NS_MEDIA_RECEIVER_REGISTRAR, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->subscribe( ssdp_event_logger.get() );
 
     /* register the upnp CDS servlets. */
-    squawk::UpnpContentDirectory * content_directory = new squawk::UpnpContentDirectory("/ctl/ContentDir", context );
-    content_directory->registerContentDirectoryModule( std::unique_ptr< squawk::ContentDirectoryModule >( new squawk::UpnpContentDirectoryMusic( context, _upnp_cds_dao ) ) );
-    content_directory->registerContentDirectoryModule( std::unique_ptr< squawk::ContentDirectoryModule >( new squawk::UpnpContentDirectoryVideo( context, _upnp_cds_dao ) ) );
-    content_directory->registerContentDirectoryModule( std::unique_ptr< squawk::ContentDirectoryModule >( new squawk::UpnpContentDirectoryImage( context, _upnp_cds_dao ) ) );
-    content_directory->registerContentDirectoryModule( std::unique_ptr< squawk::ContentDirectoryModule >( new squawk::UpnpContentDirectoryFile( context, _upnp_cds_dao ) ) );
+    squawk::UpnpContentDirectory * content_directory = new squawk::UpnpContentDirectory("/ctl/ContentDir" );
+    content_directory->registerContentDirectoryModule( std::unique_ptr< squawk::ContentDirectoryModule >( new squawk::UpnpContentDirectoryMusic() ) );
+    content_directory->registerContentDirectoryModule( std::unique_ptr< squawk::ContentDirectoryModule >( new squawk::UpnpContentDirectoryVideo() ) );
+    content_directory->registerContentDirectoryModule( std::unique_ptr< squawk::ContentDirectoryModule >( new squawk::UpnpContentDirectoryImage() ) );
+    content_directory->registerContentDirectoryModule( std::unique_ptr< squawk::ContentDirectoryModule >( new squawk::UpnpContentDirectoryFile() ) );
 
     squawk::UpnpConnectionManager * connection_manager = new squawk::UpnpConnectionManager("/ctl/ConnectionMgr");
 
@@ -101,100 +84,21 @@ void SquawkServer::start() {
                 squawk_config->httpPort() /*,
                 squawk_config->int_value(CONFIG_HTTP_THREADS) */ );
 
-    squawk::UpnpXmlDescription * xmldescription = new squawk::UpnpXmlDescription(std::string("/rootDesc.xml"), context );
-    squawk::api::ApiStatisticsServlet * statistic_servlet = new squawk::api::ApiStatisticsServlet(std::string("/api/statistic"), context );
-    squawk::api::ApiAlbumListServlet * albums_servlet = new squawk::api::ApiAlbumListServlet(std::string("/api/album"), context );
-    squawk::api::ApiBookListServlet * books_servlet = new squawk::api::ApiBookListServlet(std::string("/api/book"), context );
-    squawk::api::ApiVideoListServlet * videos_servlet = new squawk::api::ApiVideoListServlet(std::string("/api/video"), context );
-    squawk::api::ApiVideoItemServlet * video_servlet = new squawk::api::ApiVideoItemServlet(std::string("/api/video/(\\d*)"), context );
-//    squawk::servlet::ApiAlbumsByArtist * albumsbyartist_servlet = new squawk::servlet::ApiAlbumsByArtist(std::string("/api/artist/(\\d+)/album"), database);
-    squawk::api::ApiArtistListServlet * artists_servlet = new squawk::api::ApiArtistListServlet(std::string("/api/artist"), context );
-    squawk::api::ApiAlbumItemServlet * album_servlet = new squawk::api::ApiAlbumItemServlet(std::string("/api/album/(\\d*)"), context );
-    // TODO squawk::api::ApiAlbumsLetterServlet * letter_servlet = new squawk::api::ApiAlbumsLetterServlet(std::string("/api/album/letter"), context );
-
-    squawk::api::CoverServlet * cover_servlet = new squawk::api::CoverServlet("/art/(\\d*).jpg", context, _upnp_cds_dao );
-    squawk::servlet::ImageServlet * image_servlet = new squawk::servlet::ImageServlet("/album/image/(\\d*).jpg", squawk_config->tmpDirectory());
-    squawk::servlet::SongServlet * song_servlet = new squawk::servlet::SongServlet("/song/(\\d*).(flac|mp3)", database);
-
-    squawk::api::MediaServlet * media_servlet = new squawk::api::MediaServlet("/file/(video|audio|image|cover)/(\\d*).(flac|mp3|avi|mp4|mkv|mpeg|mov|wmv|jpg)", context );
-    squawk::api::ApiBrowseServlet * browse_servlet = new squawk::api::ApiBrowseServlet("/(video|image|book)/?([0-9]+)?", context );
-
-    squawk::UpnpMediaServlet * upnp_media_servlet = new squawk::UpnpMediaServlet("/(video|audio|image)/(\\d*).(flac|mp3|avi|mp4|mkv|mpeg|mov|wmv)", context );
+    squawk::UpnpXmlDescription * xmldescription = new squawk::UpnpXmlDescription(std::string("/rootDesc.xml") );
+    squawk::UpnpContentDirectoryApi * content_directory_api =
+            new squawk::UpnpContentDirectoryApi(std::string(
+                "/api/(upnp/device|upnp/event|album|artist|track|browse|statistic)/?(\\d*)?"), _upnp_cds_dao, ssdp_server );
+    squawk::UpnpMediaServlet * upnp_media_servlet = new squawk::UpnpMediaServlet(
+                "/(video|audio|image|cover|albumArtUri|resource)/(\\d*).(flac|mp3|avi|mp4|mkv|mpeg|mov|wmv|jpg)" );
+    http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->docRoot());
 
     web_server->register_servlet(content_directory);
+    web_server->register_servlet(content_directory_api);
     web_server->register_servlet(connection_manager);
     web_server->register_servlet(xmldescription);
-    // TODO web_server->register_servlet(letter_servlet);
-    web_server->register_servlet(album_servlet);
-    web_server->register_servlet(albums_servlet);
-    web_server->register_servlet(books_servlet);
-    web_server->register_servlet(videos_servlet);
-    web_server->register_servlet(video_servlet);
-//    web_server->register_servlet(albumsbyartist_servlet);
-    web_server->register_servlet(artists_servlet);
-    web_server->register_servlet(cover_servlet);
-    web_server->register_servlet(image_servlet);
-    web_server->register_servlet(song_servlet);
-    web_server->register_servlet(browse_servlet);
-    web_server->register_servlet(statistic_servlet);
-    web_server->register_servlet(media_servlet);
     web_server->register_servlet(upnp_media_servlet);
-    web_server->start();
-
-
-/*    squawk::http::RequestCallback * api_albums_handler = new api::ApiAlbumsHandler(service);
-    squawk::http::RequestCallback * api_artist_handler = new api::ApiArtistHandler(service);
-    squawk::http::RequestCallback * api_album_handler = new api::ApiAlbumHandler(service);
-    squawk::http::RequestCallback * api_album_by_artist_handler = new api::ApiAlbumsByArtist(service);
-    squawk::http::RequestCallback * cover_handler = new squawk::http::files::CoverHandler(squawk_config);
-    squawk::http::RequestCallback * image_handler = new squawk::http::files::ImageHandler(dao, squawk_config);
-    squawk::http::RequestCallback * song_handler = new squawk::http::files::SongHandler(dao, squawk_config);
-    squawk::http::RequestCallback * xmldescriptions = new squawk::http::upnp::XmlDescriptions(squawk_config);
-*/
-    /* / run server in background thread.
-    http_server = new squawk::http::Server(
-      squawk_config->string_value(CONFIG_HTTP_IP),
-      squawk_config->string_value(CONFIG_HTTP_PORT),
-      squawk_config->string_value(CONFIG_HTTP_DOCROOT),
-      squawk_config->int_value(CONFIG_HTTP_THREADS));
-
-    http_server->register_handler("GET", "/api/album", api_albums_handler);
-    http_server->register_handler("GET", "/api/artist", api_artist_handler);
-    http_server->register_handler("GET", "/api/album/(\\d*)", api_album_handler);
-    http_server->register_handler("GET", "/api/artist/(\\d*)/album", api_album_by_artist_handler);
-    http_server->register_handler("POST", "/ctl/ContentDir", content_directory);
-    http_server->register_handler("GET", "/rootDesc.xml", xmldescriptions);
-    http_server->register_handler("GET", "/album/image/(\\d*).jpg", image_handler);
-    http_server->register_handler("GET", "/album/(\\d*)/cover.jpg", cover_handler);
-    http_server->register_handler("GET", "/song/(\\d*).(flac|mp3)", song_handler);
-*/
-    //Setup and start the SSDP server
-    ssdp_server = new didl::SSDPServerImpl(
-    squawk_config->uuid(),
-    squawk_config->multicastAddress(),
-    squawk_config->multicastPort() );
-
-    //register namespaces
-    ssdp_server->register_namespace(squawk_config->uuid(), std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-    ssdp_server->register_namespace(didl::NS_ROOT_DEVICE, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-    ssdp_server->register_namespace(didl::NS_MEDIASERVER, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-    ssdp_server->register_namespace(didl::NS_CONTENT_DIRECTORY, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-//    ssdp_server->register_namespace(ssdp::NS_MEDIA_RECEIVER_REGISTRAR, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-
-    ssdp_server->subscribe( ssdp_event_logger.get() );
-    
-    squawk::api::ApiUpnpEventServlet * upnp_event_servlet = new squawk::api::ApiUpnpEventServlet(std::string("/api/upnp/event"), ssdp_server );
-    squawk::api::ApiUpnpDeviceServlet * upnp_device_servlet = new squawk::api::ApiUpnpDeviceServlet(std::string("/api/upnp/device"), ssdp_server );
-    http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->docRoot());
-    web_server->register_servlet(upnp_event_servlet);
-    web_server->register_servlet(upnp_device_servlet);
     web_server->register_servlet(fileServlet);
-
-    //TODO squawk::http::RequestCallback * api_upnp_device_handler = new api::ApiUpnpDeviceHandler(service, ssdp_server);
-    //TODO http_server->register_handler("GET", "/api/devices", api_upnp_device_handler);
-
-    //start the server
-//TODO    http_thread = std::thread(&squawk::http::Server::run, http_server);
+    web_server->start();
     ssdp_server->start();
 
     //rescan the media directory
@@ -218,82 +122,4 @@ void SquawkServer::stop() {
     web_server->stop();
     delete web_server;
 }
-
-int main(int ac, const char* av[]) {
-
-    try {
-    squawk::SquawkConfig * squawk_config = new squawk::SquawkConfig();
-    if(! squawk_config->parse(ac, av)) {
-        exit(1);
-    }
-    squawk_config->load(squawk_config->configFile());
-    if(! squawk_config->validate()) {
-        exit(1);
-    }
-    squawk_config->save(squawk_config->configFile());
-
-    //load the logger
-    if ( squawk_config->logger() != "" ) {
-        log4cxx::PropertyConfigurator::configure( squawk_config->logger() );
-    } else {
-       log4cxx::BasicConfigurator::configure();
-    }
-     
-    //ensure the tmp directory exist
-    if( ! boost::filesystem::is_directory( squawk_config->tmpDirectory() ) ) {
-        boost::filesystem::create_directory( squawk_config->tmpDirectory() );
-    }
-
-    // Block all signals for background thread.
-    sigset_t new_mask;
-    sigfillset(&new_mask);
-    sigset_t old_mask;
-    pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
-
-    SquawkServer * server = new SquawkServer(squawk_config);
-    server->start();
-
-    // Restore previous signals.
-    pthread_sigmask(SIG_SETMASK, &old_mask, 0);
-
-    // Wait for signal indicating time to shut down.
-    sigset_t wait_mask;
-    sigemptyset(&wait_mask);
-    sigaddset(&wait_mask, SIGINT);
-    sigaddset(&wait_mask, SIGQUIT);
-    sigaddset(&wait_mask, SIGTERM);
-    pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
-    int sig = 0;
-
-    std::cout << "wait for signal" << std::endl;
-
-    sigwait(&wait_mask, &sig);
-
-    std::cout << "shutdown server" << std::endl;
-
-    server->stop();
-    delete squawk_config;
-    delete server;
-    return 0;
-
-  } catch (std::exception& e) {
-    std::cerr << e.what() << std::endl;
-    } catch (int & e) {
-        std::cerr << "int:" << e << std::endl;
-    } catch (char * e) {
-      std::cerr << "char*:" << e << std::endl;
-    } catch (std::string * e) {
-      std::cerr << "std:" << e << std::endl;
-  } catch (...) {
-        try {
-             std::exception_ptr eptr = std::current_exception();
-            if (eptr != std::exception_ptr()) {
-                std::rethrow_exception(eptr);
-            }
-        } catch(const std::exception& e) {
-            std::cout << "Caught exception \"" << e.what() << "\"\n";
-        }
-    }
-  return 1;
-}
-
+}//namespace squawk

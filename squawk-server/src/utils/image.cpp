@@ -57,6 +57,12 @@ std::string Image::mimeType() {
 	char * format = imlib_image_format();
 	return format;
 }
+std::string Image::colorDepth() {
+    if ( !loaded_ ) { init_(); }
+
+//    Imlib_Color_Range format = imlib_context_get_color_range();
+    return  "16"; //TODO return range format;
+}
 void Image::scale ( const int & width, const int & height, const std::string & outfile ) {
 	if ( !loaded_ ) { init_(); }
 
