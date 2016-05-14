@@ -1,0 +1,22 @@
+<h2>Media Directory</h2>
+<table>
+    <tr>
+    <td>Albums:</td><td>{{statistic.albums}}</td>
+    </tr><tr>
+    <td>Artists:</td><td>{{statistic.artists}}</td>
+    <tr>
+</table>
+
+<h2>Content types</h2>
+<table>
+    <tr ng-repeat="(key, value) in statistic.types">
+        <td>{{key}}</td><td>{{value}}</td>
+    <tr>
+</table>
+
+<h2>File types</h2>
+<table>
+    <tr ng-repeat="(key, value) in statistic.audiofiles">
+        <td>{{key}}</td><td>{{value}}</td>
+    <tr>
+</table>

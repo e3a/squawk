@@ -1,0 +1,13 @@
+<div class="text-center">
+    <dir-pagination-controls
+        boundary-links="true"
+        on-page-change="pageChanged(newPageNumber)"
+        template-url="/bower_components/angular-utils-pagination/dirPagination.tpl.html">
+    </dir-pagination-controls>
+</div>
+<div width="100%">
+    <div class="browse" dir-paginate="o in objects | itemsPerPage: pageSize" total-items="objects_count" current-page="currentPage">
+        <!-- img ng-src="/cover/tn_{{album.id}}.jpg"/><br/ -->
+        <a ng-href="#/browse/{{o.id}}">{{o.title | limitTo: 9}}</a><br/>
+    </div>
+</div>
