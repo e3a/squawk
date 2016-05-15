@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<squawk>
+  <config-file>/home/e3a/squawk/squawk-server/config/squawk2.xml</config-file>
+  <cover-names>front,cover,folder</cover-names>
+  <database-file>/var/lib/squawk/squawk2.db</database-file>
+  <http-docroot>/home/e3a/squawk/squawk-server/docroot/</http-docroot>
+  <http-ip>192.168.0.17</http-ip>
+  <http-port>9000</http-port>
+  <local-address>192.168.0.17</local-address>
+  <logger>/home/e3a/squawk/squawk-server/config/logger-console.properties</logger>
+  <media-directories>
+    <media-directory>/home/Pictures</media-directory>
+    <media-directory>/home/Music/test</media-directory>
+    <media-directory>/home/Movies</media-directory>
+    <media-directory>/home/e3a/Downloads/Books/</media-directory>
+  </media-directories>
+  <multicast-address>239.255.255.250</multicast-address>
+  <multicast-port>1900</multicast-port>
+  <tmp-directory>/var/tmp/squawk/2</tmp-directory>
+  <uuid>2b2645ef-0501-4c04-ad97-174e05bab162</uuid>
+</squawk>
