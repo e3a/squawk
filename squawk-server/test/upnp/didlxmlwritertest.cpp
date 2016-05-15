@@ -75,7 +75,7 @@ TEST( DidlXmlWriterTest, ClassContainerList ) {
 
     commons::xml::XMLWriter writer;
     DidlXmlWriter element( &writer );
-    element.container( "/music/%d", "/music", std::list<DidlContainer>( {
+    element.container( "/music/{}", "/music", std::list<DidlContainer>( {
         DidlContainer( 1, 0, "Music", "/path/to", 0, 0, 3 ),
         DidlContainer( 2, 0, "Video", "/path/to", 0, 0, 2 ),
         DidlContainer( 3, 0, "Image", "/path/to", 0, 0, 2 ),
@@ -99,7 +99,7 @@ TEST( DidlXmlWriterTest, ClassContainerAlbum ) {
     commons::xml::XMLWriter writer;
     DidlXmlWriter element( &writer );
 
-    element.container( "/album/%d", "/album", "http://192.168.0.13:8080/api/album/%d/jpeg_tn.jpg", DidlContainerAlbum( 4890, 0, "Impur", "/path/to", 0, 0, 14, 0, 1136073600, 0,
+    element.container( "/album/{}", "/album", "http://192.168.0.13:8080/api/album/{}/jpeg_tn.jpg", DidlContainerAlbum( 4890, 0, "Impur", "/path/to", 0, 0, 14, 0, 1136073600, 0,
                        "Fred Frith", "Fred Frith", "Jazz", std::list< DidlAlbumArtUri >(
                             {DidlAlbumArtUri( 4890, 1, "/path", "http://192.168.0.13:8080/api/album/4890/jpeg_tn.jpg", "JPEG_TN" ) } ) ) );
 
@@ -119,7 +119,7 @@ TEST( DidlXmlWriterTest, ClassContainerArtist ) {
 
     commons::xml::XMLWriter writer;
     DidlXmlWriter element( &writer );
-    element.container( "/artist/%d", "/artist", DidlContainerArtist( 872, 0, "Bliss", "/path/to/", 0, 0, 1, "clean name" ) );
+    element.container( "/artist/{}", "/artist", DidlContainerArtist( 872, 0, "Bliss", "/path/to/", 0, 0, 1, "clean name" ) );
 
     commons::xml::XMLReader reader( writer.str() );
     EXPECT_TRUE( reader.next() );
@@ -137,17 +137,17 @@ TEST( DidlXmlWriterTest, ClassMusicTrack ) {
 
     commons::xml::XMLWriter writer;
     DidlXmlWriter element( &writer );
-    element.write( "/file/%d", "/album/%d", "http://192.168.0.13:8080/audio/%d.%s",
+    element.write( "/file/{}", "/album/{}", "http://192.168.0.13:8080/audio/%d.%s",
                    DidlMusicTrack( 89904, 4890, "Impur", "/path/to", 0, 0, 344180785, "audio/x-flac",
                                    std::list< DidlResource >( { DidlResource(89905, 0, 344180785 /*size*/, "http://192.168.0.13:8080/audio/89904.flac",
-                                                                "path", "http-get:*:audio/x-flac:DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000", "", "audio/x-flac",
+                                                                "path", "http-get:*:audio/x-flac", "", "audio/x-flac",
                                                                     std::map< DidlResource::UPNP_RES_ATTRIBUTES, std::string > ( {
                                                                         { DidlResource::duration, "3296" },
                                                                         { DidlResource::bitrate, "0" },
                                                                         { DidlResource::bitsPerSample, "16" },
                                                                         { DidlResource::sampleFrequency, "44100" }
                                                                          } ) ) } ),
-                                   0, 1136073600, 1, 0, "Fred Frith", "Fred Frith", "Avant Garde", "Impur", 0 ) );
+                                   0, 1136073600, 1, 1, 0, "Fred Frith", "Fred Frith", "Avant Garde", "Impur", "Comment", 0 ) );
 
 
     commons::xml::XMLReader reader( writer.str() );
@@ -158,7 +158,7 @@ TEST( DidlXmlWriterTest, ClassMusicTrack ) {
     EXPECT_EQ( node.children().size(), 1 );
 
     std::string result = "<?xml version=\"1.0\"?>\n" \
-            "<DIDL-Lite xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:pv=\"http://www.pv.com/pvns/\"><item id=\"/file/89904\" parentID=\"/album/4890\" restricted=\"1\"><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:title>Impur</dc:title><dc:originalTrackNumber>1</dc:originalTrackNumber><upnp:album>Impur</upnp:album><dc:date>2006-01-01</dc:date><upnp:genre>Avant Garde</upnp:genre><upnp:artist>Fred Frith</upnp:artist><dc:contributor>Fred Frith</dc:contributor><res protocolInfo=\"http-get:*:audio/x-flac:DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" size=\"344180785\" duration=\"3296\" bitrate=\"0\" bitsPerSample=\"16\" sampleFrequency=\"44100\" mime-type=\"audio/x-flac\">http://192.168.0.13:8080/audio/89905.flac</res></item></DIDL-Lite>\n";
+            "<DIDL-Lite xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:pv=\"http://www.pv.com/pvns/\"><item id=\"/file/89904\" parentID=\"/album/4890\" restricted=\"1\"><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:title>Impur</dc:title><dc:originalTrackNumber>1</dc:originalTrackNumber><upnp:album>Impur</upnp:album><upnp:description>Comment</upnp:description><dc:date>2006-01-01</dc:date><upnp:genre>Avant Garde</upnp:genre><upnp:artist>Fred Frith</upnp:artist><dc:contributor>Fred Frith</dc:contributor><res protocolInfo=\"http-get:*:audio/x-flac:DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" size=\"344180785\" duration=\"3296\" bitrate=\"0\" bitsPerSample=\"16\" sampleFrequency=\"44100\" mime-type=\"audio/x-flac\">http://192.168.0.13:8080/audio/89905.flac</res></item></DIDL-Lite>\n";
 
     EXPECT_EQ( writer.str(), result );
 }
@@ -166,9 +166,9 @@ TEST( DidlXmlWriterTest, ClassContainerVideo ) {
 
     commons::xml::XMLWriter writer;
     DidlXmlWriter element( &writer );
-    element.write( "/video/%d", "/video", DidlMovie( 76269, 0, "AVATAR 3D", "", 0, 0, 1,"",
+    element.write( "/video/{}", "/video", "http://192.168.0.13:8080/video/{0}.{1}", DidlMovie( 76269, 0, "AVATAR 3D", "", 0, 0, 1,"",
                                                      std::list< didl::DidlResource >( { didl::DidlResource(12, 1, 1511813286, "http://192.168.0.13:8080/video/76269.mkv",
-                                                       "path", "http-get:*:video/x-matroska:*", "", "video/x-matroska",
+                                                       "path", "http-get:*:video/x-matroska:DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000", "", "video/x-matroska",
                                                        std::map< didl::DidlResource::UPNP_RES_ATTRIBUTES, std::string > ( {
                                                            { didl::DidlResource::duration, "3296" },
                                                            { didl::DidlResource::bitrate, "0" },

@@ -4,15 +4,6 @@
 
 namespace didl {
 
-/** \brief sprintf to string wrapper */
-template<typename ... Args>
-std::string stringFormat( const std::string& format, Args ... args ) {
-    size_t size = std::snprintf( nullptr, 0, format.c_str(), args ... ) + 1;
-    std::unique_ptr<char[]> buf( new char[ size ] );
-    std::snprintf( buf.get(), size, format.c_str(), args ... );
-    return std::string( buf.get(), buf.get() + size - 1 );
-}
-
 DidlXmlWriter::DidlXmlWriter ( commons::xml::XMLWriter * xmlWriter ) :
     _xmlWriter ( xmlWriter ),
     _didl_element ( _xmlWriter->element ( "DIDL-Lite" ) ) {
@@ -38,7 +29,7 @@ void DidlXmlWriter::container ( const std::string & id_prefix, const std::string
         container ( id_prefix, parent_prefix, _container );
     }
 }
-void DidlXmlWriter::container ( const std::string & id, const std::string & parent, const std::string & uri, DidlContainerAlbum container ) { //TODO remove refernrence
+void DidlXmlWriter::container ( const std::string & id, const std::string & parent, const std::string & uri, DidlContainerAlbum container ) {
     commons::xml::Node container_element = _xmlWriter->element ( _didl_element, "", "container", "" );
     _xmlWriter->attribute ( container_element, "id", fmt::format( id, container.id() ) );
     _xmlWriter->attribute ( container_element, "parentID", fmt::format( parent, container.parentId() ) );
@@ -57,7 +48,7 @@ void DidlXmlWriter::container ( const std::string & id, const std::string & pare
     _xmlWriter->ns ( dlna_album_art_node, upnp::XML_NS_DLNA_METADATA, "dlna", false );
     _xmlWriter->attribute ( dlna_album_art_node, upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
 }
-void DidlXmlWriter::container ( const std::string & id, const std::string & parent, const std::string & uri, DidlContainerPhotoAlbum container ) { //TODO remove refernrence
+void DidlXmlWriter::container ( const std::string & id, const std::string & parent, const std::string & uri, DidlContainerPhotoAlbum container ) {
     commons::xml::Node container_element = _xmlWriter->element ( _didl_element, "", "container", "" );
     _xmlWriter->attribute ( container_element, "id", fmt::format( id, container.id() ) );
     _xmlWriter->attribute ( container_element, "parentID", fmt::format( parent, container.parentId() ) );
@@ -98,8 +89,6 @@ void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & p
         write ( track, item_element, uri );
     }
 }
-
-
 void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & parent_prefix, const std::string & uri, DidlMusicTrack item ) {
     commons::xml::Node item_element = _xmlWriter->element ( _didl_element, "", "item", "" );
     _xmlWriter->attribute ( item_element, "id", fmt::format( id_prefix, item.id() ) );
@@ -110,6 +99,7 @@ void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & p
 
     _xmlWriter->element ( item_element, upnp::XML_NS_PURL, "originalTrackNumber", std::to_string ( item.track() ) );
     _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "album", item.album() );
+    _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "description", item.comment() );
 
     _xmlWriter->element ( item_element, upnp::XML_NS_PURL, "date", parse_date( item.year() ) );
     _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "genre", item.genre() );
@@ -134,7 +124,7 @@ void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & p
         write( track, item_element, uri );
     }
 }
-void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & parent_prefix, DidlMovie item ) {
+void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & parent_prefix, const std::string & uri, DidlMovie item ) {
     commons::xml::Node item_element = _xmlWriter->element ( _didl_element, "", "item", "" );
     _xmlWriter->attribute ( item_element, "id", fmt::format( id_prefix, item.id() ) );
     _xmlWriter->attribute ( item_element, "parentID", fmt::format( parent_prefix, item.parentId() ) );
@@ -146,7 +136,7 @@ void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & p
     _xmlWriter->element ( item_element, upnp::XML_NS_PURL, "date", /* year_ + */ "2014-01-01" ); //TODO
 
     for( auto & track : item.audioItemRes() ) {
-        write( track, item_element, "uri" );
+        write( track, item_element, uri );
     }
 }
 

@@ -1,7 +1,7 @@
 # Build squawk project
 # run the cmake command from your build directory:
 # cmake .. -DCMAKE_COMPILER_IS_GNUCXX=true -Dbuild_tests=true -DCMAKE_BUILD_TYPE=debug -DTESTFILES=/home/e3a/testfiles/ -DASIO_PATH=/home/e3a/asio-1.10.2/
-cmake_minimum_required(VERSION 2.8.9)
+cmake_minimum_required(VERSION 3.2.2)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 option(build_tests "Build all squawk unit tests." ON)
@@ -10,6 +10,7 @@ SET(TESTFILES "/home/e3a/testfiles" CACHE TESTFILES "The path to the testfiles."
 SET(ASIO_PATH "${CMAKE_SOURCE_DIR}/contrib/asio-1.10.6/" CACHE ASIO_PATH "The path to asio header files.")
 SET(BOWER_COMPONENTS "angular-animate" "angular-aside" "angular-bootstrap" "angular-route" "angular-sanitize" "bootstrap" "ngGallery" "videogular"
                      "dirPagination" "font-awesome" "api-console" "jquery" "angular-utils-pagination")
+
 
 project (squawk)
 
@@ -45,6 +46,8 @@ SET( SQUAWK_INCLUDES ${CMAKE_SOURCE_DIR}/commons ${CMAKE_SOURCE_DIR}/httpcpp/inc
      ${CMAKE_SOURCE_DIR}/external/fmt-3.0.0)
 
 add_subdirectory (external/fmt-3.0.0/)
+add_subdirectory (external/mstch-1.0.2)
+include_directories(${mstch_INCLUDE_DIR})
 add_subdirectory (httpcpp)
 add_subdirectory (ssdpcpp)
 add_subdirectory (squawk-server)

@@ -198,11 +198,10 @@ bool SquawkConfig::parse(int ac, const char* av[]) {
             } else if(std::string(av[i]) == std::string("--multicast-port")) {
                 setValue(CONFIG_MULTICAST_PORT, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--cover-names")) {
-                boost::char_separator<char> sep(", ");
-                boost::tokenizer< boost::char_separator<char> > tokens( std::string( av[++i] ), sep);
-                BOOST_FOREACH (const string& t, tokens) {
-                    setValue(CONFIG_COVER_NAMES, t );
-                }
+                typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+                tokenizer tok{ std::string( av[++i] ) };
+                for (tokenizer::iterator it = tok.begin(); it != tok.end(); ++it)
+                    setValue(CONFIG_COVER_NAMES, *it );
             }
         } else {
             std::cerr << "parameter not set for key " << std::string(av[i]) << std::endl;

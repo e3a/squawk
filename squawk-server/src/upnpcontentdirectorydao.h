@@ -1,6 +1,4 @@
 /*
-    Copyright (C) 2016  <etienne> <etienne.knecht@hotmail.com>
-
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
@@ -330,7 +328,7 @@ struct DidlReadType<BASE, std::list<didl::DidlResource>> {
     }
 };
 template <typename BASE>
-struct DidlReadType<BASE, std::list<didl::DidlAlbumArtUri>> { //TODO fill ressource uri
+struct DidlReadType<BASE, std::list<didl::DidlAlbumArtUri>> {
     static inline void read ( db::Sqlite3Statement *, const BASE & base, const std::string &, int &, std::list<didl::DidlAlbumArtUri> & value ) {
         db::db_statement_ptr stmt_album_art_uri_ = SquawkServer::instance()->db()->prepareStatement (
                     "select ROWID, ref_obj, path, uri, profile from tbl_cds_album_art_uri where ref_obj = ?" );
@@ -371,45 +369,57 @@ template < typename S >
 struct DidlBindRead : DidlBindReadImpl< S, boost::mpl::int_< 0 > >  {};
 
 
-inline void parse_attributes( std::stringstream & query_string, const std::map< std::string, std::string > & filters ) {
+inline void parse_attributes ( std::stringstream & query_string, const std::map< std::string, std::string > & filters ) {
     bool is_first_ = true;
 
     for ( auto & f : filters ) {
-        if( f.first != "cls" ) {
-            if ( is_first_ ) { is_first_=false; } { query_string << " or "; }
+        if ( f.first != "cls" ) {
+            if ( is_first_ ) { is_first_=false; }
+
+            else { query_string << " or "; }
+
             query_string << f.first << "=\'" << f.second + "\' ";
         }
     }
 };
-inline void parse_filters( std::stringstream & query_string, const std::map< std::string, std::string > & filters ) {
+inline void parse_filters ( std::stringstream & query_string, const std::map< std::string, std::string > & filters ) {
     bool has_filters_;
-    if( filters.empty() ) has_filters_ = false;
-    else if( filters.find( "cls" ) != filters.end() && filters.size() == 1 ) has_filters_ = false;
-    else has_filters_ = true;
+
+    if ( filters.empty() ) { has_filters_ = false; }
+
+    else if ( filters.find ( "cls" ) != filters.end() && filters.size() == 1 ) { has_filters_ = false; }
+
+    else { has_filters_ = true; }
 
     if ( has_filters_ ) {
         query_string << " AND (";
-        parse_attributes( query_string, filters );
+        parse_attributes ( query_string, filters );
         query_string << ")";
     }
 };
-inline void parse_class( didl::DIDL_CLASS cls, const std::string & prefix, std::stringstream & query_string, std::map< std::string, std::string > filters ) { //TODO reference
+inline void parse_class ( didl::DIDL_CLASS cls, const std::string & prefix, std::stringstream & query_string, std::map< std::string, std::string > filters ) {
     if ( cls != didl::object ) {
         query_string << prefix << " cls = " << cls;
-    } else if ( filters.find( "cls" ) != filters.end() ) {
+
+    } else if ( filters.find ( "cls" ) != filters.end() ) {
         query_string << prefix << " (";
-        boost::tokenizer<> classes_( filters["cls"] );
+        boost::tokenizer<> classes_ ( filters["cls"] );
         bool first_ = true;
+
         for ( boost::tokenizer<>::iterator beg = classes_.begin(); beg != classes_.end(); ++beg ) {
-            if( first_ ) first_=false; else query_string << " OR ";
+            if ( first_ ) { first_=false; }
+
+            else { query_string << " OR "; }
+
             query_string << "cls = " << *beg;
         }
+
         query_string << ") ";
     }
 }
 
-/** \brief Data persistence access object.
- * TODO do not throw DBException
+/**
+ * \brief Data persistence access object.
  */
 class UpnpContentDirectoryDao {
 public:
@@ -437,7 +447,7 @@ public:
      */
     template< typename T >
     T save ( T o ) {
-        if ( squawk::DEBUG ) { LOG4CXX_TRACE( logger, "Save:" << o ); }
+        if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "Save:" << o ); }
 
         db::db_statement_ptr stmt_object_ = _db->prepareStatement ( "select ROWID, object_update_id from tbl_cds_object where path = ?" );
         stmt_object_->bind_text ( 1, o.path() );
@@ -542,13 +552,12 @@ public:
 
         std::list< T > object_list_;
 
-
         std::stringstream query_string_;
         query_string_ << "select ";
         SqlParameters< T >::serialize ( query_string_, true, "" );
         query_string_ << " from tbl_cds_object where parent_id = ? ";
-        parse_class( DidlType< T >::cls(), " and ", query_string_, filters );
-        parse_filters( query_string_, filters );
+        parse_class ( DidlType< T >::cls(), " and ", query_string_, filters );
+        parse_filters ( query_string_, filters );
         query_string_ << " order by " << sort.first << " " << sort.second;
 
         if ( result_count > 0 ) {
@@ -596,8 +605,8 @@ public:
         query_string_ << "select ";
         SqlParameters< T >::serialize ( query_string_, true, "" );
         query_string_ << " from tbl_cds_object where ";
-        parse_class( DidlType< T >::cls(), "", query_string_, filters );
-        parse_filters( query_string_, filters );
+        parse_class ( DidlType< T >::cls(), "", query_string_, filters );
+        parse_filters ( query_string_, filters );
         query_string_ << " order by " << sort.first << " " << sort.second;
 
         if ( result_count > 0 ) {
@@ -664,6 +673,12 @@ public:
      * @return
      */
     didl::DidlContainerArtist save ( const didl::DidlContainerArtist artist );
+    /**
+     * @brief save resource
+     * @param resource
+     * @return
+     */
+    didl::DidlResource save ( const didl::DidlResource resource );
 
     /** \brief touch a file in the database.
      * <p>updates the timestamp of the record(s) with the
@@ -671,12 +686,11 @@ public:
      */
     int touch ( const std::string & path, const unsigned long mtime );
 
-    didl::DidlResource save ( const didl::DidlResource resource);
 
 private:
     /* CREATE TABLES */
     const std::list< std::string > CREATE_STATEMENTS {
-        "CREATE TABLE IF NOT EXISTS tbl_cds_object( cls, parent_id, size, title, path, mime_type, mtime, rating, year, track, playback_count, object_update_id, contributor, artist, author, publisher, genre, album, series, dlna_profile, last_playback_time, import, timestamp );",
+        "CREATE TABLE IF NOT EXISTS tbl_cds_object( cls, parent_id, size, title, path, mime_type, mtime, rating, year, track, disc, isbn, playback_count, object_update_id, contributor, artist, author, publisher, genre, album, comment, series, dlna_profile, last_playback_time, import, timestamp );",
         "CREATE UNIQUE INDEX IF NOT EXISTS UniqueIndexObjectPath ON tbl_cds_object(path);",
         "CREATE TABLE IF NOT EXISTS tbl_cds_artist( clean_name, name, import );",
         "CREATE UNIQUE INDEX IF NOT EXISTS UniqueIndexArtistCleanName ON tbl_cds_artist(clean_name);",

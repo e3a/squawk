@@ -47,7 +47,7 @@ std::tuple<size_t, size_t> UpnpContentDirectoryVideo::parseNode( didl::DidlXmlWr
             SquawkServer::instance()->dao()->objects< didl::DidlMovie >( start_index_, request_count_ );
 
         for( auto & item : item_list ) {
-            didl_element->write( "/movies/", "/movies/", SquawkServer::instance()->dao()->object<didl::DidlMovie>( item.id() ) );
+            didl_element->write( "/movies/{}", "/movies/{}", "resource/{0}.{1}", SquawkServer::instance()->dao()->object<didl::DidlMovie>( item.id() ) );
         }
     } catch( db::DbException & e ) {
         LOG4CXX_FATAL(logger, "Can not get files, Movies:" << e.code() << "-> " << e.what());

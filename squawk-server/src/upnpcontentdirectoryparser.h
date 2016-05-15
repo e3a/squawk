@@ -93,8 +93,7 @@ private:
             return didl::objectItemVideoItemMovie;
 
         } else if ( mime_type == "application/pdf" ) {
-            // TODO cls == didl::DidlBook;
-            return didl::objectItem; //TODO remove
+            return didl::objectItemEBook;
 
         } else if( squawk::DEBUG ) {
             LOG4CXX_DEBUG ( logger, "can not find object type for:" << mime_type )

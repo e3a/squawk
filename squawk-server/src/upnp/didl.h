@@ -50,7 +50,7 @@ enum DIDL_CLASS {
 };
 
 const std::array<std::string, 10> DIDL_CLASS_NAMES {{
-    "object",       "object.container", "object.container.album.musicAlbum",    "object.container.album.musicArtist",   "object.item",
+    "object",       "object.container", "object.container.album.musicAlbum",    "object.container.person.musicArtist",  "object.item",
     "object.item.audioItem.musicTrack", "object.item.imageItem.photo",          "object.item.videoItem.movie",          "object.item.book.ebook",
     "object.container.album.photoAlbum"
 }};
@@ -445,14 +445,14 @@ public:
     DidlMusicTrack() {}
 	DidlMusicTrack ( DIDL_OBJECT_ATTRIBUTES,
                      DIDL_ITEM_ATTRIBUTES,
-                     const size_t rating, const size_t year, const size_t track,
+                     const size_t rating, const size_t year, const size_t track, const size_t disc,
                      const size_t playback_count, const std::string & contributor,
                      const std::string & artist, const std::string & genre, const std::string & album,
-					 const unsigned long last_playback_time,
+                     const std::string comment, const unsigned long last_playback_time,
 					 const bool import = true ) :        
                 DidlItem ( objectItemAudioItemMusicTrack, DIDL_OBJECT_ATTRiBUTES_NAMES, DIDL_ITEM_ATTRiBUTES_NAMES, import ),
-                           _rating(rating), _year(year), _track(track), _playback_count(playback_count), _contributor(contributor),
-                           _artist(artist), _genre(genre), _album(album), _last_playback_time(last_playback_time) {}
+                           _rating(rating), _year(year), _track(track), _disc(disc), _playback_count(playback_count), _contributor(contributor),
+                           _artist(artist), _genre(genre), _album(album), _comment(comment), _last_playback_time(last_playback_time) {}
 
 	DidlMusicTrack ( const DidlMusicTrack& ) = default;
 	DidlMusicTrack ( DidlMusicTrack&& ) = default;
@@ -465,6 +465,8 @@ public:
 
     /** \brief Album name */
     std::string album() const { return _album; }
+    /** \brief comment */
+    std::string comment() const { return _comment; }
     /** \brief Album contributor */
     std::string contributor() const { return _contributor; }
 	/** \brief Album artist */
@@ -473,7 +475,9 @@ public:
 	size_t year () const { return _year; }
 	/** \brief Track on medium */
 	size_t track() const { return _track; }
-	/** \brief number of times this song was played */
+    /** \brief disc number */
+    size_t disc() const { return _disc; }
+    /** \brief number of times this song was played */
 	size_t playbackCount() const { return _playback_count; }
 	/** \brief number of times this song was played */
 	unsigned long lastPlaybackTime() const { return _last_playback_time; }
@@ -485,8 +489,8 @@ public:
     friend class boost::fusion::extension::access;
 
 protected:
-    size_t _rating = 0, _year = 0, _track = 0, _playback_count = 0;
-    std::string _contributor, _artist, _genre, _album;
+    size_t _rating = 0, _year = 0, _track = 0, _disc, _playback_count = 0;
+    std::string _contributor, _artist, _genre, _album, _comment;
     unsigned long _last_playback_time = 0;
 };
 struct DidlPhoto: public DidlItem {
@@ -521,6 +525,24 @@ public:
     friend class squawk::UpnpContentDirectoryDao;
     friend class boost::fusion::extension::access;
 };
+struct DidlEBook: public DidlItem {
+public:
+    DidlEBook() {}
+    DidlEBook ( DIDL_OBJECT_ATTRIBUTES, DIDL_ITEM_ATTRIBUTES, const std::string & isbn, const bool import = true ) :
+                DidlItem ( objectItemVideoItemMovie, DIDL_OBJECT_ATTRiBUTES_NAMES, DIDL_ITEM_ATTRiBUTES_NAMES, import ), _isbn(isbn) {}
+
+    DidlEBook ( const DidlEBook& ) = default;
+    DidlEBook ( DidlEBook&& ) = default;
+    DidlEBook& operator= ( const DidlEBook& ) = default;
+    DidlEBook& operator= ( DidlEBook&& ) = default;
+    virtual ~DidlEBook() {}
+
+    friend std::ostream& operator<< ( std::ostream & os, const DidlEBook & o );
+    friend class squawk::UpnpContentDirectoryDao;
+    friend class boost::fusion::extension::access;
+
+    std::string _isbn = "";
+};
 } //didl
 
 using namespace boost::fusion;
@@ -537,6 +559,7 @@ using namespace boost::fusion;
                                 (std::string, _artist) (std::string, _genre) (std::string, _album) (unsigned long, _last_playback_time) \
                                 (std::list< didl::DidlResource >, _item_resource)
 #define ADAPT_STRUCT_PHOTO      ADAPT_STRUCT_ITEM (std::list< didl::DidlResource >, _item_resource)
+#define ADAPT_STRUCT_EBOOK      ADAPT_STRUCT_ITEM (std::list< didl::DidlResource >, _item_resource) (std::string, _isbn)
 
 BOOST_FUSION_ADAPT_STRUCT( didl::DidlObject, ADAPT_STRUCT_OBJECT (bool, _import) )
 BOOST_FUSION_ADAPT_STRUCT( didl::DidlContainer, ADAPT_STRUCT_CONTAINER (bool, _import) )
@@ -545,7 +568,8 @@ BOOST_FUSION_ADAPT_STRUCT( didl::DidlContainerPhotoAlbum, ADAPT_STRUCT_ALBUM (bo
 BOOST_FUSION_ADAPT_STRUCT( didl::DidlContainerArtist, ADAPT_STRUCT_ARTIST (bool, _import) )
 BOOST_FUSION_ADAPT_STRUCT( didl::DidlItem, ADAPT_STRUCT_ITEM (bool, _import) )
 BOOST_FUSION_ADAPT_STRUCT( didl::DidlMusicTrack, ADAPT_STRUCT_TRACK (bool, _import) )
-BOOST_FUSION_ADAPT_STRUCT( didl::DidlPhoto, ADAPT_STRUCT_PHOTO(bool, _import) )
+BOOST_FUSION_ADAPT_STRUCT( didl::DidlPhoto, ADAPT_STRUCT_PHOTO (bool, _import) )
+BOOST_FUSION_ADAPT_STRUCT( didl::DidlEBook, ADAPT_STRUCT_EBOOK (bool, _import) )
 
 typedef std::map< std::string, int> _types_statistic;
 BOOST_FUSION_ADAPT_STRUCT(
@@ -619,6 +643,12 @@ template <>
 struct DidlType<didl::DidlPhoto> {
     static didl::DIDL_CLASS cls() {
         return didl::objectItemImageItemPhoto;
+    }
+};
+template <>
+struct DidlType<didl::DidlEBook> {
+    static didl::DIDL_CLASS cls() {
+        return didl::objectItemEBook;
     }
 };
 

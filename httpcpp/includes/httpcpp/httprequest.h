@@ -20,6 +20,8 @@
 #ifndef HTTPREQUEST
 #define HTTPREQUEST
 
+#include <vector>
+
 namespace http {
 
 /**

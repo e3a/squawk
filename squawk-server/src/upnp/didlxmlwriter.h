@@ -54,7 +54,7 @@ public:
 
     void write ( const std::string & id_prefix, const std::string & parent_prefix, const std::string & uri, DidlPhoto item );
 
-    void write ( const std::string & id_prefix, const std::string & parent_prefix, DidlMovie item );
+    void write ( const std::string & id_prefix, const std::string & parent_prefix, const std::string & uri, DidlMovie item );
 
 private:
     commons::xml::XMLWriter * _xmlWriter;

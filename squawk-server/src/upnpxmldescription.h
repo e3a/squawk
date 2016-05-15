@@ -39,8 +39,8 @@ public:
      * @param path The servlet path
      * @param config the SquawkConfig class
      */
-    UpnpXmlDescription( const std::string & path ) : HttpServlet( path ) {}
-    virtual void do_get(::http::HttpRequest & request, ::http::HttpResponse & response);
+    UpnpXmlDescription ( const std::string & path ) : HttpServlet ( path ) {}
+    virtual void do_get ( ::http::HttpRequest & request, ::http::HttpResponse & response );
 private:
     static log4cxx::LoggerPtr logger;
 };

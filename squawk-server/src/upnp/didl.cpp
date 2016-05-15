@@ -131,5 +131,11 @@ std::ostream& operator<< ( std::ostream & os, const std::list< DidlAlbumArtUri >
     os << "]";
     return os;
 }
+std::ostream& operator<< ( std::ostream & os, const DidlEBook & o ) {
+    os << "DidlEBook[";
+    SerializeString<DidlEBook>::str( os, o);
+    os << "]";
+    return os;
+}
 }//didl
 

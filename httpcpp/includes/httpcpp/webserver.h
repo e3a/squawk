@@ -20,6 +20,8 @@
 #ifndef WEBSERVER
 #define WEBSERVER
 
+#include <vector>
+
 namespace http {
 
 /**
