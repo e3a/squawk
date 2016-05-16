@@ -1,6 +1,7 @@
 #include "didlxmlwriter.h"
 
 #include "fmt/format.h"
+#include "fmt/time.h"
 
 namespace didl {
 
@@ -41,7 +42,8 @@ void DidlXmlWriter::container ( const std::string & id, const std::string & pare
     _xmlWriter->element ( container_element, upnp::XML_NS_UPNP, "artist", container.artist() );
     _xmlWriter->element ( container_element, upnp::XML_NS_PURL, "creator", container.contributor() );
 
-    _xmlWriter->element ( container_element, upnp::XML_NS_PURL, "date", parse_date( container.year() ) );
+    std::time_t time_ = container.year();
+    _xmlWriter->element ( container_element, upnp::XML_NS_PURL, "date", fmt::format("{:%Y-%m-%d}", *std::localtime( &time_ ) ) );
 
     commons::xml::Node dlna_album_art_node =
     _xmlWriter->element ( container_element, upnp::XML_NS_UPNP, "albumArtURI", fmt::format( uri, container.id() ) );
@@ -60,7 +62,8 @@ void DidlXmlWriter::container ( const std::string & id, const std::string & pare
     _xmlWriter->element ( container_element, upnp::XML_NS_UPNP, "artist", container.artist() );
     _xmlWriter->element ( container_element, upnp::XML_NS_PURL, "creator", container.contributor() );
 
-    _xmlWriter->element ( container_element, upnp::XML_NS_PURL, "date", parse_date( container.year() ) );
+    std::time_t time_ = container.year();
+    _xmlWriter->element ( container_element, upnp::XML_NS_PURL, "date", fmt::format("{:%Y-%m-%d}", *std::localtime( &time_ ) ) );
 
     commons::xml::Node dlna_album_art_node =
     _xmlWriter->element ( container_element, upnp::XML_NS_UPNP, "albumArtURI", fmt::format( uri, container.id() ) );
@@ -101,7 +104,8 @@ void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & p
     _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "album", item.album() );
     _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "description", item.comment() );
 
-    _xmlWriter->element ( item_element, upnp::XML_NS_PURL, "date", parse_date( item.year() ) );
+    std::time_t time_ = item.year();
+    _xmlWriter->element ( item_element, upnp::XML_NS_PURL, "date", fmt::format("{:%Y-%m-%d}", *std::localtime( &time_ ) ) );
     _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "genre", item.genre() );
 
     _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "artist", item.artist() );
@@ -132,8 +136,8 @@ void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & p
     _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "class", className ( item.cls() ) );
     _xmlWriter->element ( item_element, upnp::XML_NS_PURL, "title",item.title() );
 
-
-    _xmlWriter->element ( item_element, upnp::XML_NS_PURL, "date", /* year_ + */ "2014-01-01" ); //TODO
+    std::time_t time_ = item._year;
+    _xmlWriter->element ( item_element, upnp::XML_NS_PURL, "date", fmt::format("{:%Y-%m-%d}", *std::localtime( &time_ ) ) );
 
     for( auto & track : item.audioItemRes() ) {
         write( track, item_element, uri );

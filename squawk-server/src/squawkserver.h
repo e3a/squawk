@@ -20,9 +20,6 @@
 #ifndef SQUAWKSERVER_H
 #define SQUAWKSERVER_H
 
-// #include "squawk.h"
-
-#include "loggereventlistener.h"
 #include "squawkconfig.h"
 
 namespace squawk {
@@ -72,8 +69,6 @@ class SquawkServer {
 
     http::WebServer * web_server = nullptr;
     didl::SSDPServerImpl * ssdp_server = nullptr;
-    
-    std::unique_ptr<squawk::LoggerEventListener> ssdp_event_logger;
 };
 }//namespace squawk
 #endif // SQUAWKSERVER_H

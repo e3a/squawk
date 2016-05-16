@@ -50,6 +50,8 @@ public:
     std::string databaseFile();
     /** @brief the web server document root */
     std::string docRoot();
+    /** @brief the web server bower root */
+    std::string bowerRoot();
     /** @brief the list of media directories */
     std::list< std::string > mediaDirectories();
     /** @brief the configuration file */
@@ -138,6 +140,7 @@ private:
     std::string CONFIG_FILE = "config-file";
     std::string CONFIG_MEDIA_DIRECTORY = "media-directory";
     std::string CONFIG_HTTP_DOCROOT = "http-docroot";
+    std::string CONFIG_HTTP_BOWER = "http-bower";
 };
 typedef std::shared_ptr< SquawkConfig > ptr_squawk_config;
 }

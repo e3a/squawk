@@ -512,8 +512,8 @@ public:
 struct DidlMovie: public DidlItem {
 public:
     DidlMovie() {}
-    DidlMovie ( DIDL_OBJECT_ATTRIBUTES, DIDL_ITEM_ATTRIBUTES, const bool import = true ) :
-                DidlItem ( objectItemVideoItemMovie, DIDL_OBJECT_ATTRiBUTES_NAMES, DIDL_ITEM_ATTRiBUTES_NAMES, import ) {}
+    DidlMovie ( DIDL_OBJECT_ATTRIBUTES, DIDL_ITEM_ATTRIBUTES, const size_t & year, const bool import = true ) :
+                DidlItem ( objectItemVideoItemMovie, DIDL_OBJECT_ATTRiBUTES_NAMES, DIDL_ITEM_ATTRiBUTES_NAMES, import ), _year(year) {}
 
 	DidlMovie ( const DidlMovie& ) = default;
 	DidlMovie ( DidlMovie&& ) = default;
@@ -524,6 +524,8 @@ public:
     friend std::ostream& operator<< ( std::ostream & os, const DidlMovie & o );
     friend class squawk::UpnpContentDirectoryDao;
     friend class boost::fusion::extension::access;
+
+    size_t _year = 0;
 };
 struct DidlEBook: public DidlItem {
 public:

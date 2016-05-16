@@ -620,6 +620,8 @@ public:
         virtual void ssdpEvent ( SSDPEventListener::EVENT_TYPE type, std::string  client_ip, SsdpEvent device ) = 0;
 };
 
+typedef std::function< void( SSDPEventListener::EVENT_TYPE type, std::string  client_ip, SsdpEvent device ) > event_callback_t;
+
 /**
  * @brief The SSDP Response
  */
@@ -777,7 +779,7 @@ public:
         /**
 	 * \brief Subscribe for events.
 	 */
-	void subscribe ( SSDPEventListener * listener ) {
+        void subscribe ( event_callback_t listener ) {
 		listeners.push_back ( listener );
 	}
 
@@ -797,7 +799,7 @@ private:
 	std::map< std::string, std::string > namespaces;
         std::map< std::string, SsdpEvent > upnp_devices;
 
-	std::vector< SSDPEventListener * > listeners;
+        std::vector< event_callback_t > listeners;
         void fireEvent ( SSDPEventListener::EVENT_TYPE type, std::string client_ip, SsdpEvent device ) const;
 
 	bool announce_thread_run = true;
@@ -819,5 +821,5 @@ inline std::string create_header ( std::string request_line, std::map< std::stri
 	os << "\r\n";
 	return os.str();
 }
-}
+}//namespace didl
 #endif // SSDPCONNECTION_H

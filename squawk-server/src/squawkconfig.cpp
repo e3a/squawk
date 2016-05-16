@@ -31,6 +31,7 @@ const std::string SquawkConfig::HELP_TEXT = "Options description: \n" \
 "\t--http-ip arg            http server IP.\n" \
 "\t--http-port arg          http server port.\n" \
 "\t--http-docroot arg       http server docroot.\n" \
+"\t--http-bower arg         http server bower components path.\n" \
 "\t--http-threads arg       http server threads.\n" \
 "\t--database-file arg      database storage file.\n" \
 "\t--tmp-directory arg      temporary directory\n" \
@@ -68,6 +69,9 @@ std::string SquawkConfig::databaseFile() {
 std::string SquawkConfig::docRoot() {
     return store[ CONFIG_HTTP_DOCROOT ].front();
 }
+std::string SquawkConfig::bowerRoot() {
+    return store[ CONFIG_HTTP_BOWER ].front();
+}
 std::list< std::string > SquawkConfig::mediaDirectories() {
     return store[ CONFIG_MEDIA_DIRECTORY ];
 }
@@ -91,6 +95,9 @@ bool SquawkConfig::validate() {
         valid = false;
     } if(store.find( CONFIG_HTTP_DOCROOT ) == store.end()) {
         std::cerr << "* the docroot location is not set." << std::endl;
+        valid = false;
+    } if(store.find( CONFIG_HTTP_BOWER ) == store.end()) {
+        std::cerr << "* the bower location is not set." << std::endl;
         valid = false;
     } if(store.find( CONFIG_DATABASE_FILE ) == store.end()) {
         std::cerr << "* the database file is not set." << std::endl;
@@ -187,6 +194,8 @@ bool SquawkConfig::parse(int ac, const char* av[]) {
                 setValue(CONFIG_HTTP_PORT, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--http-docroot")) {
                 setValue(CONFIG_HTTP_DOCROOT, std::string(av[++i]));
+            } else if(std::string(av[i]) == std::string("--http-bower")) {
+                setValue(CONFIG_HTTP_BOWER, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--database-file")) {
                 setValue(CONFIG_DATABASE_FILE, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("--tmp-directory")) {

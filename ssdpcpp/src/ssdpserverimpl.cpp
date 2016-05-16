@@ -253,7 +253,7 @@ void SSDPServerImpl::annouceThread() {
 }
 void SSDPServerImpl::fireEvent ( SSDPEventListener::EVENT_TYPE type, std::string  client_ip, SsdpEvent device ) const {
 	for ( auto & listener : listeners ) {
-		listener->ssdpEvent ( type, client_ip, device );
+        listener ( type, client_ip, device );
 	}
 }
 std::map< std::string, SsdpEvent > SSDPServerImpl::getUpnpDevices( const std::string & usn ) {

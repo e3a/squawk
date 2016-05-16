@@ -29,6 +29,8 @@
 
 #include "fileservlet.h"
 
+#include "ssdp.h"
+
 #include "upnpcontentdirectory.h"
 #include "upnpcontentdirectoryapi.h"
 #include "upnpcontentdirectorydao.h"
@@ -48,9 +50,6 @@ void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
 
     _squawk_config = std::shared_ptr< squawk::SquawkConfig >(squawk_config);
 
-    ssdp_event_logger = 
-      std::unique_ptr<squawk::LoggerEventListener>( new squawk::LoggerEventListener() );
-  
     // create the server
     _upnp_cds_dao = std::shared_ptr< squawk::UpnpContentDirectoryDao >( new squawk::UpnpContentDirectoryDao() );
     _upnp_file_parser = std::shared_ptr< squawk::UpnpContentDirectoryParser >( new squawk::UpnpContentDirectoryParser() );
@@ -67,7 +66,11 @@ void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
     ssdp_server->register_namespace(didl::NS_MEDIASERVER, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
     ssdp_server->register_namespace(didl::NS_CONTENT_DIRECTORY, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
 //    ssdp_server->register_namespace(ssdp::NS_MEDIA_RECEIVER_REGISTRAR, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-    ssdp_server->subscribe( ssdp_event_logger.get() );
+    ssdp_server->subscribe(
+        [](didl::SSDPEventListener::EVENT_TYPE type, std::string  client_ip, didl::SsdpEvent device ) {
+            std::cout << "SSDPEvent: " << client_ip << ":" << type << " = " << device << std::endl;
+        }
+    );
 
     /* register the upnp CDS servlets. */
     squawk::UpnpContentDirectory * content_directory = new squawk::UpnpContentDirectory("/ctl/ContentDir" );
@@ -90,6 +93,8 @@ void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
                 "/api/(upnp/device|upnp/event|album|artist|track|browse|statistic)/?(\\d*)?"), _upnp_cds_dao, ssdp_server );
     squawk::UpnpMediaServlet * upnp_media_servlet = new squawk::UpnpMediaServlet(
                 "/(video|audio|image|cover|albumArtUri|resource)/(\\d*).(flac|mp3|avi|mp4|mkv|mpeg|mov|wmv|jpg)" );
+
+    http::servlet::FileServlet * bowerServlet = new http::servlet::FileServlet(std::string("/bower/.*"), squawk_config->bowerRoot());
     http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->docRoot());
 
     web_server->register_servlet(content_directory);
@@ -97,6 +102,7 @@ void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
     web_server->register_servlet(connection_manager);
     web_server->register_servlet(xmldescription);
     web_server->register_servlet(upnp_media_servlet);
+    web_server->register_servlet(bowerServlet);
     web_server->register_servlet(fileServlet);
     web_server->start();
     ssdp_server->start();

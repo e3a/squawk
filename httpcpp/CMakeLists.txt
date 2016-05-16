@@ -1,5 +1,5 @@
 # Build httpcpp
-cmake_minimum_required(VERSION 2.8.9)
+cmake_minimum_required(VERSION 3.2.2)
 
 project(httpcpp)
 
@@ -12,9 +12,6 @@ set(SOURCES src/httprequestparser.cpp src/httpresponseparser.cpp src/httpservlet
             src/httpclient.cpp src/asio/httpclientconnection.cpp)
 
 add_library(httpcpp ${SOURCES})
-
-# add_executable(http src/httpmain.cpp ${SOURCES})
-# target_link_libraries(http ${LIBS})
 
 if (build_tests)
    enable_testing()

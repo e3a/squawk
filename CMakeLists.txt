@@ -1,13 +1,13 @@
 # Build squawk project
 # run the cmake command from your build directory:
-# cmake .. -DCMAKE_COMPILER_IS_GNUCXX=true -Dbuild_tests=true -DCMAKE_BUILD_TYPE=debug -DTESTFILES=/home/e3a/testfiles/ -DASIO_PATH=/home/e3a/asio-1.10.2/
+# cmake .. -DCMAKE_C_COMPILER=gcc-6 -DCMAKE_CXX_COMPILER=/usr/bin/g++-6 -Dbuild_tests=true -DCMAKE_BUILD_TYPE=debug -DTESTFILES=/home/e3a/testfiles/
 cmake_minimum_required(VERSION 3.2.2)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 option(build_tests "Build all squawk unit tests." ON)
 option(CMAKE_COMPILER_IS_GNUCXX "is the compiler gnucxx" OFF)
 SET(TESTFILES "/home/e3a/testfiles" CACHE TESTFILES "The path to the testfiles.")
-SET(ASIO_PATH "${CMAKE_SOURCE_DIR}/contrib/asio-1.10.6/" CACHE ASIO_PATH "The path to asio header files.")
+SET(ASIO_PATH "${CMAKE_SOURCE_DIR}/external/asio-1.10.6" CACHE ASIO_PATH "The path to asio header files.")
 SET(BOWER_COMPONENTS "angular-animate" "angular-aside" "angular-bootstrap" "angular-route" "angular-sanitize" "bootstrap" "ngGallery" "videogular"
                      "dirPagination" "font-awesome" "api-console" "jquery" "angular-utils-pagination")
 
@@ -64,8 +64,8 @@ if (build_tests)
 endif()
 
 
-add_custom_target(bower /usr/local/bin/bower --allow-root install ${BOWER_COMPONENTS}
-WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/squawk-server/docroot
+add_custom_target(bower /usr/local/bin/bower --no-color -f -s --allow-root install ${BOWER_COMPONENTS}
+WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 COMMENT "Download Bower Components" VERBATIM
 )
 
