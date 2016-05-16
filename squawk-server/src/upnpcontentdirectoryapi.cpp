@@ -133,77 +133,77 @@ void UpnpContentDirectoryApi::do_get ( http::HttpRequest & request, http::HttpRe
                 response << "]";
 
             } else if ( command == "upnp/device" ) {
-                std::map< std::string, didl::SsdpEvent > devices = _ssdp_server->getUpnpDevices ( "upnp:rootdevice" );
+//                std::map< std::string, didl::SsdpEvent > devices = _ssdp_server->getUpnpDevices ( "upnp:rootdevice" );
 
-                response << "[";
-                bool first_device = true;
+//                response << "[";
+//                bool first_device = true;
 
-                for ( auto & event : devices ) {
-                    try {
-                        didl::UpnpDevice device = _ssdp_server->deviceDescription ( event.second );
+//                for ( auto & event : devices ) {
+//                    try {
+//                        didl::UpnpDevice device = _ssdp_server->deviceDescription ( event.second );
 
-                        if ( first_device ) { first_device = false; }
+//                        if ( first_device ) { first_device = false; }
 
-                        else { response << ","; }
+//                        else { response << ","; }
 
-                        response << "{";
+//                        response << "{";
 
-                        response << "\"versionMajor\":\"" << std::to_string ( device.versionMajor() ) << "\",";
-                        response << "\"versionMinor\":\"" << std::to_string ( device.versionMinor() ) << "\",";
-                        response << "\"deviceType\":\"" << device.deviceType() << "\",";
-                        response << "\"friendlyName\":\"" << device.friendlyName() << "\",";
-                        response << "\"manufacturer\":\"" << device.manufacturer() << "\",";
-                        response << "\"manufacturerUrl\":\"" << device.manufacturerUrl() << "\",";
-                        response << "\"modelDescription\":\"" << device.modelDescription() << "\",";
-                        response << "\"modelName\":\"" << device.modelName() << "\",";
-                        response << "\"modelNumber\":\"" << device.modelNumber() << "\",";
-                        response << "\"modelUrl\":\"" << device.modelUrl() << "\",";
-                        response << "\"serialNumber\":\"" << device.serialNumber() << "\",";
-                        response << "\"udn\":\"" << device.udn() << "\",";
-                        response << "\"upc\":\"" << device.upc() << "\",";
-                        response << "\"presentationUrl\":\"" << device.presentationUrl() << "\",";
+//                        response << "\"versionMajor\":\"" << std::to_string ( device.versionMajor() ) << "\",";
+//                        response << "\"versionMinor\":\"" << std::to_string ( device.versionMinor() ) << "\",";
+//                        response << "\"deviceType\":\"" << device.deviceType() << "\",";
+//                        response << "\"friendlyName\":\"" << device.friendlyName() << "\",";
+//                        response << "\"manufacturer\":\"" << device.manufacturer() << "\",";
+//                        response << "\"manufacturerUrl\":\"" << device.manufacturerUrl() << "\",";
+//                        response << "\"modelDescription\":\"" << device.modelDescription() << "\",";
+//                        response << "\"modelName\":\"" << device.modelName() << "\",";
+//                        response << "\"modelNumber\":\"" << device.modelNumber() << "\",";
+//                        response << "\"modelUrl\":\"" << device.modelUrl() << "\",";
+//                        response << "\"serialNumber\":\"" << device.serialNumber() << "\",";
+//                        response << "\"udn\":\"" << device.udn() << "\",";
+//                        response << "\"upc\":\"" << device.upc() << "\",";
+//                        response << "\"presentationUrl\":\"" << device.presentationUrl() << "\",";
 
-                        response << "\"icons\":[";
-                        bool first_icon = true;
+//                        response << "\"icons\":[";
+//                        bool first_icon = true;
 
-                        for ( auto & icon : device.iconList() ) {
-                            if ( first_icon ) { first_icon = false; }
+//                        for ( auto & icon : device.iconList() ) {
+//                            if ( first_icon ) { first_icon = false; }
 
-                            else { response << ","; }
+//                            else { response << ","; }
 
-                            response << "{\"width\":" << std::to_string ( icon.width() );
-                            response << ",\"height\":" << std::to_string ( icon.height() );
-                            response << ",\"depth\":" << std::to_string ( icon.depth() );
-                            response << ",\"mimeType\":\"" << icon.mimeType();
-                            response << "\",\"url\":\"" << icon.url() << "\"}";
-                        }
+//                            response << "{\"width\":" << std::to_string ( icon.width() );
+//                            response << ",\"height\":" << std::to_string ( icon.height() );
+//                            response << ",\"depth\":" << std::to_string ( icon.depth() );
+//                            response << ",\"mimeType\":\"" << icon.mimeType();
+//                            response << "\",\"url\":\"" << icon.url() << "\"}";
+//                        }
 
-                        response << "], \"services\":[";
-                        bool first_service = true;
+//                        response << "], \"services\":[";
+//                        bool first_service = true;
 
-                        for ( auto & service : device.serviceList() ) {
-                            if ( first_service ) { first_service = false; }
+//                        for ( auto & service : device.serviceList() ) {
+//                            if ( first_service ) { first_service = false; }
 
-                            else { response << ","; }
+//                            else { response << ","; }
 
-                            response << "{\"serviceType\":\"" << service.serviceType();
-                            response << "\",\"serviceId\":\"" << service.serviceId();
-                            response << "\",\"scpdUrl\":\"" << service.scpdUrl();
-                            response << "\",\"controlUrl\":\"" << service.controlUrl();
-                            response << "\",\"eventSubUrl\":\"" << service.eventSubUrl() << "\"}";
-                        }
+//                            response << "{\"serviceType\":\"" << service.serviceType();
+//                            response << "\",\"serviceId\":\"" << service.serviceId();
+//                            response << "\",\"scpdUrl\":\"" << service.scpdUrl();
+//                            response << "\",\"controlUrl\":\"" << service.controlUrl();
+//                            response << "\",\"eventSubUrl\":\"" << service.eventSubUrl() << "\"}";
+//                        }
 
-                        response << "]}";
+//                        response << "]}";
 
-                    } catch ( commons::xml::XmlException & ex ) {
-                        std::cerr << "can not parse xml file: " << ex.what() << std::endl;
+//                    } catch ( commons::xml::XmlException & ex ) {
+//                        std::cerr << "can not parse xml file: " << ex.what() << std::endl;
 
-                    } catch ( ... ) {
-                        std::cerr << "other exception in get description." << std::endl;
-                    }
-                }
+//                    } catch ( ... ) {
+//                        std::cerr << "other exception in get description." << std::endl;
+//                    }
+//                }
 
-                response << "]";
+//                response << "]";
             }
 
         } catch ( db::DbException & e ) {

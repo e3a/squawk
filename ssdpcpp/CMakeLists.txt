@@ -17,7 +17,6 @@ if (build_tests)
    set(LIBS ${CMAKE_BINARY_DIR}/httpcpp/libhttpcpp.a ${LIBS})
    include_directories(${GTEST_INCLUDE_DIRS} ${SQUAWK_INCLUDES} ${LOG4CXX_INCLUDE_DIR} src/asio includes)
    add_executable(testmain_ssdp test/testmain.cpp
-                  test/devicedescriptionparsertest.cpp
                   test/headerparsetest.cpp
                   test/timertest.cpp)
    target_link_libraries(testmain_ssdp ssdpcpp ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} pthread)

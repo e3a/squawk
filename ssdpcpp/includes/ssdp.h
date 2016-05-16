@@ -770,12 +770,6 @@ public:
         std::map< std::string, SsdpEvent > getUpnpDevices( const std::string & usn );
 
         /**
-         * @brief get device description
-         * @param event
-         * @return
-         */
-        UpnpDevice deviceDescription( const SsdpEvent & event );
-        /**
 	 * \brief Subscribe for events.
 	 */
         void subscribe ( event_callback_t listener ) {
@@ -805,9 +799,6 @@ private:
 	std::unique_ptr<std::thread> annouceThreadRunner;
 	std::chrono::high_resolution_clock::time_point start_time;
 	void annouceThread();
-
-        FRIEND_TEST( DeviceDescriptionParserTest, SimpleXML );
-        void parseDescription( const std::string & description, UpnpDevice & device );
 };
 inline std::string create_header ( std::string request_line, std::map< std::string, std::string > headers ) {
 	std::ostringstream os;
