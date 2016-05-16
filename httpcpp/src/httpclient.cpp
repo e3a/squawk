@@ -1,7 +1,4 @@
 /*
-    asio http client implementation
-    Copyright (C) 2014  <e.knecht@netwings.ch>
-
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
@@ -29,7 +26,7 @@ HttpClient::HttpClient ( const std::string & ip, const int & port, const std::st
 HttpClient::~HttpClient() {}
 
 void HttpClient::invoke ( HttpRequest & request, std::function<void ( HttpResponse& ) > callback ) {
-	std::cout << "HTTPclient  invoke" << std::endl;
+    std::cout << "HTTP-Client  invoke" << std::endl;
 
     //TODO add all neccesary headers
 	if ( request.isPersistent() ) {

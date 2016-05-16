@@ -39,7 +39,7 @@ private:
 	std::string _server;
 	HttpRequest * httpRequest_;
 	HttpResponse * httpResponse_;
-	HttpResponseParser responseParser_;
+    HttpResponseParser responseParser_;
 
 	asio::streambuf request_;
 	asio::streambuf response_;

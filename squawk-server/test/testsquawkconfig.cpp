@@ -113,7 +113,7 @@ TEST(SquawkParseOptions, TestIncompleteOptions) {
 }
 
 TEST(SquawkParseOptions, TestDefaultOptions) {
-    const char * options[16];
+    const char * options[18];
     options[0] = "--media-directory";
     options[1] = "/foo/bar";
     options[2] = "--media-directory";
@@ -130,10 +130,12 @@ TEST(SquawkParseOptions, TestDefaultOptions) {
     options[13] = "127.0.0.1";
     options[14] = "--local-address";
     options[15] = "127.0.0.1";
+    options[16] = "--http-bower";
+    options[17] = "/path/bower";
 
     squawk::SquawkConfig config;
 
-    ASSERT_TRUE(config.parse(16, options));
+    ASSERT_TRUE(config.parse(18, options));
     ASSERT_TRUE(config.validate());
     EXPECT_EQ(std::string("/foo/bar.xml"), config.configFile() );
 

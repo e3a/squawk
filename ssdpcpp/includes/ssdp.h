@@ -286,7 +286,6 @@ private:
 
     time_t last_seen_;
     double cache_control_;
-
 };
 
 /**

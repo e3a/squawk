@@ -94,7 +94,7 @@ void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
     squawk::UpnpMediaServlet * upnp_media_servlet = new squawk::UpnpMediaServlet(
                 "/(video|audio|image|cover|albumArtUri|resource)/(\\d*).(flac|mp3|avi|mp4|mkv|mpeg|mov|wmv|jpg)" );
 
-    http::servlet::FileServlet * bowerServlet = new http::servlet::FileServlet(std::string("/bower/.*"), squawk_config->bowerRoot());
+    http::servlet::FileServlet * bowerServlet = new http::servlet::FileServlet(std::string("/bower_components/.*"), squawk_config->bowerRoot());
     http::servlet::FileServlet * fileServlet = new http::servlet::FileServlet(std::string("/.*"), squawk_config->docRoot());
 
     web_server->register_servlet(content_directory);

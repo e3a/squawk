@@ -1,7 +1,4 @@
 /*
-    http client definition.
-    Copyright (C) 2014  <e.knecht@netwings.ch>
-
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
@@ -19,6 +16,8 @@
 #ifndef HTTPCLIENT
 #define HTTPCLIENT
 
+#include "http.h"
+
 namespace http {
 
 /**
@@ -28,12 +27,32 @@ class HttpClient {
 public:
 	HttpClient ( const std::string & url );
 	HttpClient ( const std::string & ip, const int & port, const std::string & uri );
-	~HttpClient();
+        ~HttpClient();
 
+        /**
+         * @brief invoke
+         * @param request
+         * @param callback
+         */
 	void invoke ( HttpRequest & request, std::function<void ( HttpResponse& ) > callback );
 
+        /**
+         * @brief parseIp
+         * @param url
+         * @return
+         */
         static std::string parseIp ( const std::string & url );
+        /**
+         * @brief parsePort
+         * @param url
+         * @return
+         */
         static int parsePort ( const std::string & url );
+        /**
+         * @brief parsePath
+         * @param url
+         * @return
+         */
         static std::string parsePath ( const std::string & url );
 
 private:

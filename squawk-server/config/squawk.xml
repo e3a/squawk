@@ -3,6 +3,7 @@
   <config-file>/usr/local/etc/squawk.xml</config-file>
   <database-file>/usr/local/var/lib/squawk/squawk.db</database-file>
   <http-docroot>/usr/local/var/lib/squawk/www</http-docroot>
+  <http-bower>/usr/local/var/lib/squawk/bower_components/</http-bower>
   <media-directories>
     <media-directory>/home/media</media-directory>
   </media-directories>
