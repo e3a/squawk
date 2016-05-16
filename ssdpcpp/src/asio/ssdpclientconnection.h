@@ -26,7 +26,7 @@
 
 #include "ssdp.h"
 
-namespace didl {
+namespace ssdp {
 inline namespace asio_impl {
 
 class SSDPClientConnection {
@@ -58,6 +58,6 @@ private:
 	/* the runner thread */
 	std::unique_ptr<std::thread> ssdp_runner;
 };
-}
-}
+}//namespace asio_impl
+}//namespace ssdp
 #endif // SSDPCLIENTCONNECTION_H

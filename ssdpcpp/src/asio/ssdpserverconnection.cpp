@@ -24,7 +24,7 @@
 #include <thread>
 #include <future>
 
-namespace didl {
+namespace ssdp {
 inline namespace asio_impl {
 
 void SSDPServerConnection::set_handler ( SSDPCallback * _handler ) {
@@ -66,7 +66,7 @@ void SSDPServerConnection::stop() {
 
 void SSDPServerConnection::send ( std::string request_line, std::map< std::string, std::string > headers ) {
 
-	std::string message = didl::create_header ( request_line, headers );
+    std::string message = ssdp::create_header ( request_line, headers );
 
 	asio::io_service io_service_;
 	asio::ip::udp::endpoint endpoint ( asio::ip::address::from_string ( multicast_address.c_str() ), multicast_port );
@@ -76,7 +76,7 @@ void SSDPServerConnection::send ( std::string request_line, std::map< std::strin
 }
 
 void SSDPServerConnection::send ( Response response ) {
-	std::string buffer = didl::create_header ( response.request_line, response.headers );
+    std::string buffer = ssdp::create_header ( response.request_line, response.headers );
 	socket.send_to (
 		asio::buffer ( buffer, buffer.length() ), sender_endpoint );
 }
@@ -84,7 +84,7 @@ void SSDPServerConnection::send ( Response response ) {
 void SSDPServerConnection::handle_receive_from ( const asio::error_code & error, size_t bytes_recvd ) {
 	if ( !error ) {
 		http::HttpRequest request;
-        request.remoteIp( sender_endpoint.address().to_string() );
+        request.remoteIp ( sender_endpoint.address().to_string() );
         http_parser.parse_http_request ( &request, data, bytes_recvd );
 		handler->handle_receive ( request );
         http_parser.reset();
@@ -94,7 +94,8 @@ void SSDPServerConnection::handle_receive_from ( const asio::error_code & error,
 										std::bind ( &SSDPServerConnection::handle_receive_from, this,
 												std::placeholders::_1,
 												std::placeholders::_2 ) ) );
+
     } else { http_parser.reset(); } //on error
 }
-} //asio_impl
-} //ssdp
+}//namespace asio_impl
+}//namespace ssdp

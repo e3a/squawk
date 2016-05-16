@@ -108,7 +108,7 @@ void UpnpContentDirectoryApi::do_get ( http::HttpRequest & request, http::HttpRe
                 didl::serializer< didl::DidlStatistics >::serialize ( response, statistic_, attributes_ );
 
             } else if ( command == "upnp/event" ) {
-                std::map< std::string, didl::SsdpEvent > devices = _ssdp_server->get_upnp_devices();
+                std::map< std::string, ssdp::SsdpEvent > devices = _ssdp_server->get_upnp_devices();
 
                 response << "[";
                 bool first_device = true;

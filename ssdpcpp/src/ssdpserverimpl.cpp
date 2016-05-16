@@ -33,11 +33,7 @@
 
 #include "xml.h"
 
-#include <curlpp/cURLpp.hpp>
-#include <curlpp/Easy.hpp>
-#include <curlpp/Options.hpp>
-
-namespace didl {
+namespace ssdp {
 
 inline std::string uname() {
   struct utsname uts;
@@ -60,8 +56,8 @@ SSDPServerImpl::SSDPServerImpl ( const std::string & uuid, const std::string & m
 
 void SSDPServerImpl::start() {
 	//start the server
-	connection = std::unique_ptr<SSDPServerConnection> (
-					 new didl::SSDPServerConnection ( multicast_address, multicast_port ) );
+    connection = std::unique_ptr<SSDPServerConnection> (
+                     new SSDPServerConnection ( multicast_address, multicast_port ) );
 	connection->set_handler ( this );
 	connection->start();
 
@@ -181,7 +177,7 @@ std::map< std::string, std::string > SSDPServerImpl::create_response ( const std
 	std::map< std::string, std::string > map;
     map[http::header::CACHE_CONTROL] = UPNP_OPTION_MAX_AGE + std::to_string( ANNOUNCE_INTERVAL );
 	map[UPNP_HEADER_LOCATION] = location;
-    map[UPNP_HEADER_SERVER] = uname() + std::string ( " DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0" ); //TODO
+    map[UPNP_HEADER_SERVER] = uname() + std::string ( " DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0" );
     map[boost::to_upper_copy( UPNP_HEADER_ST )] = nt;
     map[boost::to_upper_copy( UPNP_HEADER_USN )] = std::string ( "uuid:" ) + uuid + std::string ( "::" ) + nt;
     map[boost::to_upper_copy( UPNP_HEADER_EXT )] = "";
@@ -265,4 +261,4 @@ std::map< std::string, SsdpEvent > SSDPServerImpl::getUpnpDevices( const std::st
     }
     return re;
 }
-} //ssdp
+}//namespace ssdp

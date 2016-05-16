@@ -68,7 +68,7 @@ class SquawkServer {
     std::shared_ptr<squawk::UpnpContentDirectoryParser> _upnp_file_parser;
 
     http::WebServer * web_server = nullptr;
-    didl::SSDPServerImpl * ssdp_server = nullptr;
+    ssdp::SSDPServerImpl * ssdp_server = nullptr;
 };
 }//namespace squawk
 #endif // SQUAWKSERVER_H

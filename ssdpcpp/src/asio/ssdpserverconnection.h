@@ -1,8 +1,4 @@
 /*
-    ASIO ssdp connection implmementation.
-
-    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
-
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -30,7 +26,7 @@
 
 #include "ssdp.h"
 
-namespace didl {
+namespace ssdp {
 inline namespace asio_impl {
 
 /**
@@ -86,6 +82,6 @@ private:
 
 	void handle_receive_from ( const asio::error_code&, size_t bytes_recvd );
 };
-} // asio_impl
-} // ssdp
+}//namespace asio_impl
+}//namespace ssdp
 #endif // SSDPASIOCONNECTION_H

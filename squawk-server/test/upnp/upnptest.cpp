@@ -223,8 +223,7 @@ TEST( UpnpTest, ParseRequest3 ) {
 
 TEST( UpnpTest, UpnpDeviceParse ) {
 
-    didl::SSDPServerImpl server("127.0.0.1", "255.255.255.0", 1900);
-    didl::UpnpDevice device;
+    upnp::UpnpDevice device;
     upnp::parseDescription( DESCRIPTION, device );
 
     EXPECT_EQ( device.versionMajor(), 1 );

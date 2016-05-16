@@ -8,7 +8,7 @@ namespace squawk {
 
 class UpnpContentDirectoryApi : public http::HttpServlet {
 public:
-    UpnpContentDirectoryApi( const std::string & path, ptr_upnp_dao dao, didl::SSDPServerImpl * ssdp_server ) :
+    UpnpContentDirectoryApi( const std::string & path, ptr_upnp_dao dao, ssdp::SSDPServerImpl * ssdp_server ) :
         HttpServlet ( path ), _dao( dao ), _ssdp_server( ssdp_server ) {}
     ~UpnpContentDirectoryApi() {}
     virtual void do_get ( http::HttpRequest & request, http::HttpResponse & response ) override;
@@ -17,7 +17,7 @@ public:
 private:
     static log4cxx::LoggerPtr logger;
     ptr_upnp_dao _dao;
-    didl::SSDPServerImpl * _ssdp_server;
+    ssdp::SSDPServerImpl * _ssdp_server;
 
     FRIEND_TEST(UpnpContentDirectoryTest, TestAttributes);
     static std::list< std::string > parse_attributes( const std::string & str );

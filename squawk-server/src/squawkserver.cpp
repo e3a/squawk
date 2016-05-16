@@ -55,19 +55,19 @@ void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
     _upnp_file_parser = std::shared_ptr< squawk::UpnpContentDirectoryParser >( new squawk::UpnpContentDirectoryParser() );
 
     //Setup and start the SSDP server
-    ssdp_server = new didl::SSDPServerImpl(
+    ssdp_server = new ssdp::SSDPServerImpl(
     squawk_config->uuid(),
     squawk_config->multicastAddress(),
     squawk_config->multicastPort() );
 
     //register namespaces
     ssdp_server->register_namespace(squawk_config->uuid(), std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-    ssdp_server->register_namespace(didl::NS_ROOT_DEVICE, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-    ssdp_server->register_namespace(didl::NS_MEDIASERVER, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
-    ssdp_server->register_namespace(didl::NS_CONTENT_DIRECTORY, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(ssdp::NS_ROOT_DEVICE, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(ssdp::NS_MEDIASERVER, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
+    ssdp_server->register_namespace(ssdp::NS_CONTENT_DIRECTORY, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
 //    ssdp_server->register_namespace(ssdp::NS_MEDIA_RECEIVER_REGISTRAR, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
     ssdp_server->subscribe(
-        [](didl::SSDPEventListener::EVENT_TYPE type, std::string  client_ip, didl::SsdpEvent device ) {
+        [](ssdp::SSDPEventListener::EVENT_TYPE type, std::string  client_ip, ssdp::SsdpEvent device ) {
             std::cout << "SSDPEvent: " << client_ip << ":" << type << " = " << device << std::endl;
         }
     );
