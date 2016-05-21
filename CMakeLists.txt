@@ -10,8 +10,8 @@ cmake_minimum_required(VERSION 3.2.2)
 project (squawk)
 
 SET(MAJOR_VERSION "0")
-SET(MINOR_VERSION "0")
-SET(PATCH_VERSION "1")
+SET(MINOR_VERSION "1")
+SET(PATCH_VERSION "1" CACHE PATCH_VERSION "The package build number." )
 
 # -------------------------------------------------------------------------
 # -----------------------   Options and Parameters  -----------------------
