@@ -165,7 +165,7 @@ TEST(SquawkParseOptions, TestMergedOptions) {
     squawk::SquawkConfig config;
 
     ASSERT_TRUE(config.parse(4, options));
-    config.load(std::string( CMAKE_SOURCE_DIR ) + "squawk-server/config/squawk.xml");
+    config.load(std::string( CMAKE_SOURCE_DIR ) + "server/config/squawk.xml");
     ASSERT_TRUE(config.validate());
 
     EXPECT_EQ(std::string("127.0.0.1"), config.httpAddress());

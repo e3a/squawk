@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <squawk>
-  <config-file>/home/e3a/squawk/squawk-server/config/squawk2.xml</config-file>
+  <config-file>/home/e3a/squawk/server/config/squawk2.xml</config-file>
   <cover-names>front,cover,folder</cover-names>
   <database-file>/var/lib/squawk/squawk2.db</database-file>
   <http-bower>/home/e3a/build-squawk-Squawk-Default/bower_components/</http-bower>
@@ -8,7 +8,7 @@
   <http-ip>192.168.0.17</http-ip>
   <http-port>9000</http-port>
   <local-address>192.168.0.17</local-address>
-  <logger>/home/e3a/squawk/squawk-server/config/logger-console.properties</logger>
+  <logger>/home/e3a/squawk/server/config/logger-console.properties</logger>
   <media-directories>
     <media-directory>/home/Pictures</media-directory>
     <media-directory>/home/Music/test</media-directory>
