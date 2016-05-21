@@ -25,11 +25,11 @@ log4cxx::LoggerPtr UpnpConnectionManager::logger(log4cxx::Logger::getLogger("squ
 
 void UpnpConnectionManager::do_post(::http::HttpRequest & request, ::http::HttpResponse & response) {
 
-    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, request.requestBody() )
+    if( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE(logger, request.requestBody() )
 
     try {
         ::upnp::UpnpContentDirectoryRequest upnp_command = ::upnp::parseRequest( request.requestBody() );
-        if( squawk::DEBUG ) LOG4CXX_DEBUG(logger, upnp_command )
+        if( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG(logger, upnp_command )
 
         if( upnp_command.type == ::upnp::UpnpContentDirectoryRequest::PROTOCOL_INFO ) {
 
@@ -70,7 +70,7 @@ void UpnpConnectionManager::do_post(::http::HttpRequest & request, ::http::HttpR
     throw ::http::http_status::BAD_REQUEST;
 }
 void UpnpConnectionManager::do_default( const std::string & method, http::HttpRequest & request, http::HttpResponse & response ) {
-    if(DEBUG) LOG4CXX_TRACE(logger, "Default:" << method << "\n" << request )
+    if(SUAWK_SERVER_DEBUG) LOG4CXX_TRACE(logger, "Default:" << method << "\n" << request )
     response.parameter( http::header::CONTENT_LENGTH, "0" );
     response.parameter( "SID", "uid:b419974c-9784-11e5-9793-9ae5d810837d" ); // TODO real UID
     response.parameter( "TIMEOUT", "Second-1800" ); // TODO parameter

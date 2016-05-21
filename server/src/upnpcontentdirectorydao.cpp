@@ -28,7 +28,7 @@ UpnpContentDirectoryDao::UpnpContentDirectoryDao() : _db ( SquawkServer::instanc
 
     //create tables if they dont exist
     for ( auto & stmt : CREATE_STATEMENTS ) {
-        if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "create table:" << stmt ); }
+        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "create table:" << stmt ); }
 
         try {
             _db->prepareStatement ( stmt )->step();
@@ -62,7 +62,7 @@ void UpnpContentDirectoryDao::endTransaction() {
 
 /* SWEEP DATABASE */
 void UpnpContentDirectoryDao::sweep ( long mtime ) {
-    if ( squawk::DEBUG ) { LOG4CXX_DEBUG ( logger, "sweepDatabase:" << mtime ); }
+    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_DEBUG ( logger, "sweepDatabase:" << mtime ); }
 
     db::db_statement_ptr stmt = _db->prepareStatement ( "delete from tbl_cds_object where timestamp < ?" );
     stmt->bind_int ( 1, mtime );
@@ -79,7 +79,7 @@ void UpnpContentDirectoryDao::sweep ( long mtime ) {
 }
 
 size_t UpnpContentDirectoryDao::objectsCount ( didl::DIDL_CLASS cls, std::map< std::string, std::string > filters ) {
-    if ( squawk::DEBUG )
+    if ( squawk::SUAWK_SERVER_DEBUG )
     { LOG4CXX_DEBUG ( logger, "objectsCount<" << didl::className ( cls ) ); }
 
     size_t result_count = 0;
@@ -92,7 +92,7 @@ size_t UpnpContentDirectoryDao::objectsCount ( didl::DIDL_CLASS cls, std::map< s
         query_string_ << ")";
     }
 
-    if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (objectsCount): " << query_string_.str() ); }
+    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (objectsCount): " << query_string_.str() ); }
 
     db::db_statement_ptr stmt_objects_ = _db->prepareStatement ( query_string_.str() );
     stmt_objects_->bind_int ( 1, cls );
@@ -105,7 +105,7 @@ size_t UpnpContentDirectoryDao::objectsCount ( didl::DIDL_CLASS cls, std::map< s
 }
 
 size_t UpnpContentDirectoryDao::childrenCount ( didl::DIDL_CLASS cls, const size_t & parent, std::map< std::string, std::string > filters ) {
-    if ( squawk::DEBUG )
+    if ( squawk::SUAWK_SERVER_DEBUG )
     { LOG4CXX_DEBUG ( logger, "childrenCount<" << didl::className ( cls ) << ">::parent=" << parent ); }
 
     size_t result_count = 0;
@@ -114,7 +114,7 @@ size_t UpnpContentDirectoryDao::childrenCount ( didl::DIDL_CLASS cls, const size
     parse_class ( cls, " and ", query_string_, filters );
     parse_filters ( query_string_, filters );
 
-    if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (childrenCount): " << query_string_.str() ); }
+    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (childrenCount): " << query_string_.str() ); }
 
     db::db_statement_ptr stmt_objects_ = _db->prepareStatement ( query_string_.str() );
     stmt_objects_->bind_int ( 1, parent );
@@ -210,7 +210,7 @@ didl::DidlContainerArtist UpnpContentDirectoryDao::artist ( const std::string & 
     std::string clean_name_ = UpnpContentDirectoryParser::_clean_name ( name );
 
     try {
-        if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "artist:" << clean_name_ ); }
+        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "artist:" << clean_name_ ); }
 
         db::db_statement_ptr stmt_artist_ = _db->prepareStatement (
                                                 "select ROWID, name, clean_name, import from tbl_cds_artist where ROWID = ?" );
@@ -236,7 +236,7 @@ std::list< didl::DidlContainerArtist > UpnpContentDirectoryDao::artists ( const 
         std::map< std::string, std::string > filters, std::pair< std::string, std::string > sort ) const {
 
     try {
-        if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "artists:" << start_index << ", " << result_count << ")" ); }
+        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "artists:" << start_index << ", " << result_count << ")" ); }
 
         std::stringstream query_string_;
         query_string_ << "select ROWID, name, clean_name, import from tbl_cds_artist";
@@ -292,7 +292,7 @@ std::list< didl::DidlContainerArtist > UpnpContentDirectoryDao::artists ( const 
 }
 
 size_t UpnpContentDirectoryDao::artistsCount ( std::map< std::string, std::string > filters ) {
-    if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "count artists" ); }
+    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "count artists" ); }
 
     try {
         std::stringstream query_string_;
@@ -318,7 +318,7 @@ size_t UpnpContentDirectoryDao::artistsCount ( std::map< std::string, std::strin
 }
 
 didl::DidlContainerArtist UpnpContentDirectoryDao::save ( const didl::DidlContainerArtist artist ) {
-    if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "save artist = id:" << artist.id() << ", " << artist.title() ); }
+    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "save artist = id:" << artist.id() << ", " << artist.title() ); }
 
     try {
         size_t artist_id_  = 0;
@@ -439,7 +439,7 @@ didl::DidlResource UpnpContentDirectoryDao::save ( const didl::DidlResource reso
 }
 
 int UpnpContentDirectoryDao::touch ( const std::string & path, const unsigned long mtime ) {
-    if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "touch record with path: " << path ); }
+    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "touch record with path: " << path ); }
 
     try {
         db::db_statement_ptr stmt_ = _db->prepareStatement (

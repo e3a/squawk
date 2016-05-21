@@ -31,8 +31,6 @@
 #include "ssdpserverconnection.h"
 #include "ssdpclientconnection.h"
 
-#include "xml.h"
-
 namespace ssdp {
 
 inline std::string uname() {

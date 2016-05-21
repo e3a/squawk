@@ -46,7 +46,7 @@ void DidlXmlWriter::container ( const std::string & id, const std::string & pare
     _xmlWriter->element ( container_element, upnp::XML_NS_PURL, "date", fmt::format("{:%Y-%m-%d}", *std::localtime( &time_ ) ) );
 
     commons::xml::Node dlna_album_art_node =
-    _xmlWriter->element ( container_element, upnp::XML_NS_UPNP, "albumArtURI", fmt::format( uri, container.id() ) );
+        _xmlWriter->element ( container_element, upnp::XML_NS_UPNP, "albumArtURI", fmt::format( uri, container.id() ) );
     _xmlWriter->ns ( dlna_album_art_node, upnp::XML_NS_DLNA_METADATA, "dlna", false );
     _xmlWriter->attribute ( dlna_album_art_node, upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
 }

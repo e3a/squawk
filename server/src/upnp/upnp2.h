@@ -9,7 +9,7 @@
 
 #include "didl.h"
 #include "ssdp.h"
-#include "xml.h"
+#include "../utils/xml.h"
 
 namespace upnp {
     /**

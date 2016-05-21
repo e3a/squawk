@@ -267,7 +267,6 @@ public:
 
     /**
       * Create the json stream.
-      * //TODO JSON ESCAPE || is it used?
       */
     friend std::ostream& operator<< ( std::ostream& out, const ssdp::SsdpEvent & upnp_device ) {
             out << "{\"host\":\"" << upnp_device.host_ << "\",\"location\":\"" << upnp_device.location_ << "\",\"nt\":\"" << upnp_device.nt_ << "\"," <<

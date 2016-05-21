@@ -21,7 +21,7 @@
 #include "gtest/gtest_prod.h"
 
 #include "didl.h"
-#include "xml.h"
+#include "../utils/xml.h"
 
 namespace upnp {
 

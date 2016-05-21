@@ -90,7 +90,7 @@ void UpnpContentDirectory::registerContentDirectoryModule ( std::list< std::uniq
 //}
 
 void UpnpContentDirectory::do_default ( const std::string & method, http::HttpRequest & request, http::HttpResponse & /* response */ ) {
-    if ( squawk::DEBUG ) LOG4CXX_TRACE ( logger, method << ": " << request.requestBody() )
+    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, method << ": " << request.requestBody() )
 //    if( request.containsParameter( "Timeout" ) ) {
 //        size_t pos = request.parameter( "Timeout" ).find( "-" );
 //        size_t len = request.parameter( "Timeout" ).length() - pos;
@@ -121,7 +121,7 @@ void UpnpContentDirectory::do_default ( const std::string & method, http::HttpRe
 
 void UpnpContentDirectory::do_post ( http::HttpRequest & request, http::HttpResponse & response ) {
 
-    if ( squawk::DEBUG ) LOG4CXX_TRACE ( logger, request )
+    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, request )
 
         try {
             upnp::UpnpContentDirectoryRequest upnp_command = upnp::parseRequest ( request.requestBody() );

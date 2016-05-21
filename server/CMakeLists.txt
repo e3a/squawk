@@ -1,25 +1,7 @@
 # Build the Squawk Server
 cmake_minimum_required(VERSION 3.2.2)
 
-project(squawk-server)
-
-find_package(GoogleTest REQUIRED)
-
-# find_package(Flac++ REQUIRED)
-find_package(Poppler REQUIRED cpp)
-set(LIBS ${LIBS} ${POPPLER_LIBRARIES})
-
-find_package(OpenSSL REQUIRED)
-set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
-
-find_package(CURLpp REQUIRED)
-set(LIBS ${LIBS} ${CURLPP_LIBRARIES})
-
-set(LIBS ${CMAKE_BINARY_DIR}/httpcpp/libhttpcpp.a ${LIBS})
-set(LIBS ${CMAKE_BINARY_DIR}/ssdpcpp/libssdpcpp.a ${LIBS})
-set(LIBS ${CMAKE_BINARY_DIR}/external/fmt-3.0.0/fmt/libfmt.a ${LIBS})
-
-include_directories(${ROOT} ${SQUAWK_INCLUDES} ${POPPLER_INCLUDE_DIRS} ${OPENSSL_INCLUDES} ${CURLPP_INCLUDE_DIRS} src/upnp )
+project(server)
 
 set(UTILS src/utils/media.h src/utils/pdfparser.cpp src/utils/amazonfacade.cpp src/utils/image.cpp)
 set(SQUAWK src/squawk.h src/squawkconfig.cpp)
@@ -42,22 +24,18 @@ set(UPNP src/upnp/didl.cpp
          src/squawkserver.cpp
 )
 
-set(SOURCES ${UTILS} ${SQUAWK} ${DATABASE} ${HTTP_SERVER} ${UPNP})
-
-add_library(squawk ${SOURCES})
-add_executable(squawkmain src/squawkmain.cpp)
-target_link_libraries(squawkmain squawk ${LIBS})
+include_directories(${ROOT} ${SQUAWK_INCLUDES} src/upnp )
+add_library(server ${UTILS} ${SQUAWK} ${DATABASE} ${UPNP})
 
 #add_executable(aws src/utils/aws.cpp ${SOURCES})
 #target_link_libraries(aws ${LIBS})
 
-install(TARGETS squawkmain RUNTIME DESTINATION bin)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/squawk.xml DESTINATION etc/squawk )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/logger.properties DESTINATION etc/squawk )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/docroot/ConnectionMgr.xml DESTINATION var/lib/squawk/www )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/docroot/ContentDir.xml DESTINATION var/lib/squawk/www )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/docroot/X_MS_MediaReceiverRegistrar.xml DESTINATION var/lib/squawk/www )
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docroot/icons DESTINATION var/lib/squawk/www )
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docroot/ DESTINATION var/lib/squawk/www )
 
 if (build_tests)
     enable_testing()
@@ -68,6 +46,8 @@ if (build_tests)
         test/utils/testmedia.cpp
         test/utils/testamazonfacade.cpp
         test/utils/testisbnparser.cpp
+        test/utils/XmlParseTest.cpp
+        test/utils/XmlWriterTest.cpp
         test/db/testsqlite3connectionmanager.cpp
         test/upnp/TestParseConnectionManager.cpp
         test/upnp/upnptest.cpp
@@ -77,6 +57,6 @@ if (build_tests)
         test/testupnpcontentdirectoryparser.cpp
         test/testupnpcontentdirectorydao.cpp)
     target_link_libraries(testmain_server
-        squawk pthread ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} ${LIBS})
-    add_test(squawk-server testmain_server)
+        server ssdpcpp httpcpp fmt pthread ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} ${LIBS})
+    add_test(server-tests testmain_server)
 endif()

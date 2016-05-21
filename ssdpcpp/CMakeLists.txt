@@ -3,13 +3,13 @@ cmake_minimum_required(VERSION 3.2.2)
 
 project(ssdpcpp)
 
-find_package(CURLpp REQUIRED)
-set(LIBS ${LIBS} ${CURLPP_LIBRARIES})
+set(SOURCES
+    src/ssdpserverimpl.cpp
+    src/asio/ssdpserverconnection.cpp
+    src/asio/ssdpclientconnection.cpp
+)
 
-include_directories(${SQUAWK_INCLUDES} ${LOG4CXX_INCLUDE_DIR} ${CURLPP_INCLUDE_DIRS} src/asio includes)
-
-set(SOURCES ${SOURCES} src/ssdpserverimpl.cpp src/asio/ssdpserverconnection.cpp src/asio/ssdpclientconnection.cpp)
-
+include_directories(${SQUAWK_INCLUDES} src/asio includes)
 add_library(ssdpcpp ${SOURCES})
 
 if (build_tests)
@@ -22,5 +22,4 @@ if (build_tests)
                   test/timertest.cpp)
    target_link_libraries(testmain_ssdp ssdpcpp ${LIBS} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} pthread)
    add_test(ssdp-tests testmain_ssdp)
-   add_custom_target(unittest ssdp-tests)
 endif()

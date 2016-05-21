@@ -48,7 +48,7 @@
 
 #include "http.h"
 #include "ssdp.h"
-#include "xml.h"
+#include "utils/xml.h"
 
 #include "log4cxx/logger.h"
 
@@ -68,56 +68,13 @@
 #include "didlxmlwriter.h"
 
 namespace squawk {
-static const bool DEBUG = true;
-}
+static const bool SUAWK_SERVER_DEBUG = true;
 
-//namespace squawk {
-//namespace media {
+//#ifdef SQUAWK_RELEASE
+//static const char* C_SQUAWK_RELEASE = SQUAWK_RELEASE;
+//#else
+//static const char* C_SQUAWK_RELEASE = "0.0.0";
+//#endif
 
-///**
-// * @brief get the clean name
-// * @param name
-// * @return
-// */
-//inline std::string clean_name( const std::string & name ) {
-
-//    std::string s = name;
-
-//    std::string allowed = "+-()";
-//    s.erase(remove_if(s.begin(), s.end(), [&allowed](const char& c) {
-//            return allowed.find(c) != string::npos;
-//    }), s.end());
-
-//    boost::algorithm::trim( s );
-//    boost::algorithm::to_lower( s );
-
-//    if( s.rfind("the ", 0) == 0)
-//        s.erase(0, 4);
-//    if( s.rfind("die ", 0) == 0)
-//        s.erase(0, 4);
-//    if( s.rfind("das ", 0) == 0)
-//        s.erase(0, 4);
-//    if( s.rfind("der ", 0) == 0)
-//        s.erase(0, 4);
-//    return s;
-//}
-//inline std::string get_letter( const std::string & clean_name ) {
-//    if(clean_name.length()>0) {
-//        return boost::to_upper_copy( clean_name.substr(0, 1) );
-//    } else {
-//        return std::string("");
-//    }
-//}
-//static pcrecpp::RE re_clean_path("(.*)/CD[\\d+]");
-//inline std::string get_album_clean_path(const std::string & path) {
-//    string clean_path;
-//    if(re_clean_path.PartialMatch(path, &clean_path)) {
-//        return boost::algorithm::trim_copy(clean_path);
-//    } else {
-//        return boost::algorithm::trim_copy(path);
-//    }
-//}
-//}
-//}
-
+}//namespace squawk
 #endif // SQUAWK_H

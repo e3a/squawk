@@ -30,7 +30,7 @@ inline std::string tmp_path() {
 
 void UpnpMediaServlet::do_get ( http::HttpRequest & request, http::HttpResponse & response ) {
 
-    if ( squawk::DEBUG ) LOG4CXX_TRACE ( logger, request )
+    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, request )
         _process_file ( request, response );
 
     //check if file exists
@@ -71,7 +71,7 @@ void UpnpMediaServlet::do_get ( http::HttpRequest & request, http::HttpResponse 
     }
 }
 void UpnpMediaServlet::do_head ( http::HttpRequest & request, http::HttpResponse & response ) {
-    if ( squawk::DEBUG ) LOG4CXX_TRACE ( logger, request )
+    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, request )
         _process_file ( request, response );
 
     //check if file exists
@@ -121,7 +121,7 @@ void UpnpMediaServlet::_process_file ( http::HttpRequest & request, http::HttpRe
                     response.set_mime_type ( http::mime::mime_type ( stmt_resource->get_string ( 0 ) ) );
 
                 } else {
-                    if ( squawk::DEBUG ) LOG4CXX_DEBUG ( logger, "404: song:" << filename_ )
+                    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "404: song:" << filename_ )
                     throw http::http_status::NOT_FOUND;
                 }
 

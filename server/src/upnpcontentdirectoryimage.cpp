@@ -36,7 +36,7 @@ std::tuple<size_t, size_t> UpnpContentDirectoryImage::parseNode ( didl::DidlXmlW
 
     std::tuple<size_t, size_t> res_;
 
-    if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "Request Image: parent=" << ContentDirectoryModule::item_id ( request ) << ", start_index=" << start_index_ << ", request_count=" << request_count_ ); }
+    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Request Image: parent=" << ContentDirectoryModule::item_id ( request ) << ", start_index=" << start_index_ << ", request_count=" << request_count_ ); }
 
     /* ----------- Photo Albums ----------- */
     if ( request->contains ( upnp::OBJECT_ID ) &&

@@ -6,7 +6,7 @@ log4cxx::LoggerPtr UpnpContentDirectoryApi::logger ( log4cxx::Logger::getLogger 
 
 void UpnpContentDirectoryApi::do_get ( http::HttpRequest & request, http::HttpResponse & response ) {
 
-    if ( squawk::DEBUG ) { LOG4CXX_TRACE ( logger, "API HTTP Request:" << request ); }
+    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "API HTTP Request:" << request ); }
 
     std::string command = "";
     int id = 0, page = 0, limit = 100;
@@ -30,7 +30,7 @@ void UpnpContentDirectoryApi::do_get ( http::HttpRequest & request, http::HttpRe
     { sort_ = parse_sort ( request.attribute ( "sort" ) ); }
 
     if ( match ( request.uri(), &command, &id ) ) {
-        if ( squawk::DEBUG ) {
+        if ( squawk::SUAWK_SERVER_DEBUG ) {
             LOG4CXX_TRACE ( logger, "API Request:" << command << ": id:" << id );
         }
 
@@ -57,7 +57,7 @@ void UpnpContentDirectoryApi::do_get ( http::HttpRequest & request, http::HttpRe
 
     } else if ( match ( request.uri(), &command ) ) {
         try  {
-            if ( squawk::DEBUG ) {
+            if ( squawk::SUAWK_SERVER_DEBUG ) {
                 std::stringstream str_log;
                 str_log << ", Filters: { ";
                 bool first = true;

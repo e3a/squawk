@@ -40,7 +40,7 @@ std::tuple<size_t, size_t> UpnpContentDirectoryVideo::parseNode( didl::DidlXmlWr
     size_t returned_ = 0, total = 0;
     int parent_id_ = ContentDirectoryModule::item_id( request );
 
-    if( squawk::DEBUG ) LOG4CXX_TRACE(logger, "Request Movie: parent=" << parent_id_ << ", start_index=" << start_index_ << ", request_count=" << request_count_ );
+    if( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE(logger, "Request Movie: parent=" << parent_id_ << ", start_index=" << start_index_ << ", request_count=" << request_count_ );
 
     try {
         std::list< didl::DidlMovie > item_list =

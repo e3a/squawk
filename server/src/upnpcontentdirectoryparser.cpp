@@ -81,7 +81,7 @@ void UpnpContentDirectoryParser::parse ( std::list< std::string > paths ) {
 }
 
 void UpnpContentDirectoryParser::_import_audio ( const didl::DidlObject object ) {
-    if(squawk::DEBUG ) LOG4CXX_DEBUG( logger, "import audio:" << object )
+    if(squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG( logger, "import audio:" << object )
 
 }
 
@@ -166,7 +166,7 @@ void UpnpContentDirectoryParser::_import_movies ( const didl::DidlObject object 
 }
 
 void UpnpContentDirectoryParser::_import_movie ( const didl::DidlItem & movie ) {
-    if(squawk::DEBUG ) LOG4CXX_DEBUG( logger, "import movies" )
+    if(squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG( logger, "import movies" )
 
     commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( movie.path() );
     boost::filesystem::path file_path_ ( movie.path() );
@@ -225,7 +225,7 @@ void UpnpContentDirectoryParser::_import_images ( const didl::DidlObject /* obje
 }
 
 void UpnpContentDirectoryParser::_import_photo( const didl::DidlItem & photo ) {
-    if(squawk::DEBUG ) LOG4CXX_TRACE( logger, "import_image:" << photo )
+    if(squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE( logger, "import_image:" << photo )
 
     std::list<didl::DidlResource> resources_;
 
@@ -281,12 +281,12 @@ void UpnpContentDirectoryParser::_import_photo( const didl::DidlItem & photo ) {
 }
 
 void UpnpContentDirectoryParser::_import_books () {
-    if( squawk::DEBUG ) LOG4CXX_DEBUG( logger, "import books" )
+    if( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG( logger, "import books" )
 
 }
 
 void UpnpContentDirectoryParser::_import_ebook ( const didl::DidlItem & ebook ) {
-    if( squawk::DEBUG ) LOG4CXX_DEBUG( logger, "import:" << ebook )
+    if( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG( logger, "import:" << ebook )
 
     std::list<didl::DidlResource> resources_;
 
@@ -298,7 +298,7 @@ void UpnpContentDirectoryParser::_import_ebook ( const didl::DidlItem & ebook ) 
     );
 
     std::string  isbn_ = PdfParser::parsePdf( ebook.path() );
-    if( squawk::DEBUG ) LOG4CXX_DEBUG( logger, "import (isbn):" << isbn_ )
+    if( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG( logger, "import (isbn):" << isbn_ )
     SquawkServer::instance()->dao()->save(
                 didl::DidlEBook( ebook.id(), ebook.parentId(), ebook.title(), ebook.path(), ebook.mtime(),
                                  ebook.objectUdpateId(), ebook.size(), ebook.mimeType(), resources_, isbn_, true ) );
@@ -325,7 +325,7 @@ UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse 
 
     std::list< std::string > child_directories_;
 
-    if( squawk::DEBUG ) LOG4CXX_TRACE( logger, "Parse Path:" << container_ )
+    if( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE( logger, "Parse Path:" << container_ )
 
     //search for regular files
     boost::filesystem::directory_iterator end_itr;

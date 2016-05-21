@@ -95,7 +95,7 @@ private:
         } else if ( mime_type == "application/pdf" ) {
             return didl::objectItemEBook;
 
-        } else if( squawk::DEBUG ) {
+        } else if( squawk::SUAWK_SERVER_DEBUG ) {
             LOG4CXX_DEBUG ( logger, "can not find object type for:" << mime_type )
         }
         return didl::objectItem;
