@@ -132,6 +132,8 @@ private:
         }
     }
 
+    std::string _get_ip();
+
     std::string CONFIG_LOGGER_PROPERTIES = "logger";
     std::string CONFIG_MULTICAST_ADDRESS = "multicast-address";
     std::string CONFIG_MULTICAST_PORT = "multicast-port";

@@ -19,6 +19,13 @@
 
 #include "squawkconfig.h"
 
+#include <stdio.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <arpa/inet.h>
+
 namespace squawk {
 
 const std::string SquawkConfig::HELP_TEXT = "Options description: \n" \
@@ -107,9 +114,9 @@ bool SquawkConfig::validate() {
         valid = false;
 
     } if(store.find( CONFIG_HTTP_IP ) == store.end()) {
-        setValue(CONFIG_HTTP_IP, std::string("0.0.0.0"));
+        setValue(CONFIG_HTTP_IP, _get_ip() );
     } if(store.find( CONFIG_LOCAL_LISTEN_ADDRESS ) == store.end()) {
-        setValue(CONFIG_LOCAL_LISTEN_ADDRESS, std::string("0.0.0.0"));
+        setValue(CONFIG_LOCAL_LISTEN_ADDRESS, _get_ip() );
     } if(store.find( CONFIG_MULTICAST_ADDRESS ) == store.end()) {
         setValue(CONFIG_MULTICAST_ADDRESS, std::string("239.255.255.250"));
     } if(store.find( CONFIG_MULTICAST_PORT ) == store.end()) {
@@ -218,5 +225,28 @@ bool SquawkConfig::parse(int ac, const char* av[]) {
         }
     }
     return valid;
+}
+std::string SquawkConfig::_get_ip() {
+    std::string ip_ = "127.0.0.1";
+    struct ifaddrs* ifAddrStruct = NULL;
+
+    getifaddrs( &ifAddrStruct );
+    char addressBuffer[INET_ADDRSTRLEN];
+    for( struct ifaddrs* ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next ) {
+        if( (ifa->ifa_addr)->sa_family == AF_INET ) {
+
+            void* tmpAddrPtr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+
+            inet_ntop( AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN );
+
+            if( strcmp( ifa->ifa_name, "lo" ) ) {
+                ip_ = addressBuffer;
+            }
+        }
+    }
+    if( ifAddrStruct != NULL ) {
+        freeifaddrs( ifAddrStruct );
+    }
+    return ip_;
 }
 }//namespace squawk
