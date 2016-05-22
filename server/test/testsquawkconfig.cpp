@@ -170,7 +170,7 @@ TEST(SquawkParseOptions, TestMergedOptions) {
 
     EXPECT_EQ(std::string("127.0.0.1"), config.httpAddress());
 
-    EXPECT_EQ(std::string("/home/media"), config.mediaDirectories().front() );
+    EXPECT_EQ(std::string("/home/Pictures"), config.mediaDirectories().front() );
     EXPECT_EQ(8080, config.httpPort());
     EXPECT_EQ(std::string("/usr/local/var/lib/squawk/www"), config.docRoot() );
     EXPECT_EQ(std::string("/usr/local/var/lib/squawk/squawk.db"), config.databaseFile() );
