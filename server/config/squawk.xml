@@ -1,11 +1,18 @@
 <?xml version="1.0"?>
 <squawk>
-  <config-file>/usr/local/etc/squawk.xml</config-file>
-  <database-file>/usr/local/var/lib/squawk/squawk.db</database-file>
-  <http-docroot>/usr/local/var/lib/squawk/www</http-docroot>
-  <http-bower>/usr/local/var/lib/squawk/bower_components/</http-bower>
+  <config-file>/etc/squawk/squawk.xml</config-file>
+  <database-file>/var/lib/squawk/squawk.db</database-file>
+  <http-docroot>/var/lib/squawk/www</http-docroot>
+  <http-bower>/var/lib/squawk/bower_components/</http-bower>
   <media-directories>
-    <media-directory>/home/media</media-directory>
+  <media-directories>
+    <media-directory>/home/Pictures</media-directory>
+    <media-directory>/home/Music/test</media-directory>
+    <media-directory>/home/Movies</media-directory>
   </media-directories>
+  <logger>/etc/squawk/logger.properties</logger>
   <tmp-directory>/var/tmp/squawk</tmp-directory>
+  <cover-names>front,cover,folder</cover-names>
+  <multicast-address>239.255.255.250</multicast-address>
+  <multicast-port>1900</multicast-port>
 </squawk>
