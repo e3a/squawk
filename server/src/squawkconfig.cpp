@@ -178,7 +178,7 @@ bool SquawkConfig::parse(int ac, const char* av[]) {
             std::cerr << HELP_TEXT << std::endl;
             return false;
         } else if(std::string(av[i]) == std::string("-v") || std::string(av[i]) == std::string("--version")) {
-            std::cerr << 1 << std::endl; //TODO output version
+            std::cout << SQUAWK_RELEASE_ << std::endl;
             return false;
 
         } else if( i + 1 < ac ) {

@@ -34,7 +34,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 set(CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG} -O0 -g)
 add_definitions(-DASIO_STANDALONE)
-add_definitions(-DSQUAWK_RELEASE="${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}/")
+add_definitions(-DSQUAWK_RELEASE="${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}")
 add_definitions(-DTESTFILES="${TESTFILES}/")
 add_definitions(-DCMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}/")
 add_definitions(-Wall -Wextra)
@@ -84,9 +84,9 @@ add_subdirectory (server)
 # -----------------------   Compile Binary          -----------------------
 # -------------------------------------------------------------------------
 include_directories(${ROOT} ${SQUAWK_INCLUDES} ${CMAKE_SOURCE_DIR}/server/src/ ${CMAKE_SOURCE_DIR}/server/src/upnp )
-add_executable(squawkmain squawkmain.cpp)
-target_link_libraries(squawkmain server ssdpcpp httpcpp fmt ${GTEST_LIBRARIES} ${LIBS})
-install(TARGETS squawkmain RUNTIME DESTINATION bin)
+add_executable(squawk squawkmain.cpp)
+target_link_libraries(squawk server ssdpcpp httpcpp fmt ${GTEST_LIBRARIES} ${LIBS})
+install(TARGETS squawk RUNTIME DESTINATION bin)
 
 # -------------------------------------------------------------------------
 # -----------------------   Manage Test Cases       -----------------------

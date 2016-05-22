@@ -103,6 +103,11 @@ public:
     }
 
 private:
+#ifdef SQUAWK_RELEASE
+    std::string SQUAWK_RELEASE_ = SQUAWK_RELEASE;
+#else
+    std::string SQUAWK_RELEASE_ = "0.0.0";
+#endif
     static const std::string HELP_TEXT;
     std::map< std::string, std::list< std::string > > store;
 

@@ -17,8 +17,8 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef SQuAWK_H
-#define SQuAWK_H
+#ifndef SQUAWK_H
+#define SQUAWK_H
 
 #include <algorithm>
 #include <array>
@@ -69,12 +69,5 @@
 
 namespace squawk {
 static const bool SUAWK_SERVER_DEBUG = true;
-
-//#ifdef SQUAWK_RELEASE
-//static const char* C_SQUAWK_RELEASE = SQUAWK_RELEASE;
-//#else
-//static const char* C_SQUAWK_RELEASE = "0.0.0";
-//#endif
-
 }//namespace squawk
 #endif // SQUAWK_H
