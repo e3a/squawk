@@ -32,7 +32,9 @@ public:
     SquawkConfig() {}
     ~SquawkConfig() {}
 
-    /** @brief the logger properties files */
+    /** @brief the server visible name. */
+    std::string name();
+    /** @brief the logger properties files. */
     std::string logger();
     /** @brief the multicast address */
     std::string multicastAddress();
@@ -135,6 +137,10 @@ private:
     std::string _get_ip();
 
     std::string CONFIG_LOGGER_PROPERTIES = "logger";
+    std::string CONFIG_MEDIA_DIRECTORIES = "media-directories";
+    std::string CONFIG_MEDIA_DIRECTORY = "media-directory";
+    std::string CONFIG_COVER_NAMES = "cover-names";
+    std::string CONFIG_COVER_NAME = "cover-name";
     std::string CONFIG_MULTICAST_ADDRESS = "multicast-address";
     std::string CONFIG_MULTICAST_PORT = "multicast-port";
     std::string CONFIG_HTTP_IP = "http-ip";
@@ -143,11 +149,10 @@ private:
     std::string CONFIG_TMP_DIRECTORY = "tmp-directory";
     std::string CONFIG_LOCAL_LISTEN_ADDRESS = "local-address";
     std::string CONFIG_UUID = "uuid";
-    std::string CONFIG_COVER_NAMES = "cover-names";
     std::string CONFIG_FILE = "config-file";
-    std::string CONFIG_MEDIA_DIRECTORY = "media-directory";
     std::string CONFIG_HTTP_DOCROOT = "http-docroot";
     std::string CONFIG_HTTP_BOWER = "http-bower";
+    std::string CONFIG_SERVER_NAME = "server-name";
 };
 typedef std::shared_ptr< SquawkConfig > ptr_squawk_config;
 }

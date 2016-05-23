@@ -34,7 +34,8 @@ const std::string SquawkConfig::HELP_TEXT = "Options description: \n" \
 "\t-r [ --rescan ]          rescan database at startup.\n" \
 "\t-l [ --logger ] arg      logger properties file. \n" \
 "\t-c [ --config-file ] arg configuration properties file.\n" \
-"\t--media-directory arg    media paths. (repeat option for multiple paths)\n" \
+"\t--server-name arg        server visible name\n" \
+"\t--media-directory arg    media paths. (comma seperated list)\n" \
 "\t--http-ip arg            http server IP.\n" \
 "\t--http-port arg          http server port.\n" \
 "\t--http-docroot arg       http server docroot.\n" \
@@ -47,6 +48,11 @@ const std::string SquawkConfig::HELP_TEXT = "Options description: \n" \
 "\t--multicast-port arg     multicast port\n " \
 "\t--cover-names arg        names to use as cover (without extension)\n ";
 
+std::string SquawkConfig::name() {
+    if(  store.find( CONFIG_SERVER_NAME ) != store.end() ) {
+        return store[ CONFIG_SERVER_NAME ].front();
+    } else return std::string();
+}
 std::string SquawkConfig::logger() {
     if(  store.find( CONFIG_LOGGER_PROPERTIES ) != store.end() ) {
         return store[ CONFIG_LOGGER_PROPERTIES ].front();
@@ -113,6 +119,8 @@ bool SquawkConfig::validate() {
         std::cerr << "* the folder for the temporary files is not set." << std::endl;
         valid = false;
 
+    } if(store.find( CONFIG_SERVER_NAME ) == store.end()) {
+        setValue(CONFIG_SERVER_NAME, "Squawk Media Server, v" + SQUAWK_RELEASE_ );
     } if(store.find( CONFIG_HTTP_IP ) == store.end()) {
         setValue(CONFIG_HTTP_IP, _get_ip() );
     } if(store.find( CONFIG_LOCAL_LISTEN_ADDRESS ) == store.end()) {
@@ -130,8 +138,8 @@ bool SquawkConfig::validate() {
         uuid_unparse((unsigned char *)&out, buffer);
         setValue( CONFIG_UUID, std::string(buffer) );
     } if(store.find( CONFIG_COVER_NAMES ) == store.end()) {
-        setValue( CONFIG_COVER_NAMES, "cover" );
-        setValue( CONFIG_COVER_NAMES, "front" );
+        setValue( CONFIG_COVER_NAMES, "cover", true, true );
+        setValue( CONFIG_COVER_NAMES, "front", true, true );
     }
     return valid;
 }
@@ -144,9 +152,13 @@ void SquawkConfig::load( std::string filename ) {
     commons::xml::XMLReader reader( buffer.str() );
     std::vector< commons::xml::Node > root_node = reader.getElementsByName ( "squawk" );
     for( auto & node : root_node[0].children () ) {
-        if( node.name() == "media-directories" ) {
+        if( node.name() == CONFIG_MEDIA_DIRECTORIES ) {
             for( auto & dir : node.children() ) {
                 setValue( CONFIG_MEDIA_DIRECTORY, dir.content(), true, true );
+            }
+        } else if( node.name() == CONFIG_COVER_NAMES ) {
+            for( auto & dir : node.children() ) {
+                setValue( CONFIG_COVER_NAMES, dir.content(), true, true );
             }
         } else {
             setValue( node.name(), node.content(), false, false );
@@ -158,9 +170,14 @@ void SquawkConfig::save(const std::string & filename) const {
     commons::xml::Node root_node = writer.element( "squawk" );
     for( auto & itr : store ) {
         if( itr.first ==  CONFIG_MEDIA_DIRECTORY ) {
-            commons::xml::Node directories = writer.element( root_node, "", "media-directories" );
+            commons::xml::Node directories = writer.element( root_node, "", CONFIG_MEDIA_DIRECTORIES );
             for( auto & dir : itr.second ) {
                 writer.element( directories, "", itr.first, dir );
+            }
+        } else if( itr.first ==  CONFIG_COVER_NAMES ) {
+            commons::xml::Node directories = writer.element( root_node, "", CONFIG_COVER_NAMES );
+            for( auto & dir : itr.second ) {
+                writer.element( directories, "", CONFIG_COVER_NAME, dir );
             }
         } else {
             bool is_first_ = true;
@@ -193,6 +210,8 @@ bool SquawkConfig::parse(int ac, const char* av[]) {
                 setValue(CONFIG_FILE, std::string(av[++i]));
             } else if(std::string(av[i]) == std::string("-l") || std::string(av[i]) == std::string("--logger")) {
                 setValue(CONFIG_LOGGER_PROPERTIES, std::string(av[++i]));
+            } else if(std::string(av[i]) == std::string("--server_name")) {
+                setValue(CONFIG_SERVER_NAME, std::string(av[++i]), true, true );
             } else if(std::string(av[i]) == std::string("--media-directory")) {
                 setValue(CONFIG_MEDIA_DIRECTORY, std::string(av[++i]), true, true );
             } else if(std::string(av[i]) == std::string("--http-ip")) {
@@ -217,7 +236,7 @@ bool SquawkConfig::parse(int ac, const char* av[]) {
                 typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
                 tokenizer tok{ std::string( av[++i] ) };
                 for (tokenizer::iterator it = tok.begin(); it != tok.end(); ++it)
-                    setValue(CONFIG_COVER_NAMES, *it );
+                    setValue(CONFIG_COVER_NAMES, *it, true, true );
             }
         } else {
             std::cerr << "parameter not set for key " << std::string(av[i]) << std::endl;

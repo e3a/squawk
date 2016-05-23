@@ -2,6 +2,11 @@
 <squawk>
   <config-file>/usr/local/etc/squawk/squawk.xml</config-file>
   <database-file>/usr/local/var/lib/squawk/squawk.db</database-file>
+  <cover-names>
+    <cover-name>cover</cover-name>
+    <cover-name>front</cover-name>
+    <cover-name>folder</cover-name>
+  </cover-names>
   <http-docroot>/usr/local/var/lib/squawk/www</http-docroot>
   <http-bower>/usr/local/var/lib/squawk/bower_components/</http-bower>
   <media-directories>
@@ -11,7 +16,7 @@
   </media-directories>
   <logger>/usr/local/etc/squawk/logger.properties</logger>
   <tmp-directory>/var/tmp/squawk</tmp-directory>
-  <cover-names>front,cover,folder</cover-names>
+  <cover-names><cover-name>front</cover-name><cover-name>cover</cover-name><cover-name>folder</cover-name></cover-names>
   <multicast-address>239.255.255.250</multicast-address>
   <multicast-port>1900</multicast-port>
 </squawk>
