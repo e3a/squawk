@@ -39,7 +39,7 @@ void UpnpXmlDescription::do_get(::http::HttpRequest&, ::http::HttpResponse & res
 
     commons::xml::Node device_node = writer.element( root_node, "", "device" );
     writer.element( device_node, "", "deviceType", "urn:schemas-upnp-org:device:MediaServer:1" );
-    writer.element( device_node, "", "friendlyName", "Squawk Media Server" );
+    writer.element( device_node, "", "friendlyName", SquawkServer::instance()->config()->name() );
     writer.element( device_node, "", "manufacturer", "spielhuus" );
     writer.element( device_node, "", "manufacturerURL", "http://www.spielhuus.org" );
 

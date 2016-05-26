@@ -66,7 +66,7 @@ std::tuple<size_t, size_t> UpnpContentDirectoryMusic::parseNode ( didl::DidlXmlW
             std::map< std::string, std::string > filters_ ( { { "artist", artist_name_ }, { "contributor", artist_name_ } } );
             std::list< didl::DidlContainerAlbum > album_list_ = SquawkServer::instance()->dao()->objects<didl::DidlContainerAlbum> ( start_index_, request_count_, filters_ );
             std::for_each ( album_list_.begin(), album_list_.end(), [&didl_element] ( didl::DidlContainerAlbum & a ) {
-                didl_element->container ( "/music/album/{}", "/music/artist/", "albumArtUri/{}.jpg", a );
+                didl_element->container ( "/music/album/{}", "/music/artist/", http_uri ( "albumArtUri/{}.jpg" ), a );
             } );
 
             res_ = std::tuple<size_t, size_t> ( album_list_.size(), SquawkServer::instance()->dao()->objectsCount ( didl::objectContainerAlbumMusicAlbum, filters_ ) );
@@ -91,7 +91,7 @@ std::tuple<size_t, size_t> UpnpContentDirectoryMusic::parseNode ( didl::DidlXmlW
                     std::map< std::string, std::string >(),
                     std::make_pair ( "mtime", "desc" ) );
             std::for_each ( album_list_.begin(), album_list_.end(), [&didl_element] ( didl::DidlContainerAlbum & a ) {
-                didl_element->container ( "/music/album/{}", "/music/new", "albumArtUri/{}.jpg", a );
+                didl_element->container ( "/music/album/{}", "/music/new", http_uri ( "albumArtUri/{}.jpg" ), a );
             } );
 
             res_ = std::tuple<size_t, size_t> ( album_list_.size(), SquawkServer::instance()->dao()->objectsCount ( didl::objectContainerAlbumMusicAlbum ) );
