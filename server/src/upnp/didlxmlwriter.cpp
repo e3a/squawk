@@ -114,7 +114,7 @@ void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & p
     std::time_t last_playback_time_ = item.lastPlaybackTime();
     _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "lastPlaybackTime", fmt::format("{:%Y-%m-%d %h:%m:%s}", *std::localtime( &last_playback_time_ ) ) );
     _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "playbackCount", std::to_string( item.playbackCount() ) );
-    _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "rating ", std::to_string( item.rating() ) );
+    _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "rating", std::to_string( item.rating() ) );
 
     for ( auto & track : item.audioItemRes() ) {
         write ( track, item_element, uri_res );

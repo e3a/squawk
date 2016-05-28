@@ -298,7 +298,8 @@ void UpnpContentDirectoryParser::_import_photo ( const didl::DidlItem & photo ) 
 void UpnpContentDirectoryParser::_import_books () {
     if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import books" )
 
-    }
+
+}
 
 void UpnpContentDirectoryParser::_import_ebook ( const didl::DidlItem & ebook ) {
     if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import:" << ebook )
