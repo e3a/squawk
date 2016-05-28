@@ -65,7 +65,7 @@ public:
 
     void write ( const std::string & id_prefix, const std::string & parent_prefix, const std::string & uri, DidlItem item );
 
-    void write ( const std::string & id_prefix, const std::string & parent_prefix, const std::string & uri, DidlMusicTrack item );
+    void write ( const std::string & id_prefix, const std::string & parent_prefix, const std::string & uri_res, const std::string & uri_album_art, DidlMusicTrack item );
 
     void write ( const std::string & id_prefix, const std::string & parent_prefix, const std::string & uri, DidlPhoto item );
 

@@ -21,13 +21,15 @@
 #include "../upnpcontentdirectoryparser.h"
 
 namespace squawk {
-TEST(TestUpnpContentDirectoryParser, ParseMultidiscName) {
+TEST(UpnpContentDirectoryParserTest, ParseMultidiscName) {
 
     ASSERT_TRUE( UpnpContentDirectoryParser::_multidisc_name( "cd1" ) );
     ASSERT_TRUE( UpnpContentDirectoryParser::_multidisc_name( "CD01" ) );
+    ASSERT_TRUE( UpnpContentDirectoryParser::_multidisc_name( "Disk 01" ) );
+    ASSERT_TRUE( UpnpContentDirectoryParser::_multidisc_name( "Disc 1of2" ) );
     ASSERT_FALSE( UpnpContentDirectoryParser::_multidisc_name( "Some Other CD Name" ) );
 }
-TEST(TestUpnpContentDirectoryParser, TestCleanName) {
+TEST(UpnpContentDirectoryParserTest, TestCleanName) {
     ASSERT_STREQ("clean name", UpnpContentDirectoryParser::_clean_name("clean name").c_str());
     ASSERT_STREQ("clean name", UpnpContentDirectoryParser::_clean_name(" clean name ").c_str());
     ASSERT_STREQ("clean name", UpnpContentDirectoryParser::_clean_name(" Clean Name ").c_str());
@@ -35,7 +37,7 @@ TEST(TestUpnpContentDirectoryParser, TestCleanName) {
     ASSERT_STREQ("clean name", UpnpContentDirectoryParser::_clean_name("The Clean Name ").c_str());
     ASSERT_STREQ("clean name", UpnpContentDirectoryParser::_clean_name("Das Clean Name ").c_str());
 }
-TEST(TestUpnpContentDirectoryParser, MimeType ) {
+TEST(UpnpContentDirectoryParserTest, MimeType ) {
 
     ASSERT_EQ( http::mime::FLAC, UpnpContentDirectoryParser::_mime_type( ".flac" ) );
     ASSERT_EQ( http::mime::GIF, UpnpContentDirectoryParser::_mime_type( ".gif" ) );
@@ -43,19 +45,27 @@ TEST(TestUpnpContentDirectoryParser, MimeType ) {
     ASSERT_EQ( http::mime::MKV, UpnpContentDirectoryParser::_mime_type( ".mkv" ) );
     ASSERT_EQ( http::mime::PDF, UpnpContentDirectoryParser::_mime_type( ".pdf" ) );
 }
-TEST(TestUpnpContentDirectoryParser, FileType ) {
+TEST(UpnpContentDirectoryParserTest, FileType ) {
 
     ASSERT_EQ( didl::objectItemAudioItemMusicTrack, UpnpContentDirectoryParser::_file_type( "audio/x-flac" ) );
     ASSERT_EQ( didl::objectItemImageItemPhoto, UpnpContentDirectoryParser::_file_type( "image/gif" ) );
     ASSERT_EQ( didl::objectItemImageItemPhoto, UpnpContentDirectoryParser::_file_type( "image/jpeg" ) );
     ASSERT_EQ( didl::objectItemVideoItemMovie, UpnpContentDirectoryParser::_file_type( "video/x-matroska" ) );
-//TODO    ASSERT_EQ( didl::objectItemBook, UpnpContentDirectoryParser::_file_type( "application/pdf" ) );
+    ASSERT_EQ( didl::objectItemEBook, UpnpContentDirectoryParser::_file_type( "application/pdf" ) );
 }
-TEST(TestUpnpContentDirectoryParser, GetTypeByExtension) {
+TEST(UpnpContentDirectoryParserTest, ParseSeries ) {
+    int season_, episode_;
+    std::string name_;
+    ASSERT_TRUE( UpnpContentDirectoryParser::_parse_series( "The.Simpsons.S27E19.720p.HDTV.x264-AVS.[VTV]", &season_, &episode_, &name_ ) );
+    ASSERT_EQ( season_, 27 );
+    ASSERT_EQ( episode_, 19 );
+    ASSERT_EQ( name_, "The Simpsons" );
+}
+TEST(UpnpContentDirectoryParserTest, GetTypeByExtension) {
   EXPECT_TRUE(http::mime::MPEG == http::mime::mime_type("mp3"));
   EXPECT_TRUE(http::mime::VORBIS == http::mime::mime_type("ogg"));
 }
-TEST(TestUpnpContentDirectoryParser, GetByExtension) {
+TEST(UpnpContentDirectoryParserTest, GetByExtension) {
   EXPECT_EQ(std::string("audio/mpeg"), http::mime::mime_type(http::mime::MPEG));
 }
 }//squawk

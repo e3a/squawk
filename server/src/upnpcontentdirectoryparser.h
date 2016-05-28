@@ -36,6 +36,7 @@ private:
 
     enum DIDL_PARSE_TYPES { container, music_album, multidisc, photo_album };
 
+
     DIDL_PARSE_TYPES _parse( didl::DidlContainer & parent, const std::string & path );
     void _import_audio ( const didl::DidlObject obje );
     void _import_movies ( const didl::DidlObject object );
@@ -50,10 +51,21 @@ private:
 
     static std::string _scale_image( const std::string & profile, const std::string & path, int image_id, const std::string & target );
 
-    FRIEND_TEST( TestUpnpContentDirectoryParser, ParseMultidiscName );
-    static bool _multidisc_name( const std::string & path ) {
-        return pcrecpp::RE("CD[\\d+]", pcrecpp::RE_Options().set_caseless( true ) ).PartialMatch( path );
+    FRIEND_TEST( UpnpContentDirectoryParserTest, ParseSeries );
+    static bool _parse_series( const std::string & filename, int * season, int * episode, std::string * name ) {
+        if ( pcrecpp::RE("(.*)S(\\d*)E(\\d*).*", pcrecpp::RE_Options().set_caseless( true ) ).PartialMatch( filename, name, season, episode ) ) {
+            std::replace( name->begin(), name->end(), '.', ' ');
+            boost::trim(*name);
+            return true;
+
+        } else return false;
     }
+
+    FRIEND_TEST( UpnpContentDirectoryParserTest, ParseMultidiscName );
+    static bool _multidisc_name( const std::string & path ) {
+        return pcrecpp::RE("CD[\\d+]|disc \\d*+of\\d*|Disk \\d*", pcrecpp::RE_Options().set_caseless( true ) ).PartialMatch( path );
+    }
+
     static bool _cover( const std::string & path ) {
         for( auto item : SquawkServer::instance()->config()->coverNames() ) {
             if( boost::algorithm::trim_copy( boost::algorithm::to_lower_copy( item ) ) ==
@@ -65,7 +77,7 @@ private:
         return false;
     }
 
-    FRIEND_TEST( TestUpnpContentDirectoryParser, MimeType );
+    FRIEND_TEST( UpnpContentDirectoryParserTest, MimeType );
     /**
      * @brief get the mime-type from the boost path object.
      * @param extension the file extension including the dot (i.e. .txt)
@@ -76,7 +88,7 @@ private:
         else return http::mime::mime_type ( boost::algorithm::to_lower_copy( extension.substr( 1 ) ) );
     }
 
-    FRIEND_TEST( TestUpnpContentDirectoryParser, FileType );
+    FRIEND_TEST( UpnpContentDirectoryParserTest, FileType );
     /**
      * @brief _file_type
      * @param mime_type

@@ -129,7 +129,7 @@ TEST ( DidlXmlWriterTest, ClassMusicTrack ) {
 
     commons::xml::XMLWriter writer;
     DidlXmlWriter element ( &writer );
-    element.write ( "/file/{}", "/album/{}", "http://192.168.0.13:8080/audio/{0}.{1}",
+    element.write ( "/file/{}", "/album/{}", "http://192.168.0.13:8080/audio/{0}.{1}", "http://192.168.0.13:8080/api/album/{}/jpeg_tn.jpg",
                     DidlMusicTrack ( 89904, 4890, "Impur", "/path/to", 0, 0, 344180785, "audio/x-flac",
                                      std::list< DidlResource > ( { DidlResource ( 89905, 0, 344180785 /*size*/, "http://192.168.0.13:8080/audio/89904.flac",
                                              "path", "http-get:*:audio/x-flac", "", "audio/x-flac",
@@ -151,7 +151,7 @@ TEST ( DidlXmlWriterTest, ClassMusicTrack ) {
     EXPECT_EQ ( node.children().size(), 1 );
 
     std::string result = "<?xml version=\"1.0\"?>\n" \
-                         "<DIDL-Lite xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:pv=\"http://www.pv.com/pvns/\"><item id=\"/file/89904\" parentID=\"/album/4890\" restricted=\"1\"><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:title>Impur</dc:title><dc:originalTrackNumber>1</dc:originalTrackNumber><upnp:album>Impur</upnp:album><upnp:description>Comment</upnp:description><dc:date>2006-01-01</dc:date><upnp:genre>Avant Garde</upnp:genre><upnp:artist>Fred Frith</upnp:artist><dc:contributor>Fred Frith</dc:contributor><res protocolInfo=\"http-get:*:audio/x-flac:DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" size=\"344180785\" dlnaProfile=\"\" mime-type=\"audio/x-flac\" duration=\"3296\" bitrate=\"0\" bitsPerSample=\"16\" sampleFrequency=\"44100\">http://192.168.0.13:8080/audio/89905.flac</res></item></DIDL-Lite>\n";
+                         "<DIDL-Lite xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:pv=\"http://www.pv.com/pvns/\"><item id=\"/file/89904\" parentID=\"/album/4890\" restricted=\"1\"><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:title>Impur</dc:title><dc:originalTrackNumber>1</dc:originalTrackNumber><upnp:album>Impur</upnp:album><upnp:description>Comment</upnp:description><dc:date>2006-01-01</dc:date><upnp:genre>Avant Garde</upnp:genre><upnp:artist>Fred Frith</upnp:artist><dc:contributor>Fred Frith</dc:contributor><res protocolInfo=\"http-get:*:audio/x-flac:DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" size=\"344180785\" dlnaProfile=\"\" mime-type=\"audio/x-flac\" duration=\"3296\" bitrate=\"0\" bitsPerSample=\"16\" sampleFrequency=\"44100\">http://192.168.0.13:8080/audio/89905.flac</res><upnp:albumArtURI xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\" dlna:profileID=\"JPEG_TN\">http://192.168.0.13:8080/api/album/4890/jpeg_tn.jpg</upnp:albumArtURI></item></DIDL-Lite>\n";
 
     EXPECT_EQ ( writer.str(), result );
 }
@@ -168,7 +168,7 @@ TEST ( DidlXmlWriterTest, ClassContainerVideo ) {
         { didl::DidlResource::resolution, "1920x1080" },
         { didl::DidlResource::nrAudioChannels, "6" },
     } ) )
-                                                      } ), 1136073600 ) );
+    } ), 1136073600, 0, 0, "" ) );
 
     commons::xml::XMLReader reader ( writer.str() );
     EXPECT_TRUE ( reader.next() );

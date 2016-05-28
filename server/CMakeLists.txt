@@ -54,7 +54,7 @@ if (build_tests)
         test/upnp/didlxmlwritertest.cpp
         test/upnp/didljsonwritertest.cpp
         test/testupnpcontentdirectoryapi.cpp
-        test/testupnpcontentdirectoryparser.cpp
+        test/upnpcontentdirectoryparsertest.cpp
         test/testupnpcontentdirectorydao.cpp)
     target_link_libraries(testmain_server
         server ssdpcpp httpcpp fmt pthread ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} ${LIBS})

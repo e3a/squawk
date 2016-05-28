@@ -823,7 +823,6 @@ public:
 			      std::cout << "UNKNOWN AAC CODEC: " << std::endl;
 			    }			      
 			    break;
-
 		  
 			    /* TODO
 			    audiofile.dlnaProfile( DLNA_PROFILE::MP3 );

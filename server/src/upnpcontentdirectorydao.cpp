@@ -438,6 +438,81 @@ didl::DidlResource UpnpContentDirectoryDao::save ( const didl::DidlResource reso
                                 resource.mimeType(), resource.attributes() );
 }
 
+std::list< didl::DidlContainer > UpnpContentDirectoryDao::series ( const size_t & start_index, const size_t & result_count,
+        std::map< std::string, std::string > filters, std::pair< std::string, std::string > sort ) const {
+
+    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "series:" << start_index << ", " << result_count << ")" ); }
+
+    std::stringstream query_string_;
+    query_string_ << "select distinct series_title from tbl_cds_object where series_title!='' ";
+
+    if ( ! filters.empty() ) {
+        query_string_ << " AND( ";
+        parse_attributes ( query_string_, filters );
+        query_string_ << " ) ";
+    }
+
+    query_string_ << " order by " << sort.first << " " << sort.second;
+
+    if ( result_count > 0 ) {
+        query_string_ << " limit ?, ? ";
+    }
+
+    db::db_statement_ptr stmt_series_ = _db->prepareStatement ( query_string_.str() );
+
+    if ( result_count > 0 ) {
+        stmt_series_->bind_int ( 1, start_index );
+        stmt_series_->bind_int ( 2, result_count );
+    }
+
+    std::list< didl::DidlContainer > series_list_;
+
+    while ( stmt_series_->step() ) {
+        db::db_statement_ptr stmt_series_count_ = _db->prepareStatement (
+                    "select count(*) from tbl_cds_object where series_title = ?" );
+        stmt_series_count_->bind_text ( 1, stmt_series_->get_string( 0 ) );
+        int series_count_ = 0;
+
+        if ( stmt_series_count_->step() ) {
+            series_count_ = stmt_series_count_->get_int ( 0 );
+        }
+
+        series_list_.push_back (
+            didl::DidlContainer ( 0 /*ROWID*/, 0 /*parent_id*/,
+                                  stmt_series_->get_string ( 0 ) /* title,*/,
+                                        "" /*path*/,
+                                        0 /*mtime*/, 0 /*object_update_id*/,
+                                        series_count_ /*child_count*/, true ) );
+    }
+
+    return series_list_;
+}
+
+size_t UpnpContentDirectoryDao::seriesCount ( std::map< std::string, std::string > filters ) const {
+
+    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "seriesCount:" ); }
+
+    std::stringstream query_string_;
+    if( filters.empty() ) {
+        query_string_ << "select count(distinct series_title) from tbl_cds_object";
+    } else {
+        query_string_ << "select count(series_title) from tbl_cds_object";
+        query_string_ << " WHERE ";
+        parse_attributes ( query_string_, filters );
+    }
+
+    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (seriesCount): " << query_string_.str() ); }
+
+    db::db_statement_ptr stmt_series_ = _db->prepareStatement ( query_string_.str() );
+
+    int result_ = 0;
+    if ( stmt_series_->step() ) {
+        result_ = stmt_series_->get_int( 0 );
+    }
+    return result_;
+
+}
+
 int UpnpContentDirectoryDao::touch ( const std::string & path, const unsigned long mtime ) {
     if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "touch record with path: " << path ); }
 

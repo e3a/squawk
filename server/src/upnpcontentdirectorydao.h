@@ -680,17 +680,35 @@ public:
      */
     didl::DidlResource save ( const didl::DidlResource resource );
 
+    /**
+     * @brief get list of series
+     * @param start_index
+     * @param result_count
+     * @param filters
+     * @param sort
+     * @return
+     */
+    std::list< didl::DidlContainer > series ( const size_t & start_index, const size_t & result_count,
+            std::map< std::string, std::string > filters = std::map<std::string, std::string >(),
+            std::pair< std::string, std::string > sort = std::pair<std::string, std::string > ( "series_title", "asc" ) ) const;
+
+    /**
+     * @brief get list of series
+     * @param filters
+     * @return
+     */
+    size_t seriesCount ( std::map< std::string, std::string > filters = std::map<std::string, std::string >() ) const;
+
     /** \brief touch a file in the database.
      * <p>updates the timestamp of the record(s) with the
      *    given path. Returns number of records touched.</p>
      */
     int touch ( const std::string & path, const unsigned long mtime );
 
-
 private:
     /* CREATE TABLES */
     const std::list< std::string > CREATE_STATEMENTS {
-        "CREATE TABLE IF NOT EXISTS tbl_cds_object( cls, parent_id, size, title, path, mime_type, mtime, rating, year, track, disc, isbn, playback_count, object_update_id, contributor, artist, author, publisher, genre, album, comment, series, dlna_profile, last_playback_time, import, timestamp );",
+        "CREATE TABLE IF NOT EXISTS tbl_cds_object( cls, parent_id, size, title, path, mime_type, mtime, rating, year, track, disc, isbn, playback_count, object_update_id, contributor, artist, author, publisher, genre, album, comment, series_title, season, episode, dlna_profile, last_playback_time, import, timestamp );",
         "CREATE UNIQUE INDEX IF NOT EXISTS UniqueIndexObjectPath ON tbl_cds_object(path);",
         "CREATE TABLE IF NOT EXISTS tbl_cds_artist( clean_name, name, import );",
         "CREATE UNIQUE INDEX IF NOT EXISTS UniqueIndexArtistCleanName ON tbl_cds_artist(clean_name);",

@@ -92,7 +92,7 @@ void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & p
         write ( track, item_element, uri );
     }
 }
-void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & parent_prefix, const std::string & uri, DidlMusicTrack item ) {
+void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & parent_prefix, const std::string & uri_res, const std::string & uri_album_art, DidlMusicTrack item ) {
     commons::xml::Node item_element = _xmlWriter->element ( _didl_element, "", "item", "" );
     _xmlWriter->attribute ( item_element, "id", fmt::format( id_prefix, item.id() ) );
     _xmlWriter->attribute ( item_element, "parentID", fmt::format( parent_prefix, item.parentId() ) );
@@ -111,9 +111,18 @@ void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & p
     _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "artist", item.artist() );
     _xmlWriter->element ( item_element, upnp::XML_NS_PURL, "contributor", item.contributor() );
 
+    std::time_t last_playback_time_ = item.lastPlaybackTime();
+    _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "lastPlaybackTime", fmt::format("{:%Y-%m-%d %h:%m:%s}", *std::localtime( &last_playback_time_ ) ) );
+    _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "playbackCount", std::to_string( item.playbackCount() ) );
+    _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "rating ", std::to_string( item.rating() ) );
+
     for ( auto & track : item.audioItemRes() ) {
-        write ( track, item_element, uri );
+        write ( track, item_element, uri_res );
     }
+    commons::xml::Node dlna_album_art_node =
+        _xmlWriter->element ( item_element, upnp::XML_NS_UPNP, "albumArtURI", fmt::format( uri_album_art, item.parentId() ) );
+    _xmlWriter->ns ( dlna_album_art_node, upnp::XML_NS_DLNA_METADATA, "dlna", false );
+    _xmlWriter->attribute ( dlna_album_art_node, upnp::XML_NS_DLNA_METADATA, "profileID", "JPEG_TN" );
 }
 void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & parent_prefix, const std::string & uri, DidlPhoto item ) {
 

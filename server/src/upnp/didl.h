@@ -512,8 +512,9 @@ public:
 struct DidlMovie: public DidlItem {
 public:
     DidlMovie() {}
-    DidlMovie ( DIDL_OBJECT_ATTRIBUTES, DIDL_ITEM_ATTRIBUTES, const size_t & year, const bool import = true ) :
-                DidlItem ( objectItemVideoItemMovie, DIDL_OBJECT_ATTRiBUTES_NAMES, DIDL_ITEM_ATTRiBUTES_NAMES, import ), _year(year) {}
+    DidlMovie ( DIDL_OBJECT_ATTRIBUTES, DIDL_ITEM_ATTRIBUTES, const size_t & year, const size_t & season, const size_t & episode, const std::string & series_title, const bool import = true ) :
+                DidlItem ( objectItemVideoItemMovie, DIDL_OBJECT_ATTRiBUTES_NAMES, DIDL_ITEM_ATTRiBUTES_NAMES, import ),
+                _year(year), _season(season), _episode(episode), _series_title(series_title) {}
 
 	DidlMovie ( const DidlMovie& ) = default;
 	DidlMovie ( DidlMovie&& ) = default;
@@ -525,13 +526,14 @@ public:
     friend class squawk::UpnpContentDirectoryDao;
     friend class boost::fusion::extension::access;
 
-    size_t _year = 0;
+    size_t _year = 0, _season, _episode;
+    std::string _series_title;
 };
 struct DidlEBook: public DidlItem {
 public:
     DidlEBook() {}
     DidlEBook ( DIDL_OBJECT_ATTRIBUTES, DIDL_ITEM_ATTRIBUTES, const std::string & isbn, const bool import = true ) :
-                DidlItem ( objectItemVideoItemMovie, DIDL_OBJECT_ATTRiBUTES_NAMES, DIDL_ITEM_ATTRiBUTES_NAMES, import ), _isbn(isbn) {}
+                DidlItem ( objectItemEBook, DIDL_OBJECT_ATTRiBUTES_NAMES, DIDL_ITEM_ATTRiBUTES_NAMES, import ), _isbn(isbn) {}
 
     DidlEBook ( const DidlEBook& ) = default;
     DidlEBook ( DidlEBook&& ) = default;
@@ -557,9 +559,11 @@ using namespace boost::fusion;
 #define ADAPT_STRUCT_ARTIST     ADAPT_STRUCT_CONTAINER (std::string, _clean_name)
 
 #define ADAPT_STRUCT_ITEM       ADAPT_STRUCT_OBJECT (size_t, _size) (std::string, _mime_type)
-#define ADAPT_STRUCT_TRACK      ADAPT_STRUCT_ITEM (size_t, _rating) (size_t, _year) (size_t, _track) (size_t, _playback_count) (std::string, _contributor) \
+#define ADAPT_STRUCT_TRACK      ADAPT_STRUCT_ITEM (size_t, _rating) (size_t, _year) (size_t, _track) (size_t, _disc) (size_t, _playback_count) (std::string, _contributor) \
                                 (std::string, _artist) (std::string, _genre) (std::string, _album) (unsigned long, _last_playback_time) \
                                 (std::list< didl::DidlResource >, _item_resource)
+#define ADAPT_STRUCT_MOVIE      ADAPT_STRUCT_ITEM (unsigned long, _year) (size_t, _season) (size_t, _episode) (std::string, _series_title) \
+                                                  (std::list< didl::DidlResource >, _item_resource)
 #define ADAPT_STRUCT_PHOTO      ADAPT_STRUCT_ITEM (std::list< didl::DidlResource >, _item_resource)
 #define ADAPT_STRUCT_EBOOK      ADAPT_STRUCT_ITEM (std::list< didl::DidlResource >, _item_resource) (std::string, _isbn)
 
@@ -572,6 +576,7 @@ BOOST_FUSION_ADAPT_STRUCT( didl::DidlItem, ADAPT_STRUCT_ITEM (bool, _import) )
 BOOST_FUSION_ADAPT_STRUCT( didl::DidlMusicTrack, ADAPT_STRUCT_TRACK (bool, _import) )
 BOOST_FUSION_ADAPT_STRUCT( didl::DidlPhoto, ADAPT_STRUCT_PHOTO (bool, _import) )
 BOOST_FUSION_ADAPT_STRUCT( didl::DidlEBook, ADAPT_STRUCT_EBOOK (bool, _import) )
+BOOST_FUSION_ADAPT_STRUCT( didl::DidlMovie, ADAPT_STRUCT_MOVIE (bool, _import) )
 
 typedef std::map< std::string, int> _types_statistic;
 BOOST_FUSION_ADAPT_STRUCT(
@@ -580,17 +585,6 @@ BOOST_FUSION_ADAPT_STRUCT(
     (int, _artist_count)
     (_types_statistic, _audiofile_types)
     (_types_statistic, _file_types) )
-
-BOOST_FUSION_ADAPT_STRUCT( //TODO
-    didl::DidlMovie,
-    (didl::DIDL_CLASS, _cls)
-    (size_t, _id)
-    (size_t, _parent_id)
-    (std::string, _title)
-    (std::string, _path)
-    (unsigned long,  _mtime)
-    (size_t, _object_update_id)
-    (bool, _import) )
 
 /* resolve the type of the didl object */
 template <typename T>

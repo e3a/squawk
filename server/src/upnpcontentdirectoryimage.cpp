@@ -25,7 +25,7 @@ bool UpnpContentDirectoryImage::match ( ::upnp::UpnpContentDirectoryRequest * re
 }
 int UpnpContentDirectoryImage::getRootNode ( ::didl::DidlXmlWriter * didl_element ) {
     didl_element->container ( "/images/", "", didl::DidlContainer (
-                                  0, 0,"Images", "/images", 0, 0, SquawkServer::instance()->dao()->childrenCount ( didl::objectItemImageItemPhoto, 0 ) ) );
+                                  0, 0,"Images", "/images", 0, 0, SquawkServer::instance()->dao()->objectsCount ( didl::objectContainerAlbumPhotoAlbum ) ) );
     return 1;
 }
 std::tuple<size_t, size_t> UpnpContentDirectoryImage::parseNode ( didl::DidlXmlWriter * didl_element, ::upnp::UpnpContentDirectoryRequest * request ) {

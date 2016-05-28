@@ -113,7 +113,7 @@ std::tuple<size_t, size_t> UpnpContentDirectoryMusic::parseNode ( didl::DidlXmlW
 
             for ( auto object_ : track_list_ ) {
                 if ( object_.cls() == didl::objectItemAudioItemMusicTrack ) {
-                    didl_element->write ( "/music/album/{}", "/music/album/{}", http_uri ( "resource/{0}.{1}" ),
+                    didl_element->write ( "/music/album/{}", "/music/album/{}", http_uri ( "resource/{0}.{1}" ), http_uri ( "albumArtUri/{}.jpg" ),
                                           SquawkServer::instance()->dao()->object<didl::DidlMusicTrack> ( object_.id() ) );
 
                 } else if ( object_.cls() == didl::objectItemImageItemPhoto ) {
