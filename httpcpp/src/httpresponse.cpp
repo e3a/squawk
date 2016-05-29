@@ -181,9 +181,10 @@ std::string HttpResponse::get_message_header() {
 	}
 
 	//add last Modified Date
-	if ( last_modified ) {
-        ss << header::LAST_MODIFIED << std::string(": ") << time_to_string( gmtime( &last_modified ) ) << LINE_BREAK;
-	}
+//TODO Crashes
+//	if ( last_modified ) {
+//        ss << header::LAST_MODIFIED << std::string(": ") << time_to_string( gmtime( &last_modified ) ) << LINE_BREAK;
+//	}
 
 	//add now
 	time_t now = time ( nullptr );
