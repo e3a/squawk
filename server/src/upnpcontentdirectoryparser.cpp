@@ -301,7 +301,8 @@ void UpnpContentDirectoryParser::_import_books () {
     if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import books" )
 
 
-    }
+    std::list< didl::DidlEBook > book_list_;
+}
 
 void UpnpContentDirectoryParser::_import_ebook ( const didl::DidlItem & ebook ) {
     if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import:" << ebook )
