@@ -46,7 +46,7 @@ TEST( MediaTest, ParseMpegLayer2Mpthreetest) {
     ASSERT_EQ( 6, media_file.tagNames().size() );
     ASSERT_STREQ( "Test of MP3 File", media_file.getTag( commons::media::MediaFile::TITLE ).c_str() );
     ASSERT_STREQ( "Me", media_file.getTag( commons::media::MediaFile::ALBUM ).c_str() );
-    //TODO ASSERT_STREQ( "test", media_file.getTag( commons::media::MediaFile::COMMENT ).c_str() );
+    ASSERT_STREQ( "", media_file.getTag( commons::media::MediaFile::COMMENT ).c_str() );
     ASSERT_STREQ( "Me", media_file.getTag( commons::media::MediaFile::ARTIST ).c_str() );
     ASSERT_STREQ( "2006", media_file.getTag( commons::media::MediaFile::YEAR ).c_str() );
     ASSERT_STREQ( "Other", media_file.getTag( commons::media::MediaFile::GENRE ).c_str() );
@@ -128,9 +128,7 @@ TEST( MediaTest, ParseDivxWiegelesHeliSki_DivXPlus_19Mbps) {
 
     ASSERT_EQ( 2, media_file.tagNames().size() );
     ASSERT_STREQ( "Alterna Films 2012", media_file.getTag( commons::media::MediaFile::TITLE ).c_str() );
-//TODO    ASSERT_STREQ( "Wiegeles HeliSki", media_file.getTag( commons::media::MediaFile::TITLE ).c_str() );
     ASSERT_STREQ( "Encoded in DivX Plus HD!", media_file.getTag( commons::media::MediaFile::COMMENT ).c_str() );
-
 }
 TEST( MediaTest, ParseMkvCover ) {
     commons::media::MediaFile media_file = commons::media::MediaParser::parseFile( std::string(TESTFILES) +  "cover_art.mkv" );
@@ -149,7 +147,6 @@ TEST( MediaTest, ParseMkvCover ) {
 
     ASSERT_EQ( 2, media_file.tagNames().size() );
     ASSERT_STREQ( "Dexter Season 5 trailer", media_file.getTag( commons::media::MediaFile::TITLE ).c_str() );
-//TODO    ASSERT_STREQ( "Wiegeles HeliSki", media_file.getTag( commons::media::MediaFile::TITLE ).c_str() );
     ASSERT_STREQ( "", media_file.getTag( commons::media::MediaFile::COMMENT ).c_str() );
 
 }

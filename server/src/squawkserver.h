@@ -61,14 +61,11 @@ class SquawkServer {
   private:
     SquawkServer() {}
 
-    //TODO unused db::ptr_connection _database;
     squawk::ptr_squawk_config _squawk_config;
     std::shared_ptr< squawk::UpnpContentDirectoryDao > _upnp_cds_dao;
-
     std::shared_ptr<squawk::UpnpContentDirectoryParser> _upnp_file_parser;
-
-    http::WebServer * web_server = nullptr;
-    ssdp::SSDPServerImpl * ssdp_server = nullptr;
+    http::WebServer * web_server = nullptr; //TODO
+    ssdp::SSDPServerImpl * ssdp_server = nullptr; //TODO
 };
 }//namespace squawk
 #endif // SQUAWKSERVER_H

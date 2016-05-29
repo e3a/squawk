@@ -50,10 +50,10 @@ TEST( HeaderParseTest, Response ) {
     SsdpEvent event = server.parseResponse( response );
 
     EXPECT_EQ( "http://192.168.0.13:8080/rootDesc.xml", event.location() );
-//    EXPECT_EQ( "http://192.168.0.13:8080/rootDesc.xml", event.cacheControl() );
-    //TODO EXPECT_EQ( "Linux/#44~14.04.1-Ubuntu SMP Fri Mar 13 10:33:29 UTC 2015 DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0", event.host() );
+    EXPECT_EQ( 1800, event.cacheControl() );
+    EXPECT_EQ( "Linux/#44~14.04.1-Ubuntu SMP Fri Mar 13 10:33:29 UTC 2015 DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0", event.host() );
     EXPECT_EQ( "d7eede24-9688-4f20-9d59-ab93d074027f", event.nt() );
-//TODO     EXPECT_EQ( "http://192.168.0.13:8080/rootDesc.xml", event.nts() );
+    EXPECT_EQ( "http://192.168.0.13:8080/rootDesc.xml", event.nts() );
     EXPECT_EQ( "Linux/#44~14.04.1-Ubuntu SMP Fri Mar 13 10:33:29 UTC 2015 DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0", event.server() );
     EXPECT_EQ( "uuid:d7eede24-9688-4f20-9d59-ab93d074027f::d7eede24-9688-4f20-9d59-ab93d074027f", event.usn() );
 }

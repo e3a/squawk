@@ -47,7 +47,6 @@ the format specifier for decimals (%d), the relating id will be inserted.</p>
 <p><h4>URL Creation</h4>.</p>
 */
 class DidlXmlWriter {
-//TODO do not throw xml exception
 public:
     /** \brief Create the xml writer */
     DidlXmlWriter ( commons::xml::XMLWriter * xmlWriter ) ;
@@ -74,24 +73,6 @@ public:
 private:
     commons::xml::XMLWriter * _xmlWriter;
     commons::xml::Node _didl_element;
-
-    FRIEND_TEST( DidlXmlWriterTest, ParseDate );
-    /**
-     * @brief create a string  from the timestamp.
-     * @param seconds the unix timestamp
-     * @return The format: YYYY-mm-dd
-     */
-//    static std::string parse_date( long seconds ) {
-
-//        std::array<char, 32> buffer_;
-//        time_t time = seconds;
-//        tm local;
-//        localtime_r(&time, &local);
-//        std::strftime(buffer_.data(), 32, "%Y-%m-%d", &local);
-
-//        return std::string( buffer_.data() );
-//    }
-
     void write ( const DidlResource & item, commons::xml::Node & item_element, const std::string & res_uri );
 };
 

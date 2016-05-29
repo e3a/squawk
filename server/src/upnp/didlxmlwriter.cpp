@@ -152,7 +152,6 @@ void DidlXmlWriter::write ( const std::string & id_prefix, const std::string & p
         write( track, item_element, uri );
     }
 }
-
 void DidlXmlWriter::write ( const DidlResource & item, commons::xml::Node & item_element, const std::string & res_uri ) {
 
     commons::xml::Node dlna_res_node = _xmlWriter->element ( item_element, "", "res",

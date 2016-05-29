@@ -762,8 +762,7 @@ public:
         if ( fmt_ctx->nb_streams > 0 ) {
             AVDictionaryEntry *tag = NULL;
             media_file.duration( fmt_ctx->duration / AV_TIME_BASE ); //set the playlength
-            for( unsigned int i=0; i<fmt_ctx->nb_streams; i++ ) { //TODO remove output
-                std::cout << "input stream " << i << ", type: " << fmt_ctx->streams[i]->codec->codec_type << std::endl;
+            for( unsigned int i=0; i<fmt_ctx->nb_streams; i++ ) {
                 switch( fmt_ctx->streams[i]->codec->codec_type ) {
                     case AVMEDIA_TYPE_UNKNOWN: std::cout << "AVMEDIA_TYPE_UNKNOWN" << std::endl; break;
                     case AVMEDIA_TYPE_VIDEO: {
@@ -944,11 +943,6 @@ private:
         av_strerror(error, error_buffer, sizeof(error_buffer));
         return std::string( error_buffer );
     }
-
-    /** TODO get the media information **/
-//    static void getMediaInformation() {
-
-//    }
 
     static CODEC convertCodec( const AVCodecID & codec_id ) {
       if( codec_id == AV_CODEC_ID_MP1 )

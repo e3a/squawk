@@ -128,7 +128,7 @@ void UpnpXmlDescription::do_get(::http::HttpRequest&, ::http::HttpResponse & res
     writer.element( device_node, "", "URLBase", "http://192.168.0.13:8080/" ); //TODO from config
 
     response << writer.str();
-    response.set_mime_type( ::http::mime::XML );
-    response.status( ::http::http_status::OK );
+    response.set_mime_type( http::mime::XML );
+    response.status( http::http_status::OK );
 }
 }

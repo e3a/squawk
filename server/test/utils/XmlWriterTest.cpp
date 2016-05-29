@@ -73,13 +73,9 @@
 "<dlna:X_DLNADOC xmlns:dlna=\"urn:schemas-dlna-org:device-1-0\">DMS-1.50</dlna:X_DLNADOC>" \
 "</root>\n"
 
-#define XML_SOAP_ENVELOPE "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" \
-    "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" \
-    "<s:Body><u:BrowseResponse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><Result xsi:type=\"xsd:string\"/></u:BrowseResponse></s:Body></s:Envelope>\n"
+#define XML_SOAP_ENVELOPE "<?xml version=\"1.0\"?>\n<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"><s:Body><u:BrowseResponse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><Result xsi:type=\"xsd:string\"/></u:BrowseResponse></s:Body></s:Envelope>\n"
 
-#define XML_SOAP_ENVELOPE_CONTENT "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" \
-    "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" \
-    "<s:Body><u:BrowseResponse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><Result xsi:type=\"xsd:string\">ABC</Result></u:BrowseResponse></s:Body></s:Envelope>\n"
+#define XML_SOAP_ENVELOPE_CONTENT "<?xml version=\"1.0\"?>\n<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"><s:Body><u:BrowseResponse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><Result xsi:type=\"xsd:string\">ABC</Result></u:BrowseResponse></s:Body></s:Envelope>\n"
 
 TEST( XmlWriter, SimpleXML ) {
 
@@ -169,7 +165,7 @@ TEST( XmlWriter, RootNamespaceXML ) {
 
     EXPECT_EQ( XML_ROOT_NS, writer.str() );
 }
-/* TODO doese not work on ubuntu TEST( XmlWriter, SoapEnvelope ) {
+TEST( XmlWriter, SoapEnvelope ) {
 
     commons::xml::XMLWriter xmlWriter;
     commons::xml::Node envelope_node = xmlWriter.element( "Envelope" );
@@ -184,7 +180,7 @@ TEST( XmlWriter, RootNamespaceXML ) {
     commons::xml::Node result_node = xmlWriter.element(browse_response_node, "", "Result");
     xmlWriter.attribute(result_node, "http://www.w3.org/2001/XMLSchema-instance", "type", "xsd:string");
 
-    EXPECT_EQ( XML_SOAP_ENVELOPE, xmlWriter.str( "utf-8" ) );
+    EXPECT_EQ( XML_SOAP_ENVELOPE, xmlWriter.str() );
 }
 TEST( XmlWriter, SoapEnvelopeWithContnet ) {
 
@@ -201,5 +197,5 @@ TEST( XmlWriter, SoapEnvelopeWithContnet ) {
     commons::xml::Node result_node = xmlWriter.element(browse_response_node, "", "Result", "ABC");
     xmlWriter.attribute(result_node, "http://www.w3.org/2001/XMLSchema-instance", "type", "xsd:string");
 
-    EXPECT_EQ( XML_SOAP_ENVELOPE_CONTENT, xmlWriter.str( "utf-8" ) );
-} */
+    EXPECT_EQ( XML_SOAP_ENVELOPE_CONTENT, xmlWriter.str() );
+}

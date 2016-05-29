@@ -49,8 +49,6 @@ private:
     void _import_movie( const didl::DidlItem & movie );
     void _import_ebook( const didl::DidlItem & ebook );
 
-    static std::string _scale_image( const std::string & profile, const std::string & path, int image_id, const std::string & target );
-
     FRIEND_TEST( UpnpContentDirectoryParserTest, ParseSeries );
     static bool _parse_series( const std::string & filename, int * season, int * episode, std::string * name ) {
         if ( pcrecpp::RE("(.*)S(\\d*)E(\\d*).*", pcrecpp::RE_Options().set_caseless( true ) ).PartialMatch( filename, name, season, episode ) ) {

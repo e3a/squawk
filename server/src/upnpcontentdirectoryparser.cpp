@@ -120,9 +120,10 @@ didl::DidlMusicTrack inline UpnpContentDirectoryParser::_import_track ( const di
 
     size_t disc_ = 0;
     std::string str_disc_ = media_file.getTag ( commons::media::MediaFile::DISC );
+
     if ( !str_disc_.empty() && std::all_of ( str_disc_.begin(), str_disc_.end(), ::isdigit ) ) { //when is number
         disc_ = std::stoi ( str_disc_ );
-    } else std::cerr << "DISC IS NOT DIGIT: " << str_disc_ << std::endl;
+    }
 
     std::string comment_ = media_file.getTag ( commons::media::MediaFile::COMMENT );
 
@@ -242,7 +243,8 @@ void UpnpContentDirectoryParser::_import_images ( const didl::DidlObject /* obje
 void UpnpContentDirectoryParser::_import_photo ( const didl::DidlItem & photo ) {
     if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, "import_image:" << photo )
 
-    std::list<didl::DidlResource> resources_;
+        std::list<didl::DidlResource> resources_;
+
     std::hash<std::string> hash_fn;
     image::Image image_meta_ ( photo.path() );
 
@@ -263,7 +265,7 @@ void UpnpContentDirectoryParser::_import_photo ( const didl::DidlItem & photo ) 
             { didl::DidlResource::resolution, "768x768" },
             { didl::DidlResource::colorDepth, image_meta_.colorDepth() }
         } )
-    ) );
+                               ) );
     }
 
     //create a resized preview thumbnail
@@ -299,7 +301,7 @@ void UpnpContentDirectoryParser::_import_books () {
     if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import books" )
 
 
-}
+    }
 
 void UpnpContentDirectoryParser::_import_ebook ( const didl::DidlItem & ebook ) {
     if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import:" << ebook )
@@ -316,9 +318,9 @@ void UpnpContentDirectoryParser::_import_ebook ( const didl::DidlItem & ebook ) 
     std::string  isbn_ = PdfParser::parsePdf ( ebook.path() );
 
     if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import (isbn):" << isbn_ )
-        SquawkServer::instance()->dao()->save (
-            didl::DidlEBook ( ebook.id(), ebook.parentId(), ebook.title(), ebook.path(), ebook.mtime(),
-                              ebook.objectUdpateId(), ebook.size(), ebook.mimeType(), resources_, isbn_, true ) );
+    SquawkServer::instance()->dao()->save (
+        didl::DidlEBook ( ebook.id(), ebook.parentId(), ebook.title(), ebook.path(), ebook.mtime(),
+                          ebook.objectUdpateId(), ebook.size(), ebook.mimeType(), resources_, isbn_, true ) );
 }
 
 UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse ( didl::DidlContainer & parent, const std::string & path ) {
@@ -331,7 +333,6 @@ UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse 
 
     if ( container_.id() == 0 ) {
         container_ = SquawkServer::instance()->dao()->save ( didl::DidlContainer ( 0, parent.id(), _fs_path.stem().string(), path, 0, 0, 0, true ) );
-
     }
 
     bool parent_changed_ = false;
@@ -345,13 +346,11 @@ UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse 
 
     if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, "Parse Path:" << container_ )
 
-        //search for regular files
-        boost::filesystem::directory_iterator end_itr;
-
+    //search for regular files
+    boost::filesystem::directory_iterator end_itr;
     for ( boost::filesystem::directory_iterator itr ( _fs_path ); itr != end_itr; ++itr ) {
 
         std::string item_filepath_ = path + "/" + itr->path().filename().string();
-
         if ( boost::filesystem::is_regular_file ( itr->status() ) ) {
 
             std::string mime_type_ = http::mime::mime_type ( _mime_type ( itr->path().extension().string() ) );
@@ -409,7 +408,11 @@ UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse 
                         albumArtUri_.push_back (
                             didl::DidlAlbumArtUri ( 0, 0,
                                                     SquawkServer::instance()->config()->tmpDirectory() + "/AlbumArtUri/" + std::to_string ( container_.id() ) + ".jpg", "URI", "JPEG_TN" ) );
-                        _scale_image ( "JPEG_TN", item_filepath_, container_.id(), SquawkServer::instance()->config()->tmpDirectory() + "/AlbumArtUri" );
+
+                        std::stringstream cover_stream_;
+                        cover_stream_ << SquawkServer::instance()->config()->tmpDirectory() << "/AlbumArtUri/" << container_.id() << ".jpg";
+                        image::Image image ( item_filepath_ );
+                        image.scale ( 160, 160, cover_stream_.str() );
                     }
 
                 } else if ( file_type_ == didl::objectItemVideoItemMovie ) {
@@ -448,7 +451,7 @@ UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse 
         }
     }
 
-    //continue with childrem
+    //continue with children
     bool is_multidisc_ = false;
 
     for ( auto s : child_directories_ ) {
@@ -478,37 +481,6 @@ UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse 
     return container_type_;
 }
 
-//create the thumbnails
-/**
- * @brief UpnpContentDirectoryParser::_scale_image
- * @param profile
- * @param path
- * @param image_id
- * @param target
- * @return the filename of the new file.
- */
-std::string UpnpContentDirectoryParser::_scale_image ( const std::string & profile, const std::string & path, int image_id, const std::string & target ) {
-    image::Image image ( path );
-
-    std::stringstream cover_stream;
-
-    if ( profile == "JPEG_TN" ) { //TODO ONLY TN USED, move to callers
-        cover_stream << target << "/" << image_id << ".jpg";
-        image.scale ( 160, 160, cover_stream.str() );
-
-    } else if ( profile == "JPEG_SM" ) {
-        cover_stream << target << "/sm_" << image_id << ".jpg";
-        std::string cover_filename = cover_stream.str();
-        image.scale ( 480, 480, cover_filename );
-
-    } else if ( profile == "JPEG_LRG" ) {
-        cover_stream << target << "/lrg_" << image_id << ".jpg";
-        std::string cover_filename = cover_stream.str();
-        image.scale ( 768, 768, cover_filename );
-    }
-
-    return cover_stream.str();
-}
 std::string UpnpContentDirectoryParser::_clean_name ( const std::string & name ) {
     std::string s = name;
 

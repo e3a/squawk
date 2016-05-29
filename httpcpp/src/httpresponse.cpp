@@ -62,25 +62,12 @@ HttpResponse & HttpResponse::operator<< ( const std::string & str ) {
 }
 
 void HttpResponse::set_istream ( std::istream * is ) {
-    //TODO std::cout << "set stream im response" << std::endl;
-
 	if ( body_istream ) {
 		std::cerr << "body input stream can only be set once." << std::endl;
 
 	} else {
 		body_istream = is;
 	}
-
-	/*    char buffer[512];
-	     size_t total_size = 0;
-	     std::streamsize read_size = 0;
-	     do {
-	         read_size = is.readsome( buffer, 512 );
-	         total_size+= read_size;
-	         body_stream.write(buffer, read_size);
-	     } while(read_size != 0);
-
-	     size += total_size; */
 }
 
 inline std::string time_to_string ( struct tm * time ) {
@@ -99,10 +86,6 @@ size_t HttpResponse::fill_buffer ( char * buffer, size_t buffer_size ) {
 		return body_stream.readsome ( buffer, buffer_size - 1 );
 	}
 }
-
-/* std::string HttpResponse::get_message_body() {
-    return body_stream.str();
-} */
 
 std::string HttpResponse::get_message_header() {
 	std::stringstream ss;
@@ -181,7 +164,6 @@ std::string HttpResponse::get_message_header() {
 	}
 
 	if ( size_ > 0 ) {
-        //TODO std::cout << "set size:" << size_ << std::endl;
 		ss << header::CONTENT_LENGTH << std::string ( ": " ) << std::to_string ( size_ ) << LINE_BREAK;
 	}
 
@@ -200,7 +182,7 @@ std::string HttpResponse::get_message_header() {
 
 	//add last Modified Date
 	if ( last_modified ) {
-		//TODO ss << HTTP_HEADER_LAST_MODIFIED << std::string(": ") << time_to_string( gmtime( &last_modified ) ) << LINE_BREAK;
+        ss << header::LAST_MODIFIED << std::string(": ") << time_to_string( gmtime( &last_modified ) ) << LINE_BREAK;
 	}
 
 	//add now
