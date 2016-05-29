@@ -1,7 +1,4 @@
 /*
-    Upnp video directory module.
-    Copyright (C) 2013  <copyright holder> <email>
-
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -27,80 +24,12 @@ class UpnpContentDirectoryVideo : public ContentDirectoryModule {
 public:
     UpnpContentDirectoryVideo() {}
 
-    virtual int getRootNode( ::didl::DidlXmlWriter * didl_element );
-    virtual bool match( ::upnp::UpnpContentDirectoryRequest * parseRequest );
-    virtual std::tuple<size_t, size_t> parseNode( didl::DidlXmlWriter * didl_element, ::upnp::UpnpContentDirectoryRequest * parseRequest );
+    virtual int getRootNode ( didl::DidlXmlWriter * didl_element );
+    virtual bool match ( upnp::UpnpContentDirectoryRequest * parseRequest );
+    virtual std::tuple<size_t, size_t> parseNode ( didl::DidlXmlWriter * didl_element, upnp::UpnpContentDirectoryRequest * parseRequest );
 
 private:
     static log4cxx::LoggerPtr logger;
-
-//    /* get video count */
-//    static constexpr const char * SQL_VIDEO_COUNT = "select count(*) from tbl_cds_files where type=2";
-//    int videoCount() {
-//        int count = 0;
-//        try {
-//            db::db_statement_ptr stmt_videos = db->prepareStatement( SQL_VIDEO_COUNT );
-//            if( stmt_videos->step() ) {
-//                count = stmt_videos->get_int( 0 );
-//            }
-
-//        } catch( db::DbException & e ) {
-//            LOG4CXX_FATAL(logger, "Can not get video count, Exception:" << e.code() << "-> " << e.what());
-//            throw;
-//        } catch( ... ) {
-//            LOG4CXX_FATAL(logger, "Other Excpeption in video count.");
-//            throw;
-//        }
-//        return count;
-//    }
-
-      /* get videos */
-//    static constexpr const char * SQL_VIDEOS = \
-            "select ROWID, name, mime_type, duration, filesize, sampleFrequency, " \
-            "width, height, bitrate, channels from tbl_cds_files where type=2 order by name";
-//    void videos( std::function<void(didl::DidlMovie)> callback ) {
-//        try {
-//            db::db_statement_ptr stmt_videos = db->prepareStatement( SQL_VIDEOS );
-//            while( stmt_videos->step() ) {
-
-//                std::string mime_type = stmt_videos->get_string( 2 );
-//                std::string tmp_type = mime_type;
-//                if(mime_type == "video/avi") {
-//                    tmp_type = "video/mpeg";
-//                } else if( mime_type == "video/x-matroska" ) {
-//                    tmp_type = "video/mpeg";
-//                }
-
-//                callback( didl::DidlMovie(
-//                          "/video/" + std::to_string( stmt_videos->get_int( 0 ) ) /*id*/,
-//                          "music.album", stmt_videos->get_string( 1 ) /*title*/,
-//                          0, "", "",
-//                            std::list< didl::DidlAlbumArtUri >(),
-//                            std::list< didl::DidlAudioItemRes >( {
-//                                didl::DidlAudioItemRes(
-//                                 "http://" + http_address_ + ":" + http_port_ + "/video/" + std::to_string( stmt_videos->get_int( 0 ) ) + "." + http::mime::extension( mime_type ),
-//                                 "http-get:*:" + mime_type  + ":*" ,
-//                                    std::map<didl::UPNP_RES_ATTRIBUTES, std::string >( {
-//                                        { didl::duration, stmt_videos->get_string( 3 ) },
-//                                        { didl::size, stmt_videos->get_string( 4 ) },
-//                                        { didl::sampleFrequency, stmt_videos->get_string( 5 ) },
-//                                        { didl::resolution, stmt_videos->get_string( 6 ) + "x" + stmt_videos->get_string( 7 ) },
-//                                        { didl::bitrate, stmt_videos->get_string( 8 ) },
-//                                        { didl::channels, stmt_videos->get_string( 9 ) }
-//                                    }
-//                                )
-//                            ) } )
-//                ));
-//            }
-
-//        } catch( db::DbException & e ) {
-//            LOG4CXX_FATAL(logger, "Can not get videos, Exception:" << e.code() << "-> " << e.what());
-//            throw;
-//        } catch( ... ) {
-//            LOG4CXX_FATAL(logger, "Other Excpeption in get video.");
-//            throw;
-//        }
-//    }
 };
-}
+}//namespace squawk
 #endif // UPNPVIDEODIRECTORY_H

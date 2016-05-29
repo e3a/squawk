@@ -58,8 +58,19 @@ class SquawkServer {
         return db::Sqlite3Database::instance().connection( _squawk_config->databaseFile() );
     }
 
+    std::map< std::string, upnp::UpnpDevice > upnp_devices () {
+        return _ssdp_devices;
+    }
+
   private:
     SquawkServer() {}
+
+    static log4cxx::LoggerPtr logger;
+
+    std::map< std::string, upnp::UpnpDevice > _ssdp_devices;
+    std::mutex _ssdp_devices_mutex;
+    bool announce_thread_run = true;
+    std::unique_ptr<std::thread> _ssdp_devices_thread;
 
     squawk::ptr_squawk_config _squawk_config;
     std::shared_ptr< squawk::UpnpContentDirectoryDao > _upnp_cds_dao;

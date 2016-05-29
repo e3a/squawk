@@ -1,26 +1,6 @@
-<h2>UPNP Events</h2>
-
-<accordion close-others="oneAtATime">
-    <accordion-group heading="UPNP Events">
-        <accordion close-others="oneAtATime">
-            <accordion-group heading="{{event.nt}}" ng-repeat="event in events">
-                <span class="bold">{{event.nt}}</span>
-                <span>{{event.host}}</span><br/>
-                <a ng-href="{{event.location}}">{{event.location}}</a>
-                <span>{{event.nts}}</span><br/>
-                <span>{{event.server}}</span><br/>
-                <span>{{event.usn}}</span><br/>
-            </accordion-group>
-        </accordion>
-    </accordion-group>
-</accordion>
-
-<accordion close-others="oneAtATime">
-    <accordion-group heading="UPNP Devices">
-        <accordion close-others="oneAtATime">
-            <accordion-group heading="{{device.friendlyName}}" ng-repeat="device in devices">
-                <span>{{device.friendlyName}}</span>
-            </accordion-group>
-        </accordion>
-    </accordion-group>
-</accordion>
+<h2>UPNP Devices</h2>
+<uib-accordion close-others="oneAtATime">
+    <uib-accordion-group heading="{{device.friendlyName}}" ng-repeat="device in devices">
+	<span>{{device.friendlyName}}</span>
+    </uib-accordion-group>
+</uib-accordion>

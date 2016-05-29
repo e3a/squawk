@@ -79,9 +79,9 @@ void SSDPServerImpl::stop() {
 void SSDPServerImpl::handle_response ( http::HttpResponse & response ) {
     if ( response.status() == http::http_status::OK ) {
 		if ( response.parameter ( UPNP_HEADER_USN ).find ( uuid ) == string::npos ) {
-			upnp_devices[response.parameter ( UPNP_HEADER_USN )] = parseResponse ( response );
+//TODO			upnp_devices[response.parameter ( UPNP_HEADER_USN )] = parseResponse ( response );
 			fireEvent ( SSDPEventListener::ANNOUNCE, response.remote_ip, parseResponse ( response ) );
-		}
+        }//fi no self announcement
 	}
 }
 void SSDPServerImpl::handle_receive ( http::HttpRequest & request ) {
@@ -104,12 +104,11 @@ void SSDPServerImpl::handle_receive ( http::HttpRequest & request ) {
         } else if ( request.method() == REQUEST_METHOD_NOTIFY ) {
 
             if ( request.parameter( UPNP_HEADER_NTS ) == UPNP_STATUS_ALIVE ) {
-                upnp_devices[ request.parameter( UPNP_HEADER_USN ) ] = parseRequest ( request );
+//TODO                upnp_devices[ request.parameter( UPNP_HEADER_USN ) ] = parseRequest ( request );
                 fireEvent ( SSDPEventListener::ANNOUNCE, request.remoteIp(), parseRequest ( request ) );
             } else {
-                std::cerr << "delete device: (NOTIFY:BYE) " << request.parameter ( UPNP_HEADER_USN ) << std::endl;
                 fireEvent ( SSDPEventListener::BYE, request.remoteIp(), parseRequest ( request ) );
-                upnp_devices.erase ( request.parameter( UPNP_HEADER_USN ) );
+//TODO                upnp_devices.erase ( request.parameter( UPNP_HEADER_USN ) );
             }
 
         } else {
@@ -140,7 +139,6 @@ SsdpEvent SSDPServerImpl::parseResponse ( http::HttpResponse & response ) {
 }
 void SSDPServerImpl::announce() {
 	suppress();
-
 	for ( size_t i = 0; i < NETWORK_COUNT; i++ ) {
 		for ( auto & iter : namespaces ) {
 			send_anounce ( iter.first, iter.second );
@@ -215,13 +213,13 @@ void SSDPServerImpl::send_suppress ( const std::string & nt ) {
 	connection->send ( SSDP_HEADER_REQUEST_LINE, map );
 }
 void SSDPServerImpl::annouceThread() {
-	start_time = std::chrono::high_resolution_clock::now();
+    _announce_time = std::chrono::high_resolution_clock::now();
 
 	while ( announce_thread_run ) {
 
         //check reanounce timer
 		auto end_time = std::chrono::high_resolution_clock::now();
-		auto dur = end_time - start_time;
+        auto dur = end_time - _announce_time;
 		auto f_secs = std::chrono::duration_cast<std::chrono::duration<unsigned int>> ( dur );
 
 		if ( f_secs.count() >= ( ANNOUNCE_INTERVAL / 3 ) ) {
@@ -230,33 +228,14 @@ void SSDPServerImpl::annouceThread() {
 					send_anounce ( iter.first, iter.second );
 				}
 			}
-			start_time = std::chrono::high_resolution_clock::now();
+            _announce_time = std::chrono::high_resolution_clock::now();
 		}
-
-        //check for timed out devices
-        for ( auto & device : upnp_devices ) {
-            if ( check_timeout( device.second.lastSeen(), device.second.cacheControl() ) ) {
-                std::cerr << "timout device: " << device.first << " = " << device.second << std::endl;
-                // upnp_devices.erase( device.first ); //TODO use lock
-            }
-        }
-
 		std::this_thread::sleep_for ( std::chrono::milliseconds ( 5000 ) );
-
 	}
 }
 void SSDPServerImpl::fireEvent ( SSDPEventListener::EVENT_TYPE type, std::string  client_ip, SsdpEvent device ) const {
 	for ( auto & listener : listeners ) {
         listener ( type, client_ip, device );
 	}
-}
-std::map< std::string, SsdpEvent > SSDPServerImpl::getUpnpDevices( const std::string & usn ) {
-    std::map< std::string, SsdpEvent > re;
-    for( auto & device : upnp_devices ) {
-        if( device.second.nt() == usn ) {
-            re[ device.first ] = device.second;
-        }
-    }
-    return re;
 }
 }//namespace ssdp

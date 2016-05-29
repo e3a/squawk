@@ -35,6 +35,8 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/logger.properties DESTINATION e
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/docroot/ConnectionMgr.xml DESTINATION var/lib/squawk/www )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/docroot/ContentDir.xml DESTINATION var/lib/squawk/www )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/docroot/X_MS_MediaReceiverRegistrar.xml DESTINATION var/lib/squawk/www )
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/squawk-init-script DESTINATION /etc/init.d/squawk )
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/squawk-default DESTINATION /etc/default/squawk )
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docroot/ DESTINATION var/lib/squawk/www )
 
 if (build_tests)

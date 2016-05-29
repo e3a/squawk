@@ -107,103 +107,78 @@ void UpnpContentDirectoryApi::do_get ( http::HttpRequest & request, http::HttpRe
                 didl::DidlStatistics statistic_ = _dao->statistics();
                 didl::serializer< didl::DidlStatistics >::serialize ( response, statistic_, attributes_ );
 
-            } else if ( command == "upnp/event" ) {
-                std::map< std::string, ssdp::SsdpEvent > devices = _ssdp_server->get_upnp_devices();
+            } else if ( command == "upnp/device" ) {
+                std::map< std::string, upnp::UpnpDevice > devices = SquawkServer::instance()->upnp_devices();
 
                 response << "[";
                 bool first_device = true;
 
-                for ( auto & device : devices ) {
-                    if ( first_device ) { first_device = false; }
+                for ( auto & event : devices ) {
+                    try {
+                        upnp::UpnpDevice & device = event.second;
 
-                    else { response << ","; }
+                        if ( first_device ) { first_device = false; }
 
-                    response << "{";
+                        else { response << ","; }
 
-                    response << "\"host\":\"" << device.second.host() << "\",";
-                    response << "\"location\":\"" << device.second.location() << "\",";
-                    response << "\"nt\":\"" << device.second.nt() << "\",";
-                    response << "\"nts\":\"" << device.second.nts() << "\",";
-                    response << "\"server\":\"" << device.second.server() << "\",";
-                    response << "\"usn\":\"" << device.second.usn() << "\"";
+                        response << "{";
 
-                    response << "}";
+                        response << "\"versionMajor\":\"" << std::to_string ( device.versionMajor() ) << "\",";
+                        response << "\"versionMinor\":\"" << std::to_string ( device.versionMinor() ) << "\",";
+                        response << "\"deviceType\":\"" << device.deviceType() << "\",";
+                        response << "\"friendlyName\":\"" << device.friendlyName() << "\",";
+                        response << "\"manufacturer\":\"" << device.manufacturer() << "\",";
+                        response << "\"manufacturerUrl\":\"" << device.manufacturerUrl() << "\",";
+                        response << "\"modelDescription\":\"" << device.modelDescription() << "\",";
+                        response << "\"modelName\":\"" << device.modelName() << "\",";
+                        response << "\"modelNumber\":\"" << device.modelNumber() << "\",";
+                        response << "\"modelUrl\":\"" << device.modelUrl() << "\",";
+                        response << "\"serialNumber\":\"" << device.serialNumber() << "\",";
+                        response << "\"udn\":\"" << device.udn() << "\",";
+                        response << "\"upc\":\"" << device.upc() << "\",";
+                        response << "\"presentationUrl\":\"" << device.presentationUrl() << "\",";
+
+                        response << "\"icons\":[";
+                        bool first_icon = true;
+
+                        for ( auto & icon : device.iconList() ) {
+                            if ( first_icon ) { first_icon = false; }
+
+                            else { response << ","; }
+
+                            response << "{\"width\":" << std::to_string ( icon.width() );
+                            response << ",\"height\":" << std::to_string ( icon.height() );
+                            response << ",\"depth\":" << std::to_string ( icon.depth() );
+                            response << ",\"mimeType\":\"" << icon.mimeType();
+                            response << "\",\"url\":\"" << icon.url() << "\"}";
+                        }
+
+                        response << "], \"services\":[";
+                        bool first_service = true;
+
+                        for ( auto & service : device.serviceList() ) {
+                            if ( first_service ) { first_service = false; }
+
+                            else { response << ","; }
+
+                            response << "{\"serviceType\":\"" << service.serviceType();
+                            response << "\",\"serviceId\":\"" << service.serviceId();
+                            response << "\",\"scpdUrl\":\"" << service.scpdUrl();
+                            response << "\",\"controlUrl\":\"" << service.controlUrl();
+                            response << "\",\"eventSubUrl\":\"" << service.eventSubUrl() << "\"}";
+                        }
+
+                        response << "]}";
+
+                    } catch ( commons::xml::XmlException & ex ) {
+                        std::cerr << "can not parse xml file: " << ex.what() << std::endl;
+
+                    } catch ( ... ) {
+                        std::cerr << "other exception in get description." << std::endl;
+                    }
                 }
 
                 response << "]";
-
-            } else if ( command == "upnp/device" ) {
-//                std::map< std::string, didl::SsdpEvent > devices = _ssdp_server->getUpnpDevices ( "upnp:rootdevice" );
-
-//                response << "[";
-//                bool first_device = true;
-
-//                for ( auto & event : devices ) {
-//                    try {
-//                        didl::UpnpDevice device = _ssdp_server->deviceDescription ( event.second );
-
-//                        if ( first_device ) { first_device = false; }
-
-//                        else { response << ","; }
-
-//                        response << "{";
-
-//                        response << "\"versionMajor\":\"" << std::to_string ( device.versionMajor() ) << "\",";
-//                        response << "\"versionMinor\":\"" << std::to_string ( device.versionMinor() ) << "\",";
-//                        response << "\"deviceType\":\"" << device.deviceType() << "\",";
-//                        response << "\"friendlyName\":\"" << device.friendlyName() << "\",";
-//                        response << "\"manufacturer\":\"" << device.manufacturer() << "\",";
-//                        response << "\"manufacturerUrl\":\"" << device.manufacturerUrl() << "\",";
-//                        response << "\"modelDescription\":\"" << device.modelDescription() << "\",";
-//                        response << "\"modelName\":\"" << device.modelName() << "\",";
-//                        response << "\"modelNumber\":\"" << device.modelNumber() << "\",";
-//                        response << "\"modelUrl\":\"" << device.modelUrl() << "\",";
-//                        response << "\"serialNumber\":\"" << device.serialNumber() << "\",";
-//                        response << "\"udn\":\"" << device.udn() << "\",";
-//                        response << "\"upc\":\"" << device.upc() << "\",";
-//                        response << "\"presentationUrl\":\"" << device.presentationUrl() << "\",";
-
-//                        response << "\"icons\":[";
-//                        bool first_icon = true;
-
-//                        for ( auto & icon : device.iconList() ) {
-//                            if ( first_icon ) { first_icon = false; }
-
-//                            else { response << ","; }
-
-//                            response << "{\"width\":" << std::to_string ( icon.width() );
-//                            response << ",\"height\":" << std::to_string ( icon.height() );
-//                            response << ",\"depth\":" << std::to_string ( icon.depth() );
-//                            response << ",\"mimeType\":\"" << icon.mimeType();
-//                            response << "\",\"url\":\"" << icon.url() << "\"}";
-//                        }
-
-//                        response << "], \"services\":[";
-//                        bool first_service = true;
-
-//                        for ( auto & service : device.serviceList() ) {
-//                            if ( first_service ) { first_service = false; }
-
-//                            else { response << ","; }
-
-//                            response << "{\"serviceType\":\"" << service.serviceType();
-//                            response << "\",\"serviceId\":\"" << service.serviceId();
-//                            response << "\",\"scpdUrl\":\"" << service.scpdUrl();
-//                            response << "\",\"controlUrl\":\"" << service.controlUrl();
-//                            response << "\",\"eventSubUrl\":\"" << service.eventSubUrl() << "\"}";
-//                        }
-
-//                        response << "]}";
-
-//                    } catch ( commons::xml::XmlException & ex ) {
-//                        std::cerr << "can not parse xml file: " << ex.what() << std::endl;
-
-//                    } catch ( ... ) {
-//                        std::cerr << "other exception in get description." << std::endl;
-//                    }
-//                }
-
-//                response << "]";
             }
 
         } catch ( db::DbException & e ) {

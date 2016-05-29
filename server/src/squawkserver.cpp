@@ -46,6 +46,9 @@
 #include "upnpconnectionmanager.h"
 
 namespace squawk {
+
+log4cxx::LoggerPtr SquawkServer::logger ( log4cxx::Logger::getLogger ( "squawk.SquawkServer" ) );
+
 void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
 
     _squawk_config = std::shared_ptr< squawk::SquawkConfig >(squawk_config);
@@ -67,10 +70,79 @@ void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
     ssdp_server->register_namespace(ssdp::NS_CONTENT_DIRECTORY, std::string("http://") + squawk_config->httpAddress() + ":" + std::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
 //    ssdp_server->register_namespace(ssdp::NS_MEDIA_RECEIVER_REGISTRAR, std::string("http://") + squawk_config->httpAddress() + ":" + commons::string::to_string( squawk_config->httpPort() ) + "/rootDesc.xml");
     ssdp_server->subscribe(
-        [](ssdp::SSDPEventListener::EVENT_TYPE type, std::string  client_ip, ssdp::SsdpEvent device ) {
-            std::cout << "SSDPEvent: " << client_ip << ":" << type << " = " << device << std::endl;
+        [this](ssdp::SSDPEventListener::EVENT_TYPE type, std::string, ssdp::SsdpEvent device ) {
+
+ //TODO           std::lock_guard<std::mutex> _ssdp_devices_guard( _ssdp_devices_mutex );
+
+            //nt            device type
+            //nts           event type
+            //usn           device endpoint uuid
+            //cache_control cache timer
+            std::string _rootdevice_usn;
+            size_t uuid_position_end_ = device.usn().find( "::" );
+            if( uuid_position_end_ != std::string::npos ) {
+                _rootdevice_usn = device.usn().substr(0, uuid_position_end_ );
+            } else if( device.nt() == ssdp::NS_ROOT_DEVICE ) {
+                _rootdevice_usn = device.usn();
+            } else if( device.nt() == device.usn() ) {
+                _rootdevice_usn = device.usn();
+            } else if( squawk::SUAWK_SERVER_DEBUG ) {
+                LOG4CXX_DEBUG ( logger, "can not parse usn: " << device.nt() << "=" << device.usn() )
+            }
+
+            if( device.nt() == ssdp::NS_ROOT_DEVICE ) {
+                if( type == ssdp::SSDPEventListener::BYE ) {
+                    if( _ssdp_devices.find( _rootdevice_usn ) != _ssdp_devices.end() ) {
+                        if( squawk::SUAWK_SERVER_DEBUG ) {
+                            LOG4CXX_DEBUG ( logger, "SSDPEvent (remove rootdevice): " << device )
+                        }
+                        _ssdp_devices.erase( _ssdp_devices.find( _rootdevice_usn ) );
+                    }
+                } else if( _ssdp_devices.find( _rootdevice_usn ) != _ssdp_devices.end() ) {
+                    //update timestamp
+                    if( squawk::SUAWK_SERVER_DEBUG ) {
+                        LOG4CXX_TRACE ( logger, "SSDPEvent (existing rootdevice): " << device )
+                    }
+                     _ssdp_devices[ _rootdevice_usn ].touch();
+                } else {
+                    //create new rootdevice
+                    try {
+                        if( squawk::SUAWK_SERVER_DEBUG ) {
+                            LOG4CXX_TRACE ( logger, "SSDPEvent (new rootdevice): " << device )
+                        }
+                        _ssdp_devices[ _rootdevice_usn ] = upnp::deviceDescription( device );
+                        _ssdp_devices[ _rootdevice_usn ].touch();
+                        _ssdp_devices[ _rootdevice_usn ].timeout( device.cacheControl() );
+                    } catch( commons::xml::XmlException & ex ) {
+                        LOG4CXX_FATAL ( logger, "XML Parse Exception (" << ex.code() << ") " << ex.what() )
+                    } catch( ... ) {
+                        LOG4CXX_FATAL ( logger, "Other Exception in parse new rootdevice." )
+                    }
+                }
+            } /* TODO else {
+                if( _ssdp_devices.find( _rootdevice_usn ) != _ssdp_devices.end() ) {
+                    // std::cout << "SSDPEvent (new endpoint): " << device << std::endl;
+
+                } else { std::cerr << "root device not found: " << _rootdevice_usn << std::endl; }
+            } */
         }
     );
+
+    /* clean the devices */
+    _ssdp_devices_thread = std::unique_ptr<std::thread> ( new std::thread( [this](){
+        while ( announce_thread_run ) {
+            //std::lock_guard<std::mutex> _ssdp_devices_guard( _ssdp_devices_mutex );
+            for( auto ssdp_device_ : _ssdp_devices ) {
+                if( ssdp_device_.second.timeout() ) {
+                    if( squawk::SUAWK_SERVER_DEBUG ) {
+                        LOG4CXX_DEBUG ( logger, "SSDPEvent Cleanup Thread[Remove Device]:  " << ssdp_device_.first )
+                    }
+                    _ssdp_devices.erase( _ssdp_devices.find( ssdp_device_.first ) );
+                }
+            }
+            std::this_thread::sleep_for ( std::chrono::milliseconds ( 5000 ) );
+        }
+    }));
 
     /* register the upnp CDS servlets. */
     squawk::UpnpContentDirectory * content_directory = new squawk::UpnpContentDirectory("/ctl/ContentDir" );

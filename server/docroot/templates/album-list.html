@@ -2,13 +2,13 @@
     <dir-pagination-controls
         boundary-links="true"
         on-page-change="pageChanged(newPageNumber)"
-        template-url="/bower_components/angular-utils-pagination/dirPagination.tpl.html">
+        template-url="/bower_components/dirPagination/dirPagination.tpl.html">
     </dir-pagination-controls>
 </div>
 <div width="100%">
     <div class="album" dir-paginate="album in albums | itemsPerPage: pageSize" total-items="albums_count" current-page="currentPage">
-        <img ng-src="/cover/tn_{{album.id}}.jpg"/><br/>
-        <a ng-href="#/album/{{album.id}}">{{album.title | limitTo: 9}}</a><br/>
-        <a ng-href="#/artist/{{artist.id}}/album" ng-repeat="artist in album.artists">{{artist.name}}</a>
+        <img ng-src="/albumArtUri/{{album.id}}.jpg"/><br/>
+        <a ng-href="#/album/{{album.id}}">{{album.title | limitTo: 16}}</a><br/>
+        <a ng-href="#/artist/{{album.artist}}/album">{{album.artist}}</a>
     </div>
 </div>

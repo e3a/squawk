@@ -26,6 +26,15 @@
 #include <gtest/gtest.h>
 
 namespace upnp {
+TEST( UpnpTest, ParseUpnpDeviceTimeout ) {
+
+    UpnpDevice device_;
+    device_.timeout( 5 );
+    device_.touch();
+    ASSERT_FALSE( device_.timeout() );
+    std::this_thread::sleep_for ( std::chrono::milliseconds ( 5000 ) );
+    ASSERT_TRUE( device_.timeout() );
+}
 TEST( UpnpTest, ParseRequest ) {
 /*
 <?xml version="1.0" encoding="UTF-8"?>

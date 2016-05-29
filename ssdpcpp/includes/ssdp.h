@@ -444,14 +444,14 @@ public:
         * Get the UPNP Devices.
 	* \return map with the upnp devices, the map key is the service UUID
 	*/
-        std::map< std::string, SsdpEvent > get_upnp_devices() {
-		return upnp_devices;
-	}
+//TODO        std::map< std::string, SsdpEvent > get_upnp_devices() {
+//		return upnp_devices;
+//	}
        /**
         * Get the UPNP DEvices filtered by usn.
         * \return map with the upnp devices, the map key is the service UUID
         */
-        std::map< std::string, SsdpEvent > getUpnpDevices( const std::string & usn );
+//TODO        std::map< std::string, SsdpEvent > getUpnpDevices( const std::string & usn );
 
         /**
 	 * \brief Subscribe for events.
@@ -473,15 +473,15 @@ private:
 	void send_anounce ( const std::string & nt, const std::string & location );
 	void send_suppress ( const std::string & nt );
 	std::map< std::string, std::string > create_response ( const std::string & nt, const std::string & location );
-	std::map< std::string, std::string > namespaces;
-        std::map< std::string, SsdpEvent > upnp_devices;
+        std::map< std::string, std::string > namespaces; //the namespaces for this server
+//        std::map< std::string, SsdpEvent > upnp_devices;
 
         std::vector< event_callback_t > listeners;
         void fireEvent ( SSDPEventListener::EVENT_TYPE type, std::string client_ip, SsdpEvent device ) const;
 
 	bool announce_thread_run = true;
 	std::unique_ptr<std::thread> annouceThreadRunner;
-	std::chrono::high_resolution_clock::time_point start_time;
+        std::chrono::high_resolution_clock::time_point _announce_time;
 	void annouceThread();
 };
 inline std::string create_header ( std::string request_line, std::map< std::string, std::string > headers ) {

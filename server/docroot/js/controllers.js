@@ -105,16 +105,12 @@ squawkApp.controller('AlbumDetailCtrl', ['$scope', '$http', '$routeParams',  fun
 squawkApp.controller('AdminCtrl', ['$scope', '$http', function AdminCtrl($scope, $http) {
     $scope.panes = [
         { title:"Settings",     content:"templates/config.html" , active: true},
-        { title:"Dorectories",  content:"templates/directories.html"},
         { title:"Statistic",    content:"templates/statistic.html"},
         { title:"Upnp",         content:"templates/upnpevents.html"},
         { title:"About",        content:"templates/about.html"}
     ];
     $http.get('/api/statistic').success(function(data) {
         $scope.statistic = data;
-    });
-    $http.get('/api/upnp/event').success(function(data) {
-        $scope.events = data;
     });
     $http.get('/api/upnp/device').success(function(data) {
         $scope.devices = data;

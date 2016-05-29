@@ -1,6 +1,7 @@
 #ifndef UPNP2
 #define UPNP2
 
+#include <chrono>
 #include <sstream>
 
 #include <curlpp/cURLpp.hpp>
@@ -282,7 +283,7 @@ private:
  */
 struct UpnpDevice {
 public:
-    UpnpDevice() {}
+    UpnpDevice() : timestamp_( std::chrono::high_resolution_clock::now() ) {}
     UpnpDevice ( const UpnpDevice& ) = default;
     UpnpDevice ( UpnpDevice&& ) = default;
     UpnpDevice& operator= ( const UpnpDevice& ) = default;
@@ -491,6 +492,22 @@ public:
      */
     void addService( Service service ) { services_.push_back( service ); }
 
+    std::chrono::high_resolution_clock::time_point timestamp() {
+        return timestamp_;
+    }
+    void touch() {
+        timestamp_ = std::chrono::high_resolution_clock::now();
+    }
+    bool timeout() {
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto dur = end_time - timestamp_;
+        auto f_secs = std::chrono::duration_cast<std::chrono::duration<unsigned int>> ( dur );
+        return( f_secs.count() >= timeout_ );
+    }
+    void timeout(unsigned short timeout ) {
+        timeout_ = timeout;
+    }
+
 private:
     int versionMajor_, versionMinor_;
     std::string deviceType_, friendlyName_, manufacturer_, manufacturerUrl_, modelDescription_, modelName_,
@@ -498,6 +515,8 @@ private:
     std::vector< Icon > images_;
     std::vector< Service > services_;
     std::vector< UpnpDevice > devices_;
+    std::chrono::high_resolution_clock::time_point timestamp_;
+    unsigned short timeout_ = 1800;
 };
 
 
@@ -590,6 +609,7 @@ inline upnp::UpnpDevice deviceDescription( const ssdp::SsdpEvent & event ) {
     upnp::UpnpDevice device;
     //make the request
     try {
+        //TODO not use curl
         curlpp::Cleanup myCleanup;
         curlpp::Easy myRequest;
         std::cout << "get device description:" << event.location() << std::endl;
