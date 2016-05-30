@@ -33,8 +33,8 @@ do_start() {
    fi
    rm -rf "$RUNDIR" || return 1
    install -d --mode=0755 -o $USER -g $GROUP "$RUNDIR" || return 1
-   start-stop-daemon --start --background --chuid $USER --group $GROUP --quiet --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS > /var/log/squawk/squawk.out 2>&1
-}
+   start-stop-daemon --start --background --chuid $USER --group $GROUP --quiet --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS > /var/log/squawk.out 2>&1
+   }
 
 do_stop() {
 
