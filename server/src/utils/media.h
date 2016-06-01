@@ -724,7 +724,7 @@ public:
         os <<  "MediaFile::" << std::endl;
         os << " duration: " <<  time_to_string( obj._duration ) << std::endl;
         os << "Meta Information: " << std::endl;
-        for( auto & iter : obj.audio_streams ) std::cout << iter;
+        for( auto & iter : obj.audio_streams ) std::cout << iter; //TODO
         for( auto & iter : obj.video_streams ) std::cout << iter;
         for( auto & iter : obj.tags ) {
             os << "\t" << iter.first << " = " << iter.second << std::endl;

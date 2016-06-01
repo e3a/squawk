@@ -26,8 +26,6 @@ public:
     virtual void do_get ( http::HttpRequest & request, http::HttpResponse & response );
     virtual void do_head ( http::HttpRequest & request, http::HttpResponse & response );
 private:
-    static log4cxx::LoggerPtr logger;
-
     void _process_file ( http::HttpRequest & request, http::HttpResponse & response );
     void _dlna_headers ( http::HttpRequest & request, http::HttpResponse & response );
 };

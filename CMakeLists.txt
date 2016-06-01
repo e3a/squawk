@@ -49,8 +49,6 @@ find_package(Sqlite3 REQUIRED)
 set(LIBS ${LIBS} ${SQLITE3_LIBRARY})
 find_package(PCRE++ REQUIRED)
 set(LIBS ${LIBS} -lpcrecpp)
-find_package(Log4cxx REQUIRED)
-set(LIBS ${LIBS} ${LOG4CXX_LIBRARIES})
 find_package(Imlib2 REQUIRED)
 set(LIBS ${LIBS} ${IMLIB2_LIBRARIES})
 find_package(LibAVCodec COMPONENTS avformat avcodec avutil)
@@ -68,7 +66,8 @@ set(LIBS ${LIBS} -luuid -lpthread -lm) #needed for ubuntu
 
 SET( SQUAWK_INCLUDES ${CMAKE_SOURCE_DIR}/httpcpp/includes ${CMAKE_SOURCE_DIR}/ssdpcpp/includes
      ${Boost_INCLUDE_DIRS} ${ASIO_PATH}/include/ ${LIBXML2_INCLUDE_DIR} ${IMLIB2_INCLUDE_DIR}
-     ${AVCODEC_INCLUDES} ${CURLPP_INCLUDE_DIRS} ${OPENSSL_INCLUDES} ${CMAKE_SOURCE_DIR}/${FORMAT_PATH})
+     ${AVCODEC_INCLUDES} ${CURLPP_INCLUDE_DIRS} ${OPENSSL_INCLUDES} ${CMAKE_SOURCE_DIR}/${FORMAT_PATH}
+     ${CMAKE_SOURCE_DIR}/external/easyloggingpp/src/ )
 
 # -------------------------------------------------------------------------
 # -----------------------   Compile Libraries       -----------------------
@@ -137,7 +136,7 @@ SET(CPACK_PACKAGE_VERSION_MINOR "${MINOR_VERSION}")
 SET(CPACK_PACKAGE_VERSION_PATCH "${PATCH_VERSION}")
 SET(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${MAJOR_VERSION}.${MINOR_VERSION}.${CPACK_PACKAGE_VERSION_PATCH}")
 SET(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${MAJOR_VERSION}.${MINOR_VERSION}.${CPACK_PACKAGE_VERSION_PATCH}")
-SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libpcrecpp0, liblog4cxx10, libimlib2, libavcodec54, libavformat54, libavutil52, libpoppler-cpp0, libcurlpp0, libboost-filesystem1.54.0")
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libpcrecpp0, libimlib2, libavcodec54, libavformat54, libavutil52, libpoppler-cpp0, libcurlpp0, libboost-filesystem1.54.0")
 SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 SET(CPACK_DEBIAN_PACKAGE_SECTION "media")
 SET(CPACK_DEBIAN_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})

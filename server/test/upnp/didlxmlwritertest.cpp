@@ -20,7 +20,7 @@
 #include <string>
 #include <sstream>
 
-#include "upnp2.h"
+#include "upnp.h"
 #include "didlxmlwriter.h"
 
 #include <gtest/gtest.h>

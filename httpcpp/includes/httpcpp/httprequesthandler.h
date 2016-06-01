@@ -20,7 +20,12 @@
 #ifndef HTTPREQUESTHANDLER
 #define HTTPREQUESTHANDLER
 
+#include <string>
+
 namespace http {
+
+typedef std::unique_ptr< HttpServlet > ptr_servlet_t;
+using http_callback_t = void( const HttpRequest&, HttpResponse& );
 
 /**
  * @brief The HttpRequestHandler class
@@ -31,7 +36,10 @@ public:
 	 * @brief Register the servlets.
 	 * @param servlet A servlet instance.
 	 */
-	virtual void register_servlet ( HttpServlet * servlet ) = 0;
+        virtual void register_servlet ( ptr_servlet_t servlet ) = 0;
+
+        virtual void callback ( std::string & method, std::string & uri, std::function< http_callback_t > callback ) = 0;
+
 	/**
 	 * @brief Callback handler for requests.
 	 * @param request The HttpRequest object.

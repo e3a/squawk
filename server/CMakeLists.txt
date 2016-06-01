@@ -7,7 +7,7 @@ set(UTILS src/utils/media.h src/utils/pdfparser.cpp src/utils/amazonfacade.cpp s
 set(SQUAWK src/squawk.h src/squawkconfig.cpp)
 set(DATABASE src/db/dbexception.h src/db/sqlite3statement.cpp src/db/sqlite3connection.cpp src/db/sqlite3database.cpp)
 set(UPNP src/upnp/didl.cpp
-         src/upnp/upnp2.h
+         src/upnp/upnp.h
          src/upnp/didlxmlwriter.cpp
          src/upnp/didljsonwriter.h
          src/upnpconnectionmanager.cpp

@@ -21,20 +21,19 @@
 #include "squawkserver.h"
 
 namespace squawk {
-log4cxx::LoggerPtr UpnpContentDirectoryDao::logger ( log4cxx::Logger::getLogger ( "squawk.UpnpContentDirectoryDao" ) );
 
 /* CONSTRUCTOR */
 UpnpContentDirectoryDao::UpnpContentDirectoryDao() : _db ( SquawkServer::instance()->db() ) {
 
     //create tables if they dont exist
     for ( auto & stmt : CREATE_STATEMENTS ) {
-        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "create table:" << stmt ); }
+        LOG ( TRACE ) << "create table:" << stmt;
 
         try {
             _db->prepareStatement ( stmt )->step();
 
         } catch ( db::DbException & e ) {
-            LOG4CXX_FATAL ( logger, "create table, Exception:" << e.code() << "-> " << e.what() );
+            LOG ( FATAL ) << "Create table, Exception:" << e.code() << "-> " << e.what();
             throw upnp::UpnpException ( e.code(), "DbException: " +  std::string ( e.what() ) );
         }
     }
@@ -46,7 +45,7 @@ void UpnpContentDirectoryDao::startTransaction() {
         _db->exec ( "BEGIN;" );
 
     } catch ( db::DbException & e ) {
-        LOG4CXX_FATAL ( logger, "create statements, Exception:" << e.code() << "-> " << e.what() );
+        LOG ( FATAL ) << "Create statements, Exception:" << e.code() << "-> " << e.what();
         throw upnp::UpnpException ( e.code(), "DbException: " +  std::string ( e.what() ) );
     }
 }
@@ -55,14 +54,14 @@ void UpnpContentDirectoryDao::endTransaction() {
         _db->exec ( "END;" );
 
     } catch ( db::DbException & e ) {
-        LOG4CXX_FATAL ( logger, "create statements, Exception:" << e.code() << "-> " << e.what() );
+        LOG ( FATAL ) << "Create statements, Exception:" << e.code() << "-> " << e.what();
         throw upnp::UpnpException ( e.code(), "DbException: " +  std::string ( e.what() ) );
     }
 }
 
 /* SWEEP DATABASE */
 void UpnpContentDirectoryDao::sweep ( long mtime ) {
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_DEBUG ( logger, "sweepDatabase:" << mtime ); }
+    LOG ( TRACE ) << mtime;
 
     db::db_statement_ptr stmt = _db->prepareStatement ( "delete from tbl_cds_object where timestamp < ?" );
     stmt->bind_int ( 1, mtime );
@@ -79,8 +78,7 @@ void UpnpContentDirectoryDao::sweep ( long mtime ) {
 }
 
 size_t UpnpContentDirectoryDao::objectsCount ( didl::DIDL_CLASS cls, std::map< std::string, std::string > filters ) {
-    if ( squawk::SUAWK_SERVER_DEBUG )
-    { LOG4CXX_DEBUG ( logger, "objectsCount<" << didl::className ( cls ) ); }
+    LOG ( TRACE ) << didl::className ( cls );
 
     size_t result_count = 0;
     std::stringstream query_string_;
@@ -92,7 +90,7 @@ size_t UpnpContentDirectoryDao::objectsCount ( didl::DIDL_CLASS cls, std::map< s
         query_string_ << ")";
     }
 
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (objectsCount): " << query_string_.str() ); }
+    LOG(TRACE) << "Execute query (objectsCount): " << query_string_.str();
 
     db::db_statement_ptr stmt_objects_ = _db->prepareStatement ( query_string_.str() );
     stmt_objects_->bind_int ( 1, cls );
@@ -105,8 +103,7 @@ size_t UpnpContentDirectoryDao::objectsCount ( didl::DIDL_CLASS cls, std::map< s
 }
 
 size_t UpnpContentDirectoryDao::childrenCount ( didl::DIDL_CLASS cls, const size_t & parent, std::map< std::string, std::string > filters ) {
-    if ( squawk::SUAWK_SERVER_DEBUG )
-    { LOG4CXX_DEBUG ( logger, "childrenCount<" << didl::className ( cls ) << ">::parent=" << parent ); }
+    LOG ( TRACE ) << "ChildrenCount<" << didl::className ( cls ) << ">::parent=" << parent;
 
     size_t result_count = 0;
     std::stringstream query_string_;
@@ -114,7 +111,7 @@ size_t UpnpContentDirectoryDao::childrenCount ( didl::DIDL_CLASS cls, const size
     parse_class ( cls, " and ", query_string_, filters );
     parse_filters ( query_string_, filters );
 
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (childrenCount): " << query_string_.str() ); }
+    LOG ( TRACE ) << "Execute query (childrenCount): " << query_string_.str();
 
     db::db_statement_ptr stmt_objects_ = _db->prepareStatement ( query_string_.str() );
     stmt_objects_->bind_int ( 1, parent );
@@ -194,11 +191,11 @@ didl::DidlStatistics UpnpContentDirectoryDao::statistics() {
         }
 
     } catch ( db::DbException & e ) {
-        LOG4CXX_FATAL ( logger, "Can not get statistic, Exception:" << e.code() << "-> " << e.what() );
+        LOG ( FATAL ) << "Can not get statistic, Exception:" << e.code() << "-> " << e.what();
         throw;
 
     } catch ( ... ) {
-        LOG4CXX_FATAL ( logger, "Other Excpeption in get_statistic." );
+        LOG ( FATAL ) << "Other Excpeption in get_statistic.";
         throw;
     }
 
@@ -210,7 +207,7 @@ didl::DidlContainerArtist UpnpContentDirectoryDao::artist ( const std::string & 
     std::string clean_name_ = UpnpContentDirectoryParser::_clean_name ( name );
 
     try {
-        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "artist:" << clean_name_ ); }
+        LOG ( TRACE ) << "Artist:" << clean_name_;
 
         db::db_statement_ptr stmt_artist_ = _db->prepareStatement (
                                                 "select ROWID, name, clean_name, import from tbl_cds_artist where ROWID = ?" );
@@ -228,7 +225,7 @@ didl::DidlContainerArtist UpnpContentDirectoryDao::artist ( const std::string & 
         }
 
     } catch ( db::DbException & e ) {
-        LOG4CXX_FATAL ( logger, "get artist, Exception:" << e.code() << "-> " << e.what() );
+        LOG ( FATAL ) << "Get artist, Exception:" << e.code() << "-> " << e.what();
         throw upnp::UpnpException ( e.code(), "artist(" + clean_name_ + ") -> DbException: " +  std::string ( e.what() ) );
     }
 }
@@ -236,7 +233,7 @@ std::list< didl::DidlContainerArtist > UpnpContentDirectoryDao::artists ( const 
         std::map< std::string, std::string > filters, std::pair< std::string, std::string > sort ) const {
 
     try {
-        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "artists:" << start_index << ", " << result_count << ")" ); }
+        LOG ( TRACE ) << "Artists:" << start_index << ", " << result_count << ")";
 
         std::stringstream query_string_;
         query_string_ << "select ROWID, name, clean_name, import from tbl_cds_artist";
@@ -285,14 +282,14 @@ std::list< didl::DidlContainerArtist > UpnpContentDirectoryDao::artists ( const 
         return artist_list_;
 
     } catch ( db::DbException & e ) {
-        LOG4CXX_FATAL ( logger, "get artists, Exception:" << e.code() << "-> " << e.what() );
+        LOG ( FATAL ) << "Get artists, Exception:" << e.code() << "-> " << e.what();
         throw upnp::UpnpException ( e.code(),
                                     "artist(" + std::to_string ( start_index ) + "/" + std::to_string ( result_count ) + ") -> DbException: " +  std::string ( e.what() ) );
     }
 }
 
 size_t UpnpContentDirectoryDao::artistsCount ( std::map< std::string, std::string > filters ) {
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "count artists" ); }
+    LOG ( TRACE ) << "count artists";
 
     try {
         std::stringstream query_string_;
@@ -311,14 +308,14 @@ size_t UpnpContentDirectoryDao::artistsCount ( std::map< std::string, std::strin
         } else { return 0; }
 
     } catch ( db::DbException & e ) {
-        LOG4CXX_ERROR ( logger, "get artists count, Exception:" << e.code() << "-> " << e.what() );
+        LOG ( ERROR ) << "Get artists count, Exception:" << e.code() << "-> " << e.what();
         throw upnp::UpnpException ( e.code(),
                                     "artists count -> DbException: " +  std::string ( e.what() ) );
     }
 }
 
 didl::DidlContainerArtist UpnpContentDirectoryDao::save ( const didl::DidlContainerArtist artist ) {
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "save artist = id:" << artist.id() << ", " << artist.title() ); }
+    LOG ( TRACE ) << "Save artist = id:" << artist.id() << ", " << artist.title();
 
     try {
         size_t artist_id_  = 0;
@@ -359,7 +356,7 @@ didl::DidlContainerArtist UpnpContentDirectoryDao::save ( const didl::DidlContai
                                              0, 0, artist.cleanName(), artist.import() ) );
 
     } catch ( db::DbException & e ) {
-        LOG4CXX_FATAL ( logger, "save or create artist, Exception:" << e.code() << "-> " << e.what() );
+        LOG ( FATAL ) << "Save or create artist, Exception:" << e.code() << "-> " << e.what();
         throw upnp::UpnpException ( e.code(), "save(DidlContainerArtist) -> DbException: " +  std::string ( e.what() ) );
     }
 }
@@ -441,7 +438,7 @@ didl::DidlResource UpnpContentDirectoryDao::save ( const didl::DidlResource reso
 std::list< didl::DidlContainer > UpnpContentDirectoryDao::series ( const size_t & start_index, const size_t & result_count,
         std::map< std::string, std::string > filters, std::pair< std::string, std::string > sort ) const {
 
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "series:" << start_index << ", " << result_count << ")" ); }
+    LOG ( TRACE ) << "series:" << start_index << ", " << result_count << ")";
 
     std::stringstream query_string_;
     query_string_ << "select distinct series_title from tbl_cds_object where series_title!='' ";
@@ -470,7 +467,7 @@ std::list< didl::DidlContainer > UpnpContentDirectoryDao::series ( const size_t 
     while ( stmt_series_->step() ) {
         db::db_statement_ptr stmt_series_count_ = _db->prepareStatement (
                     "select count(*) from tbl_cds_object where series_title = ?" );
-        stmt_series_count_->bind_text ( 1, stmt_series_->get_string( 0 ) );
+        stmt_series_count_->bind_text ( 1, stmt_series_->get_string ( 0 ) );
         int series_count_ = 0;
 
         if ( stmt_series_count_->step() ) {
@@ -480,9 +477,9 @@ std::list< didl::DidlContainer > UpnpContentDirectoryDao::series ( const size_t 
         series_list_.push_back (
             didl::DidlContainer ( 0 /*ROWID*/, 0 /*parent_id*/,
                                   stmt_series_->get_string ( 0 ) /* title,*/,
-                                        "" /*path*/,
-                                        0 /*mtime*/, 0 /*object_update_id*/,
-                                        series_count_ /*child_count*/, true ) );
+                                  "" /*path*/,
+                                  0 /*mtime*/, 0 /*object_update_id*/,
+                                  series_count_ /*child_count*/, true ) );
     }
 
     return series_list_;
@@ -490,31 +487,35 @@ std::list< didl::DidlContainer > UpnpContentDirectoryDao::series ( const size_t 
 
 size_t UpnpContentDirectoryDao::seriesCount ( std::map< std::string, std::string > filters ) const {
 
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "seriesCount:" ); }
+    LOG ( TRACE ) << "seriesCount:";
 
     std::stringstream query_string_;
-    if( filters.empty() ) {
+
+    if ( filters.empty() ) {
         query_string_ << "select count(distinct series_title) from tbl_cds_object";
+
     } else {
         query_string_ << "select count(series_title) from tbl_cds_object";
         query_string_ << " WHERE ";
         parse_attributes ( query_string_, filters );
     }
 
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (seriesCount): " << query_string_.str() ); }
+    LOG(TRACE) << "Execute query (seriesCount): " << query_string_.str();
 
     db::db_statement_ptr stmt_series_ = _db->prepareStatement ( query_string_.str() );
 
     int result_ = 0;
+
     if ( stmt_series_->step() ) {
-        result_ = stmt_series_->get_int( 0 );
+        result_ = stmt_series_->get_int ( 0 );
     }
+
     return result_;
 
 }
 
 int UpnpContentDirectoryDao::touch ( const std::string & path, const unsigned long mtime ) {
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "touch record with path: " << path ); }
+    LOG ( TRACE ) << "Touch record with path: " << path;
 
     try {
         db::db_statement_ptr stmt_ = _db->prepareStatement (
@@ -529,7 +530,7 @@ int UpnpContentDirectoryDao::touch ( const std::string & path, const unsigned lo
         return ( last_changes_count_ );
 
     } catch ( db::DbException & e ) {
-        LOG4CXX_FATAL ( logger, "touch file with path, Exception:" << e.code() << "-> " << e.what() );
+        LOG ( FATAL ) << "Touch file with path, Exception:" << e.code() << "-> " << e.what();
         throw upnp::UpnpException ( e.code(), "touch(" + path + ") -> DbException: " +  std::string ( e.what() ) );
     }
 }

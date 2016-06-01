@@ -25,7 +25,8 @@ namespace squawk {
 
 inline std::string http_uri( const std::string & suffix = "" ) {
     std::stringstream ss;
-    ss << "http://" << SquawkServer::instance()->config()->httpAddress() << ":" << SquawkServer::instance()->config()->httpPort() << "/" << suffix;
+    auto config_ = SquawkServer::instance()->config();
+    ss << "http://" << config_->httpAddress() << ":" << config_->httpPort() << "/" << suffix;
     return ss.str();
 }
 
@@ -89,6 +90,7 @@ class ContentDirectoryModule {
     }
 };
 
+
 /**
  * @brief The UpnpContentDirectory class
  * The UPNP content directory class is the factory for all content directory implementations. the implementations
@@ -99,14 +101,11 @@ public:
     UpnpContentDirectory( const std::string & path ) : HttpServlet( path ) {}
 
     void registerContentDirectoryModule( std::unique_ptr< ContentDirectoryModule > modules );
-    /** TODO doees this work? */
-    void registerContentDirectoryModule( std::list< std::unique_ptr< ContentDirectoryModule > > modules );
 
     virtual void do_post( http::HttpRequest & request, http::HttpResponse & response);
     virtual void do_default( const std::string & method, http::HttpRequest & request, http::HttpResponse & response);
 
 private:
-    static log4cxx::LoggerPtr logger;
     std::list< std::unique_ptr< ContentDirectoryModule > > _modules;
 
     void browse( commons::xml::XMLWriter * xmlWriter, upnp::UpnpContentDirectoryRequest * upnp_command );

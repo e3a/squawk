@@ -28,7 +28,7 @@ void SSDPClientConnection::send ( const std::string & request_line, const std::m
 
 	asio::ip::udp::endpoint endpoint ( asio::ip::address::from_string ( multicast_address.c_str() ), multicast_port );
 	asio::ip::address _listen_address = asio::ip::address::from_string ( "0.0.0.0" );
-	asio::ip::udp::endpoint listen_endpoint ( _listen_address, 65105 ); //TODO does it work without choosing port?
+    asio::ip::udp::endpoint listen_endpoint ( _listen_address, 65105 ); //TODO does it work without choosing port?
 
 	socket.open ( listen_endpoint.protocol() );
 	socket.set_option ( asio::ip::udp::socket::reuse_address ( true ) );

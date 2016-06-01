@@ -1,7 +1,4 @@
 /*
-    The UPNP Service Description
-    Copyright (C) 2013  <etienne> <etienne@gmail.com>
-
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
@@ -41,8 +38,6 @@ public:
      */
     UpnpXmlDescription ( const std::string & path ) : HttpServlet ( path ) {}
     virtual void do_get ( ::http::HttpRequest & request, ::http::HttpResponse & response );
-private:
-    static log4cxx::LoggerPtr logger;
 };
-}//squawk
+}//namespace squawk
 #endif // UPNPXMLDESCRIPTION_H

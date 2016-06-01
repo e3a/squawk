@@ -1,7 +1,4 @@
 /*
-    DB connection implementation.
-    Copyright (C) 2014  <e.knecht@netwings.ch>
-
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
@@ -24,8 +21,6 @@
 
 namespace db {
 
-log4cxx::LoggerPtr Sqlite3Connection::logger ( log4cxx::Logger::getLogger ( "squawk.db.Sqlite3Connection" ) );
-
 Sqlite3Connection::Sqlite3Connection ( const std::string & path ) {
 	sqlite3 * db;
 	int res = sqlite3_open ( path.c_str(), &db );
@@ -35,27 +30,22 @@ Sqlite3Connection::Sqlite3Connection ( const std::string & path ) {
 	}
 
     _db = std::unique_ptr< sqlite3, std::function<void ( sqlite3* ) > > ( db, [] ( sqlite3 * db ) {
-		std::cout << "delete database" << std::endl;
 		sqlite3_close ( db );
 	} );
 }
 Sqlite3Connection::~Sqlite3Connection() {
-	std::cout << "DTOR START" << std::endl;
-
     for ( auto stmt_list : _stmt_pool ) {
 		for ( auto stmt : stmt_list.second ) {
 			delete stmt;
 		}
 	}
-
     _stmt_pool.clear();
-	std::cout << "DTOR END" << std::endl;
 }
 int Sqlite3Connection::exec ( const std::string & query ) {
     return sqlite3_exec ( _db.get(), query.c_str(), NULL, NULL, NULL );
 }
 db_statement_ptr Sqlite3Connection::prepareStatement ( const std::string & statement ) {
-    std::lock_guard<std::mutex> lck ( _mtx );
+    std::lock_guard<std::mutex> lck ( _db_mtx );
 	Sqlite3Statement * stmt = nullptr;
 
 	// search an existing statement
@@ -75,7 +65,6 @@ db_statement_ptr Sqlite3Connection::prepareStatement ( const std::string & state
 		}
 
 		sqlite3_stmt_ptr sqlite3_statement_ ( sqlite3_statement, [] ( sqlite3_stmt * sqlite3_statement ) {
-            std::cout << "delete sqlite3_stmt" << std::endl;
             sqlite3_finalize ( sqlite3_statement );
 		} );
         stmt = new Sqlite3Statement ( _db, std::move ( sqlite3_statement_ ), statement );
@@ -84,7 +73,7 @@ db_statement_ptr Sqlite3Connection::prepareStatement ( const std::string & state
     return std::shared_ptr< Sqlite3Statement > ( stmt, std::bind ( &Sqlite3Connection::_release_statement, this, std::placeholders::_1 ) );
 }
 void Sqlite3Connection::_release_statement ( Sqlite3Statement * statement ) {
-    std::lock_guard<std::mutex> lck ( _mtx );
+    std::lock_guard<std::mutex> lck ( _db_mtx );
 	statement->reset();
     _stmt_pool[statement->statement()].push_back ( statement );
 }

@@ -18,7 +18,6 @@
 
 #include "squawk.h"
 #include "upnpcontentdirectory.h"
-#include "upnpcontentdirectorydao.h"
 
 namespace squawk {
 
@@ -29,9 +28,6 @@ public:
     virtual int getRootNode ( ::didl::DidlXmlWriter * didl_element );
     virtual bool match ( upnp::UpnpContentDirectoryRequest * parseRequest );
     virtual std::tuple<size_t, size_t> parseNode ( didl::DidlXmlWriter * didl_element, upnp::UpnpContentDirectoryRequest * parseRequest );
-
-private:
-    static log4cxx::LoggerPtr logger;
 };
 }//squawk
 #endif // UPNPFILEDIRECTORY_H

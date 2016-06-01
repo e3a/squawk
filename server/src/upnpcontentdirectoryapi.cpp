@@ -2,11 +2,7 @@
 
 namespace squawk {
 
-log4cxx::LoggerPtr UpnpContentDirectoryApi::logger ( log4cxx::Logger::getLogger ( "squawk.UpnpContentDirectoryApi" ) );
-
 void UpnpContentDirectoryApi::do_get ( http::HttpRequest & request, http::HttpResponse & response ) {
-
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "API HTTP Request:" << request ); }
 
     std::string command = "";
     int id = 0, page = 0, limit = 100;
@@ -30,14 +26,10 @@ void UpnpContentDirectoryApi::do_get ( http::HttpRequest & request, http::HttpRe
     { sort_ = parse_sort ( request.attribute ( "sort" ) ); }
 
     if ( match ( request.uri(), &command, &id ) ) {
-        if ( squawk::SUAWK_SERVER_DEBUG ) {
-            LOG4CXX_TRACE ( logger, "API Request:" << command << ": id:" << id );
-        }
-
         if ( command == "artist" ) {
 
         } else if ( command == "album" ) {
-            didl::DidlContainerAlbum album_ = _dao->object<didl::DidlContainerAlbum> ( id );
+            didl::DidlContainerAlbum album_ = SquawkServer::instance()->dao()->object<didl::DidlContainerAlbum> ( id );
             didl::serializer< didl::DidlContainerAlbum >::serialize ( response, album_, attributes_ );
 
         } else if ( command == "video" ) {
@@ -45,57 +37,56 @@ void UpnpContentDirectoryApi::do_get ( http::HttpRequest & request, http::HttpRe
         } else if ( command == "image" ) {
 
         } else if ( command == "track" ) {
-            std::list< didl::DidlMusicTrack > track_list_ = _dao->children<didl::DidlMusicTrack> ( id, 0, 200 );
+            std::list< didl::DidlMusicTrack > track_list_ = SquawkServer::instance()->dao()->children<didl::DidlMusicTrack> ( id, 0, 200 );
             didl::serializer< std::list< didl::DidlMusicTrack > >::serialize ( response, track_list_, attributes_ );
 
         } else if ( command == "browse" ) {
-            response << "{\"objects_count\": " << _dao->childrenCount( didl::object, id ) << ",\"objects\": ";
-            std::list< didl::DidlObject > objects_ = _dao->children<didl::DidlObject > ( id, page, limit );
+            response << "{\"objects_count\": " << SquawkServer::instance()->dao()->childrenCount( didl::object, id ) << ",\"objects\": ";
+            std::list< didl::DidlObject > objects_ = SquawkServer::instance()->dao()->children<didl::DidlObject > ( id, page, limit );
             didl::serializer< std::list< didl::DidlObject > >::serialize ( response, objects_, attributes_ );
             response << "}";
         }
 
     } else if ( match ( request.uri(), &command ) ) {
         try  {
-            if ( squawk::SUAWK_SERVER_DEBUG ) {
-                std::stringstream str_log;
-                str_log << ", Filters: { ";
-                bool first = true;
+//            if ( squawk::SUAWK_SERVER_DEBUG ) {
+//                std::stringstream str_log;
+//                str_log << ", Filters: { ";
+//                bool first = true;
 
-                for ( auto item : filters_ ) {
-                    if ( first ) { first = false; }
+//                for ( auto item : filters_ ) {
+//                    if ( first ) { first = false; }
 
-                    else { str_log << ", "; }
+//                    else { str_log << ", "; }
 
-                    str_log << item.first << "=" << item.second;
+//                    str_log << item.first << "=" << item.second;
 
-                }
+//                }
 
-                str_log << " }, Attributes: { ";
-                first = true;
+//                str_log << " }, Attributes: { ";
+//                first = true;
 
-                for ( auto item : attributes_ ) {
-                    if ( first ) { first = false; }
+//                for ( auto item : attributes_ ) {
+//                    if ( first ) { first = false; }
 
-                    else { str_log << ", "; }
+//                    else { str_log << ", "; }
 
-                    str_log << item;
+//                    str_log << item;
 
-                }
+//                }
 
-                str_log << " }, Sort: { " << sort_.first << "=" << sort_.second;
-                LOG4CXX_DEBUG ( logger, "API Request:" << command << ": Page:" << page << ", Limit:" << limit << str_log.str() << " }" );
-            }
+//                str_log << " }, Sort: { " << sort_.first << "=" << sort_.second;
+//            }
 
             if ( command == "artist" ) {
-                std::list< didl::DidlContainerArtist > artists_ = _dao->artists ( page, limit, filters_, sort_ );
+                std::list< didl::DidlContainerArtist > artists_ = SquawkServer::instance()->dao()->artists ( page, limit, filters_, sort_ );
                 response << "{artists_count=100, artists=";
                 didl::serializer< std::list< didl::DidlContainerArtist > >::serialize ( response, artists_, attributes_ );
                 response << "}";
 
             } else if ( command == "album" ) {
-                std::list< didl::DidlContainerAlbum > albums_ = _dao->objects<didl::DidlContainerAlbum> ( page, limit, filters_, sort_ );
-                response << "{\"albums_count\": " << _dao->objectsCount ( didl::objectContainerAlbumMusicAlbum, filters_ ) << ",\"albums\": ";
+                std::list< didl::DidlContainerAlbum > albums_ = SquawkServer::instance()->dao()->objects<didl::DidlContainerAlbum> ( page, limit, filters_, sort_ );
+                response << "{\"albums_count\": " << SquawkServer::instance()->dao()->objectsCount ( didl::objectContainerAlbumMusicAlbum, filters_ ) << ",\"albums\": ";
                 didl::serializer< std::list< didl::DidlContainerAlbum > >::serialize ( response, albums_, attributes_ );
                 response << "}";
 
@@ -104,7 +95,7 @@ void UpnpContentDirectoryApi::do_get ( http::HttpRequest & request, http::HttpRe
             } else if ( command == "image" ) {
 
             } else if ( command == "statistic" ) {
-                didl::DidlStatistics statistic_ = _dao->statistics();
+                didl::DidlStatistics statistic_ = SquawkServer::instance()->dao()->statistics();
                 didl::serializer< didl::DidlStatistics >::serialize ( response, statistic_, attributes_ );
 
             } else if ( command == "upnp/device" ) {

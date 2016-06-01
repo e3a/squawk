@@ -1,6 +1,4 @@
 /*
-    Copyright (C) 2014  <e.knecht@netwings.ch>
-
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
@@ -19,17 +17,14 @@
 #ifndef SQLITE3CONNECTION_H
 #define SQLITE3CONNECTION_H
 
-#include <iostream> //TODO
-
 #include <map>
 #include <mutex>
+#include <vector>
 
 #include "sqlite3statement.h"
 #include "dbexception.h"
 
 #include <sqlite3.h>
-
-#include "log4cxx/logger.h"
 
 namespace db {
 
@@ -63,10 +58,8 @@ public:
     int last_changes_count();
 
 private:
-    static log4cxx::LoggerPtr logger;
-
     sqlite3_ptr _db;
-    std::mutex _mtx;
+    std::mutex _db_mtx;
     std::map< std::string, std::vector< Sqlite3Statement * > > _stmt_pool;
 
     /** \brief Release a statement. */

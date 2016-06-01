@@ -20,15 +20,8 @@
 
 namespace squawk {
 
-log4cxx::LoggerPtr UpnpContentDirectory::logger ( log4cxx::Logger::getLogger ( "squawk.UpnpContentDirectory" ) );
-
 void UpnpContentDirectory::registerContentDirectoryModule ( std::unique_ptr< ContentDirectoryModule > module ) {
     _modules.push_back ( std::move ( module ) );
-}
-void UpnpContentDirectory::registerContentDirectoryModule ( std::list< std::unique_ptr< ContentDirectoryModule > > modules ) {
-    for ( auto & module : modules ) {
-        _modules.push_back ( std::move ( module ) );
-    }
 }
 
 //void UpnpContentDirectory::notify( std::list< int > update_ids ) {
@@ -90,7 +83,7 @@ void UpnpContentDirectory::registerContentDirectoryModule ( std::list< std::uniq
 //}
 
 void UpnpContentDirectory::do_default ( const std::string & method, http::HttpRequest & request, http::HttpResponse & /* response */ ) {
-    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, method << ": " << request.requestBody() )
+    CLOG(DEBUG, "upnp") << method << ": " << request.requestBody();
 //    if( request.containsParameter( "Timeout" ) ) {
 //        size_t pos = request.parameter( "Timeout" ).find( "-" );
 //        size_t len = request.parameter( "Timeout" ).length() - pos;
@@ -121,11 +114,9 @@ void UpnpContentDirectory::do_default ( const std::string & method, http::HttpRe
 
 void UpnpContentDirectory::do_post ( http::HttpRequest & request, http::HttpResponse & response ) {
 
-    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, request )
-
         try {
             upnp::UpnpContentDirectoryRequest upnp_command = upnp::parseRequest ( request.requestBody() );
-            LOG4CXX_DEBUG ( logger, upnp_command )
+            CLOG(DEBUG, "upnp") << "UpnpRequest:" << std::endl << upnp_command;
 
             if ( upnp_command.type == upnp::UpnpContentDirectoryRequest::BROWSE ) {
 
@@ -138,7 +129,7 @@ void UpnpContentDirectory::do_post ( http::HttpRequest & request, http::HttpResp
 
             } else if ( upnp_command.type == upnp::UpnpContentDirectoryRequest::X_FEATURE_LIST ) {
 
-                LOG4CXX_WARN ( logger, "X_GetFeatureList: " << request << "\n" << upnp_command  )
+                CLOG(DEBUG, "upnp") << "X_GetFeatureList: " << request << "\n" << upnp_command; //TODO remove
                 commons::xml::XMLWriter xmlWriter;
                 commons::xml::Node envelope_node = xmlWriter.element ( "Envelope" );
                 xmlWriter.ns ( envelope_node, upnp::XML_NS_SOAP, "s", true );
@@ -181,21 +172,21 @@ void UpnpContentDirectory::do_post ( http::HttpRequest & request, http::HttpResp
                 response.status ( http::http_status::OK );
 
             } else {
-                LOG4CXX_WARN ( logger, "invoke::Unknown Method: " << upnp_command )
+                CLOG(ERROR, "upnp") << "invoke::Unknown Method: " << upnp_command;
                 throw http::http_status::BAD_REQUEST;
             }
 
         } catch ( upnp::UpnpException & ex ) {
-            LOG4CXX_ERROR ( logger, "UPNP parse error: " << ex.code() << ":" << ex.what() )
+            CLOG(ERROR, "upnp") << "UPNP parse error: " << ex.code() << ":" << ex.what();
 
         } catch ( db::DbException & ex ) {
-            LOG4CXX_ERROR ( logger, "DB Exception: " << ex.code() << ":" << ex.what() )
+            CLOG(ERROR, "upnp") << "DB Exception: " << ex.code() << ":" << ex.what();
 
         } catch ( commons::xml::XmlException & ex ) {
-            LOG4CXX_ERROR ( logger, "XML parse error: " << ex.code() << ":" << ex.what() )
+            CLOG(ERROR, "upnp") << "XML parse error: " << ex.code() << ":" << ex.what();
 
         } catch ( ... ) {
-            LOG4CXX_ERROR ( logger, "UPNP parse error." )
+            CLOG(ERROR, "upnp") << "UPNP parse error.";
         }
 }
 
@@ -271,7 +262,7 @@ void UpnpContentDirectory::browse ( commons::xml::XMLWriter * xmlWriter, upnp::U
         }
 
     } else {
-        LOG4CXX_DEBUG ( logger, "Browse unknown command (" << upnp_command->getValue ( "BrowseFlag" ) << ")" )
+        CLOG(ERROR, "upnp") << "Browse unknown command (" << upnp_command->getValue ( "BrowseFlag" ) << ")";
     }
 
     commons::xml::Node result_node = xmlWriter->element ( response_node, "", "Result", didlWriter.str() );
@@ -284,4 +275,4 @@ void UpnpContentDirectory::browse ( commons::xml::XMLWriter * xmlWriter, upnp::U
     commons::xml::Node uid_node = xmlWriter->element ( response_node, "", "UpdateID", "1" ); //TODO
     xmlWriter->attribute ( uid_node, upnp::XML_NS_SCHEMA_INSTANCE, "type", "xsd:int" );
 }
-}
+}//namespace squawk

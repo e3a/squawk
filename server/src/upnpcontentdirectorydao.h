@@ -447,7 +447,7 @@ public:
      */
     template< typename T >
     T save ( T o ) {
-        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Save:" << o ); }
+        LOG(TRACE) << "Save:" << o;
 
         db::db_statement_ptr stmt_object_ = _db->prepareStatement ( "select ROWID, object_update_id from tbl_cds_object where path = ?" );
         stmt_object_->bind_text ( 1, o.path() );
@@ -460,7 +460,7 @@ public:
             SqlParameters< T >::serialize ( query_string_, false, "=?" );
             query_string_ << " where ROWID = ?";
 
-            if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "save object, query_string = \"" << query_string_.str() << "\"" ); }
+            LOG(TRACE) << "Save object, query_string = \"" << query_string_.str() << "\"";
 
             db::db_statement_ptr stmt = _db->prepareStatement ( query_string_.str() );
             int index_ = 0;
@@ -477,7 +477,7 @@ public:
             SqlParameters< T >::placeholders ( query_string_, false );
             query_string_ << " )";
 
-            if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "update object, query_string = \"" << query_string_.str() << "\"" ); }
+            LOG(TRACE) << "Update object, query_string = \"" << query_string_.str() << "\"";
 
             db::db_statement_ptr stmt = _db->prepareStatement ( query_string_.str() );
             int index_ = 0;
@@ -495,7 +495,7 @@ public:
      */
     template< typename T >
     T object ( const size_t & id ) {
-        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "get_object:" << id ); }
+        LOG(TRACE) << "Get_object:" << id;
 
         T o;
         std::stringstream query_string_;
@@ -503,7 +503,7 @@ public:
         SqlParameters< T >::serialize ( query_string_, true, "" );
         query_string_ << " from tbl_cds_object where ROWID = ?";
 
-        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (object): " << query_string_.str() ); }
+        LOG(TRACE) << "Execute query (object): " << query_string_.str();
 
         db::db_statement_ptr stmt_objects_ = _db->prepareStatement ( query_string_.str() );
         stmt_objects_->bind_int ( 1, id );
@@ -521,7 +521,7 @@ public:
      */
     template< typename T >
     T object ( const std::string & path ) {
-        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_DEBUG ( logger, "get_object:" << path ); }
+        LOG(TRACE) << path;
 
         T o;
         std::stringstream query_string_;
@@ -529,7 +529,7 @@ public:
         SqlParameters< T >::serialize ( query_string_, true, "" );
         query_string_ << " from tbl_cds_object where path = ?";
 
-        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (object): " << query_string_.str() ); }
+        LOG(TRACE) << "Execute query (object): " << query_string_.str();
 
         db::db_statement_ptr stmt_objects_ = _db->prepareStatement ( query_string_.str() );
         stmt_objects_->bind_text ( 1, path );
@@ -546,9 +546,9 @@ public:
     std::list< T > children ( const size_t id, const size_t & start_index, const size_t & result_count,
                               std::map< std::string, std::string > filters = std::map< std::string, std::string >(),
                               std::pair< std::string, std::string > sort = std::pair< std::string, std::string > { "title", "asc" } ) const {
-        if ( squawk::SUAWK_SERVER_DEBUG )
-            LOG4CXX_DEBUG ( logger, "children<" << didl::className ( DidlType< T >::cls() ) <<
-                            ">::" << id << " (" << start_index << ", " << result_count << ")" );
+
+        LOG(TRACE) << "Children<" << didl::className ( DidlType< T >::cls() ) <<
+                      ">::" << id << " (" << start_index << ", " << result_count << ")";
 
         std::list< T > object_list_;
 
@@ -564,7 +564,7 @@ public:
             query_string_ << " limit ?, ? ";
         }
 
-        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (children): " << query_string_.str() ); }
+        LOG(TRACE) << "Execute query (children): " << query_string_.str();
 
         db::db_statement_ptr stmt_objects_ = _db->prepareStatement ( query_string_.str() );
         stmt_objects_->bind_int ( 1, id );
@@ -596,9 +596,9 @@ public:
     std::list< T > objects ( const size_t & start_index, const size_t & result_count,
                              std::map< std::string, std::string > filters = std::map< std::string, std::string >(),
                              std::pair< std::string, std::string > sort = std::pair< std::string, std::string > { "title", "asc" } ) const {
-        if ( squawk::SUAWK_SERVER_DEBUG )
-            LOG4CXX_DEBUG ( logger, "objects<" << didl::className ( DidlType< T >::cls() ) <<
-                            ">" << " (" << start_index << ", " << result_count << ")" );
+
+        LOG(TRACE) << "Objects<" << didl::className ( DidlType< T >::cls() ) <<
+                      ">" << " (" << start_index << ", " << result_count << ")";
 
         std::list< T > object_list_;
         std::stringstream query_string_;
@@ -613,7 +613,7 @@ public:
             query_string_ << " limit ?, ? ";
         }
 
-        if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Execute query (objects): " << query_string_.str() ); }
+        LOG(TRACE) << "Execute query (objects): " << query_string_.str();
 
         db::db_statement_ptr stmt_objects_ = _db->prepareStatement ( query_string_.str() );
 
@@ -717,9 +717,6 @@ private:
         "CREATE TABLE IF NOT EXISTS tbl_cds_album_art_uri( ref_obj, path, uri, profile);",
         "CREATE INDEX IF NOT EXISTS UniqueIndexAlbumArtUriRef ON tbl_cds_album_art_uri(ref_obj);",
     };
-
-    static log4cxx::LoggerPtr logger;
-
     db::db_connection_ptr _db;
 };
 

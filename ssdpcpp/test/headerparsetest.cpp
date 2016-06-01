@@ -26,7 +26,7 @@
 
 namespace ssdp {
 TEST( HeaderParseTest, Response ) {
-    SSDPServerImpl server("127.0.0.1", "255.255.255.0", 1900);
+    SSDPServerImpl server("127.0.0.1", "255.255.255.0", 1900, std::map< std::string, std::string >() );
 
 //    ResponseLines:
 //            Cache-Control: max-age=1800

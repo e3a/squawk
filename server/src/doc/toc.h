@@ -17,9 +17,9 @@
 
 Squawk server and client is built using the following 3rd party software:
 
-@subsection Natiive Natiive dependencies
+@subsection Native dependencies
 
-Native ibraries:
+Native libraries:
 
 @subsection Web Web dependencies
 
@@ -42,7 +42,6 @@ apt-get install \
   git \ 
   cmake \ 
   libsqlite3-dev \
-  liblog4cxx10-dev \
   libasio-dev \
   libtinyxml-dev \
   libboost-dev \
@@ -56,9 +55,9 @@ apt-get install \
   libpcre++-dev \
   libgtest-dev \
   doxygen
- libmagic-dev
- libswscale-dev
- libsdl1.2-dev
+  libmagic-dev
+  libswscale-dev
+  libsdl1.2-dev
  
 gtest needs to be installed manually:
 

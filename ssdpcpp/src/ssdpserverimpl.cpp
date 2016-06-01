@@ -48,8 +48,11 @@ inline std::string time_string() {
   return str_time;
 };
 
-SSDPServerImpl::SSDPServerImpl ( const std::string & uuid, const std::string & multicast_address, const int & multicast_port ) :
+SSDPServerImpl::SSDPServerImpl ( const std::string & uuid, const std::string & multicast_address, const int & multicast_port, const std::map< std::string, std::string > & namespaces ) :
 	uuid ( uuid ), multicast_address ( multicast_address ), multicast_port ( multicast_port ) {
+    for( auto ns : namespaces ) {
+        register_namespace( ns.first, ns.second );
+    }
 }
 
 void SSDPServerImpl::start() {
@@ -104,11 +107,9 @@ void SSDPServerImpl::handle_receive ( http::HttpRequest & request ) {
         } else if ( request.method() == REQUEST_METHOD_NOTIFY ) {
 
             if ( request.parameter( UPNP_HEADER_NTS ) == UPNP_STATUS_ALIVE ) {
-//TODO                upnp_devices[ request.parameter( UPNP_HEADER_USN ) ] = parseRequest ( request );
                 fireEvent ( SSDPEventListener::ANNOUNCE, request.remoteIp(), parseRequest ( request ) );
             } else {
                 fireEvent ( SSDPEventListener::BYE, request.remoteIp(), parseRequest ( request ) );
-//TODO                upnp_devices.erase ( request.parameter( UPNP_HEADER_USN ) );
             }
 
         } else {
@@ -120,7 +121,7 @@ SsdpEvent SSDPServerImpl::parseRequest ( http::HttpRequest & request ) {
 	time_t cache_control = 0;
     if ( request.containsParameter( http::header::CACHE_CONTROL ) ) {
         cache_control = parse_keep_alive( request.parameter( http::header::CACHE_CONTROL ) );
-    } else std::cerr << "no cache control in request:" << request << std::endl;
+    }
     return SsdpEvent ( request.parameter( http::header::HOST ), request.parameter( UPNP_HEADER_LOCATION ),
                         request.parameter( UPNP_HEADER_NT ), request.parameter( UPNP_HEADER_NTS ),
                         request.parameter( UPNP_HEADER_SERVER ), request.parameter( UPNP_HEADER_USN ),

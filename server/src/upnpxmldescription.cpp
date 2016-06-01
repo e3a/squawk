@@ -24,8 +24,6 @@ using namespace std;
 
 namespace squawk {
 
-log4cxx::LoggerPtr UpnpXmlDescription::logger(log4cxx::Logger::getLogger("squawk.UpnpXmlDescription"));
-
 void UpnpXmlDescription::do_get(::http::HttpRequest&, ::http::HttpResponse & response) {
 
     commons::xml::XMLWriter writer;
@@ -131,4 +129,4 @@ void UpnpXmlDescription::do_get(::http::HttpRequest&, ::http::HttpResponse & res
     response.set_mime_type( http::mime::XML );
     response.status( http::http_status::OK );
 }
-}
+}//namespace squawk

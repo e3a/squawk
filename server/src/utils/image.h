@@ -1,7 +1,4 @@
 /*
-    image entity defintion.
-    Copyright (C) 2014  <e.knecht@netwings.ch>
-
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
@@ -86,5 +83,5 @@ private:
 	Imlib_Image image_;
 	void init_();
 };
-} // image
+}//namespace image
 #endif // IMAGE_H

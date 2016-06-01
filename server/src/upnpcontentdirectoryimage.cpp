@@ -18,14 +18,15 @@
 
 namespace squawk {
 
-log4cxx::LoggerPtr UpnpContentDirectoryImage::logger ( log4cxx::Logger::getLogger ( "squawk.UpnpContentDirectoryImage" ) );
-
 bool UpnpContentDirectoryImage::match ( ::upnp::UpnpContentDirectoryRequest * request ) {
     return ContentDirectoryModule::matchObjectId ( request, "/images/" );
 }
 int UpnpContentDirectoryImage::getRootNode ( ::didl::DidlXmlWriter * didl_element ) {
-    didl_element->container ( "/images/", "", didl::DidlContainer (
-                                  0, 0,"Images", "/images", 0, 0, SquawkServer::instance()->dao()->objectsCount ( didl::objectContainerAlbumPhotoAlbum ) ) );
+    didl_element->container ( "/images/", "",
+        didl::DidlContainer (
+            0, 0,"Images", "/images", 0, 0, SquawkServer::instance()->dao()->objectsCount ( didl::objectContainerAlbumPhotoAlbum )
+        )
+    );
     return 1;
 }
 std::tuple<size_t, size_t> UpnpContentDirectoryImage::parseNode ( didl::DidlXmlWriter * didl_element, ::upnp::UpnpContentDirectoryRequest * request ) {
@@ -36,28 +37,28 @@ std::tuple<size_t, size_t> UpnpContentDirectoryImage::parseNode ( didl::DidlXmlW
 
     std::tuple<size_t, size_t> res_;
 
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Request Image: parent=" << ContentDirectoryModule::item_id ( request ) << ", start_index=" << start_index_ << ", request_count=" << request_count_ ); }
+    auto dao = SquawkServer::instance()->dao();
 
     /* ----------- Photo Albums ----------- */
     if ( request->contains ( upnp::OBJECT_ID ) &&
-            request->getValue ( upnp::OBJECT_ID ) == "/images/" ) {
+         request->getValue ( upnp::OBJECT_ID ) == "/images/" ) {
 
-        std::list< didl::DidlContainerPhotoAlbum > photo_album_list_ = SquawkServer::instance()->dao()->objects<didl::DidlContainerPhotoAlbum> ( start_index_, request_count_ );
+        std::list< didl::DidlContainerPhotoAlbum > photo_album_list_ =
+            dao->objects<didl::DidlContainerPhotoAlbum> ( start_index_, request_count_ );
         std::for_each ( photo_album_list_.begin(), photo_album_list_.end(), [&] ( didl::DidlContainerPhotoAlbum & a ) {
             didl_element->container ( "/images/{}", "/images/{}", http_uri ( "albumArtUri/{0}.jpg" ), a );
         } );
-        res_ = std::tuple<size_t, size_t> ( photo_album_list_.size(), SquawkServer::instance()->dao()->objectsCount ( didl::objectContainerAlbumPhotoAlbum ) );
+        res_ = std::tuple<size_t, size_t> ( photo_album_list_.size(), dao->objectsCount ( didl::objectContainerAlbumPhotoAlbum ) );
 
     } else {
 
         std::list< didl::DidlPhoto > photo_list_ =
-            SquawkServer::instance()->dao()->children<didl::DidlPhoto> ( ContentDirectoryModule::item_id ( request ), start_index_, request_count_ );
-
-        for ( auto & photo__ : photo_list_ ) {
-            didl_element->write ( "/images/{}", "/images/{}", http_uri() + "resource/{0}.jpg", photo__ );
-        }
-
-        res_ = std::tuple<size_t, size_t> ( photo_list_.size(), SquawkServer::instance()->dao()->childrenCount ( didl::objectItemImageItemPhoto, ContentDirectoryModule::item_id ( request ) ) );
+            dao->children<didl::DidlPhoto> ( ContentDirectoryModule::item_id ( request ), start_index_, request_count_ );
+        std::for_each ( photo_list_.begin(), photo_list_.end(), [&] ( didl::DidlPhoto & photo_ ) {
+            didl_element->write ( "/images/{}", "/images/{}", http_uri() + "resource/{0}.jpg", photo_ );
+        } );
+        res_ = std::tuple<size_t, size_t> ( photo_list_.size(),
+            dao->childrenCount ( didl::objectItemImageItemPhoto, ContentDirectoryModule::item_id ( request ) ) );
     }
 
     return ( res_ );

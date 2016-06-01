@@ -19,8 +19,6 @@
 
 namespace squawk {
 
-log4cxx::LoggerPtr UpnpContentDirectoryVideo::logger ( log4cxx::Logger::getLogger ( "squawk.UpnpContentDirectoryVideo" ) );
-
 bool UpnpContentDirectoryVideo::match ( ::upnp::UpnpContentDirectoryRequest * request ) {
     return ContentDirectoryModule::matchObjectId ( request, "/movies/" ) || ContentDirectoryModule::matchObjectId ( request, "/series/" );
 }
@@ -39,37 +37,35 @@ std::tuple<size_t, size_t> UpnpContentDirectoryVideo::parseNode ( didl::DidlXmlW
     size_t returned_ = 0, total = 0;
     int parent_id_ = ContentDirectoryModule::item_id ( request );
 
-    if ( squawk::SUAWK_SERVER_DEBUG ) { LOG4CXX_TRACE ( logger, "Request Movie: parent=" << parent_id_ << ", start_index=" << start_index_ << ", request_count=" << request_count_ ); }
-
-
+    auto dao = SquawkServer::instance()->dao();
     if ( ContentDirectoryModule::matchObjectId ( request, "/movies/" ) ) {
         std::list< didl::DidlMovie > item_list =
-            SquawkServer::instance()->dao()->objects< didl::DidlMovie > ( start_index_, request_count_ );
+            dao->objects< didl::DidlMovie > ( start_index_, request_count_ );
 
         for ( auto & item : item_list ) {
-            didl_element->write ( "/movies/{}", "/movies/{}", http_uri ( "resource/{0}.{1}" ), SquawkServer::instance()->dao()->object<didl::DidlMovie> ( item.id() ) );
+            didl_element->write ( "/movies/{}", "/movies/{}", http_uri ( "resource/{0}.{1}" ), dao->object<didl::DidlMovie> ( item.id() ) );
         }
 
         returned_ = item_list.size();
-        total = SquawkServer::instance()->dao()->objectsCount ( didl::objectItemVideoItemMovie );
+        total = dao->objectsCount ( didl::objectItemVideoItemMovie );
 
     } else if ( ContentDirectoryModule::matchObjectId ( request, "/series/" ) ) {
         if ( request->getValue ( "ObjectID" ) == "/series" || request->getValue ( "ObjectID" ) == "/series/" ) {
             std::list< didl::DidlContainer > item_list =
-                SquawkServer::instance()->dao()->series ( start_index_, request_count_ );
+                dao->series ( start_index_, request_count_ );
 
             for ( auto & item : item_list ) {
                 didl_element->container ( "/series/" + item.title(), "/series/", item );
             }
 
             returned_ = item_list.size();
-            total = SquawkServer::instance()->dao()->seriesCount ();
+            total = dao->seriesCount ();
 
         } else {
             std::string name_ = request->getValue ( "ObjectID" ).substr ( request->getValue ( "ObjectID" ).rfind ( '/' ) + 1 );
 
             std::list< didl::DidlMovie > item_list =
-                SquawkServer::instance()->dao()->objects< didl::DidlMovie > (
+                dao->objects< didl::DidlMovie > (
                             start_index_, request_count_, std::map<std::string, std::string> ( { { "series_title", name_ } } ) );
 
             for ( auto & item : item_list ) {
@@ -77,7 +73,7 @@ std::tuple<size_t, size_t> UpnpContentDirectoryVideo::parseNode ( didl::DidlXmlW
             }
 
             returned_ = item_list.size();
-            total = SquawkServer::instance()->dao()->seriesCount ( std::map<std::string, std::string> ( { { "series_title", name_ } } ) );
+            total = dao->seriesCount ( std::map<std::string, std::string> ( { { "series_title", name_ } } ) );
         }
     }
 

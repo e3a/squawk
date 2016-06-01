@@ -24,7 +24,7 @@
 namespace amazon {
 
 TEST(TestAmazonFacade, TestCanonicalize) {
-    std::cout << "test" << std::endl;
+
     std::map<std::string, std::string > map;
     map["Service"] = "AWSECommerceService";
     map["AWSAccessKeyId"] = "AKIAIOSFODNN7EXAMPLE";
@@ -49,7 +49,6 @@ TEST(TestAmazonFacade, TestMac) {
     std::string key = "1234567890";
 
     std::string result = facade.generate_hmac256bit_hash( message.c_str(), key.c_str() );
-    std::cout << "mac:" << result << std::endl;
     EXPECT_EQ(result, std::string("j7bZM0LXZ9eXeZruTqWm2DIvDYVUU3wxPPpp+iXxzQc=" ) );
 }
 

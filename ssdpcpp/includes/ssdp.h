@@ -398,7 +398,7 @@ public:
 	/**
 	 * Create a new SSDPServer.
 	 */
-	explicit SSDPServerImpl ( const std::string & uuid, const std::string & multicast_address, const int & multicast_port );
+        explicit SSDPServerImpl ( const std::string & uuid, const std::string & multicast_address, const int & multicast_port, const std::map< std::string, std::string > & namespaces );
 	virtual ~SSDPServerImpl() {}
 	/**
 	 * Announce the services in the network.
@@ -440,19 +440,6 @@ public:
 	* \param headers the request headers
 	*/
 	virtual void handle_receive ( ::http::HttpRequest & request );
-	/**
-        * Get the UPNP Devices.
-	* \return map with the upnp devices, the map key is the service UUID
-	*/
-//TODO        std::map< std::string, SsdpEvent > get_upnp_devices() {
-//		return upnp_devices;
-//	}
-       /**
-        * Get the UPNP DEvices filtered by usn.
-        * \return map with the upnp devices, the map key is the service UUID
-        */
-//TODO        std::map< std::string, SsdpEvent > getUpnpDevices( const std::string & usn );
-
         /**
 	 * \brief Subscribe for events.
 	 */

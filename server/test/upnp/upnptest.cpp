@@ -20,7 +20,7 @@
 #include <array>
 #include <string>
 
-#include "upnp2.h"
+#include "upnp.h"
 #include "ssdp.h"
 
 #include <gtest/gtest.h>
@@ -113,7 +113,7 @@ TEST( UpnpTest, ParseRequestStdout ) {
 </s:Envelope>
 */
     const char * request = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?><s:Envelope s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><u:Browse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><ObjectID>0</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>*</Filter><StartingIndex>0</StartingIndex><RequestedCount>16</RequestedCount><SortCriteria></SortCriteria></u:Browse></s:Body></s:Envelope>";
-    const char * response = "UpnpContentDirectoryRequest::\tBrowseFlag = BrowseDirectChildren\n\tFilter = *\n\tObjectID = 0\n\tRequestedCount = 16\n\tSortCriteria = \n\tStartingIndex = 0\n";
+    const char * response = "UpnpContentDirectoryRequest:\n\tBrowseFlag = BrowseDirectChildren\n\tFilter = *\n\tObjectID = 0\n\tRequestedCount = 16\n\tSortCriteria = \n\tStartingIndex = 0\n";
     UpnpContentDirectoryRequest command = parseRequest( request );
     std::stringstream out;
     out << command;
@@ -122,7 +122,7 @@ TEST( UpnpTest, ParseRequestStdout ) {
 TEST( UpnpTest, ParseRequest3 ) {
 
     const char * request = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?><s:Envelope s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><u:Browse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\"><ObjectID>0</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>*</Filter><StartingIndex>0</StartingIndex><RequestedCount>50</RequestedCount><SortCriteria></SortCriteria></u:Browse></s:Body></s:Envelope>";
-    const char * response = "UpnpContentDirectoryRequest::\tBrowseFlag = BrowseDirectChildren\n\tFilter = *\n\tObjectID = 0\n\tRequestedCount = 50\n\tSortCriteria = \n\tStartingIndex = 0\n";
+    const char * response = "UpnpContentDirectoryRequest:\n\tBrowseFlag = BrowseDirectChildren\n\tFilter = *\n\tObjectID = 0\n\tRequestedCount = 50\n\tSortCriteria = \n\tStartingIndex = 0\n";
     UpnpContentDirectoryRequest command = parseRequest( request );
     std::stringstream out;
     out << command;

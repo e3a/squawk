@@ -12,7 +12,7 @@
   <http-ip>192.168.0.17</http-ip>
   <http-port>9000</http-port>
   <local-address>192.168.0.17</local-address>
-  <logger>/home/e3a/squawk/server/config/logger-console.properties</logger>
+  <logger/>
   <media-directories>
     <media-directory>/home/Pictures</media-directory>
     <media-directory>/home/Music/test</media-directory>

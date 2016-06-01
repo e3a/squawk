@@ -13,6 +13,7 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
+
 #include "upnpcontentdirectoryparser.h"
 
 #include "utils/media.h"
@@ -22,7 +23,6 @@
 #include "upnpcontentdirectorydao.h"
 
 namespace squawk {
-log4cxx::LoggerPtr UpnpContentDirectoryParser::logger ( log4cxx::Logger::getLogger ( "squawk.UpnpContentDirectoryParser" ) );
 
 UpnpContentDirectoryParser::UpnpContentDirectoryParser () {
     if ( ! boost::filesystem::is_directory ( SquawkServer::instance()->config()->tmpDirectory() + "/AlbumArtUri" ) ) {
@@ -47,15 +47,14 @@ void UpnpContentDirectoryParser::parse ( std::list< std::string > paths ) {
             _parse ( parent_, path );
 
         } else {
-            LOG4CXX_WARN ( logger, path << "is not a directory." )
+            CLOG(ERROR, "upnp") << path << "is not a directory.";
         }
     }
 
     SquawkServer::instance()->dao()->sweep ( start_time );
-
     SquawkServer::instance()->dao()->endTransaction();
 
-//    SquawkServer::instance()->dao()->startTransaction();
+//TODO    SquawkServer::instance()->dao()->startTransaction();
 
 //    _import_audio( didl::DidlContainer ( 0, 0, "Root", "", 0, 0, 0 ) );
 //    _import_movies( didl::DidlContainer ( 0, 0, "Root", "", 0, 0, 0 ) );
@@ -78,13 +77,11 @@ void UpnpContentDirectoryParser::parse ( std::list< std::string > paths ) {
 
     ss << "Total:\t" << sum << std::endl;
     ss << "Time:\t" << elapsed_seconds.count() << std::endl;
-    LOG4CXX_INFO ( logger, ss.str() )
+    CLOG(INFO, "upnp") << ss.str();
 }
 
 void UpnpContentDirectoryParser::_import_audio ( const didl::DidlObject object ) {
-    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import audio:" << object )
-
-    }
+}
 
 didl::DidlMusicTrack inline UpnpContentDirectoryParser::_import_track ( const didl::DidlItem & track  ) {
     //Get the track information
@@ -153,11 +150,8 @@ didl::DidlMusicTrack inline UpnpContentDirectoryParser::_import_track ( const di
 }
 
 void UpnpContentDirectoryParser::_import_movies ( const didl::DidlObject object ) {
-//    if(squawk::DEBUG ) LOG4CXX_DEBUG( logger, "import movies" )
-
 //    for ( auto & movie_ : SquawkServer::instance()->dao()->children<didl::DidlMovie>( object.id(), 0, 0 ) ) {
 //        if( ! movie_.import() ) {
-//            std::cout << "+++ found video:" << movie_.id() << ":" << movie_.title() << std::endl;
 
 //            commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( movie_.path() );
 //            boost::filesystem::path file_path_ ( movie_.path() );
@@ -176,12 +170,10 @@ void UpnpContentDirectoryParser::_import_movies ( const didl::DidlObject object 
 }
 
 void UpnpContentDirectoryParser::_import_movie ( const didl::DidlItem & movie ) {
-    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import movies" )
+    CLOG(TRACE, "upnp") << "import movie:" << movie.path();
 
-        commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( movie.path() );
-
+    commons::media::MediaFile media_file = commons::media::MediaParser::parseFile ( movie.path() );
     boost::filesystem::path file_path_ ( movie.path() );
-
     std::list< didl::DidlResource > resources_;
 
     for ( auto stream_ : media_file.getVideoStreams() ) {
@@ -204,10 +196,8 @@ void UpnpContentDirectoryParser::_import_movie ( const didl::DidlItem & movie ) 
 }
 
 void UpnpContentDirectoryParser::_import_images ( const didl::DidlObject /* object */ ) {
-//    if(squawk::DEBUG ) LOG4CXX_TRACE( logger, "import_images:" << object )
 //    for ( auto & image_ : SquawkServer::instance()->dao()->children<didl::DidlPhoto>( object.id(), 0, 0 ) ) {
 //        if ( !image_.import() ) {
-//            if(squawk::DEBUG ) LOG4CXX_TRACE( logger, "import_image:" << image_ )
 //            std::list<didl::DidlResource> resources_;
 //            std::string image_meta_resolution, image_meta_mime_type_, image_meta_color_depth_;
 //            {
@@ -241,10 +231,9 @@ void UpnpContentDirectoryParser::_import_images ( const didl::DidlObject /* obje
 }
 
 void UpnpContentDirectoryParser::_import_photo ( const didl::DidlItem & photo ) {
-    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, "import_image:" << photo )
+    CLOG(TRACE, "upnp") << "import photo:" << photo.path();
 
-        std::list<didl::DidlResource> resources_;
-
+    std::list<didl::DidlResource> resources_;
     std::hash<std::string> hash_fn;
     image::Image image_meta_ ( photo.path() );
 
@@ -298,17 +287,13 @@ void UpnpContentDirectoryParser::_import_photo ( const didl::DidlItem & photo ) 
 }
 
 void UpnpContentDirectoryParser::_import_books () {
-    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import books" )
-
-
     std::list< didl::DidlEBook > book_list_;
 }
 
 void UpnpContentDirectoryParser::_import_ebook ( const didl::DidlItem & ebook ) {
-    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import:" << ebook )
+    CLOG(TRACE, "upnp") << "import book:" << ebook.path();
 
-        std::list<didl::DidlResource> resources_;
-
+    std::list<didl::DidlResource> resources_;
     resources_.push_back ( didl::DidlResource (
                                0, ebook.id(),
                                boost::filesystem::file_size ( ebook.path() ) /*size*/, "", ebook.path(),
@@ -316,12 +301,10 @@ void UpnpContentDirectoryParser::_import_ebook ( const didl::DidlItem & ebook ) 
                                std::map< didl::DidlResource::UPNP_RES_ATTRIBUTES, std::string > () )
                          );
 
-    std::string  isbn_ = PdfParser::parsePdf ( ebook.path() );
-
-    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "import (isbn):" << isbn_ )
     SquawkServer::instance()->dao()->save (
-        didl::DidlEBook ( ebook.id(), ebook.parentId(), ebook.title(), ebook.path(), ebook.mtime(),
-                          ebook.objectUdpateId(), ebook.size(), ebook.mimeType(), resources_, isbn_, true ) );
+        didl::DidlEBook ( ebook.id(), ebook.parentId(), ebook.title(), ebook.path(),
+                          ebook.mtime(), ebook.objectUdpateId(), ebook.size(),
+                          ebook.mimeType(), resources_, PdfParser::parsePdf ( ebook.path() ), true ) );
 }
 
 UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse ( didl::DidlContainer & parent, const std::string & path ) {
@@ -344,8 +327,6 @@ UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse 
     std::list< didl::DidlAlbumArtUri > albumArtUri_;
 
     std::list< std::string > child_directories_;
-
-    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, "Parse Path:" << container_ )
 
     //search for regular files
     boost::filesystem::directory_iterator end_itr;
@@ -429,9 +410,6 @@ UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse 
 
         } else if ( boost::filesystem::is_directory ( itr->status() ) ) {
             child_directories_.push_back ( item_filepath_ );
-
-        } else {
-            LOG4CXX_WARN ( logger, "path is neither a reqular file nor a directory:" << path )
         }
     }//end directory iterator (_parent_changed, child_directories)
 

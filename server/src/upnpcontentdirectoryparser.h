@@ -30,8 +30,6 @@ public:
     static std::string _clean_name( const std::string & name );
 
 private:
-    static log4cxx::LoggerPtr logger;
-
     std::map<std::string, int> statistic;
 
     enum DIDL_PARSE_TYPES { container, music_album, multidisc, photo_album };
@@ -106,7 +104,7 @@ private:
             return didl::objectItemEBook;
 
         } else if( squawk::SUAWK_SERVER_DEBUG ) {
-            LOG4CXX_DEBUG ( logger, "can not find object type for:" << mime_type )
+            // C L O G (ERROR, "upnp") << "can not find object type for:" << mime_type;
         }
         return didl::objectItem;
     }

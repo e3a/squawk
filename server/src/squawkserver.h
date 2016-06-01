@@ -62,21 +62,26 @@ class SquawkServer {
         return _ssdp_devices;
     }
 
+    bool import_media_directory();
+
   private:
     SquawkServer() {}
 
-    static log4cxx::LoggerPtr logger;
+    void cleanup_upnp_devices();
+    void ssdp_event( ssdp::SSDPEventListener::EVENT_TYPE type, std::string, ssdp::SsdpEvent device );
 
     std::map< std::string, upnp::UpnpDevice > _ssdp_devices;
     std::mutex _ssdp_devices_mutex;
-    bool announce_thread_run = true;
     std::unique_ptr<std::thread> _ssdp_devices_thread;
+    bool _ssdp_devices_thread_run = true;
+
+    std::shared_ptr< squawk::UpnpContentDirectoryParser > _upnp_file_parser;
+    std::thread _upnp_file_parser_thread;
 
     squawk::ptr_squawk_config _squawk_config;
     std::shared_ptr< squawk::UpnpContentDirectoryDao > _upnp_cds_dao;
-    std::shared_ptr<squawk::UpnpContentDirectoryParser> _upnp_file_parser;
-    http::WebServer * web_server = nullptr; //TODO
-    ssdp::SSDPServerImpl * ssdp_server = nullptr; //TODO
+    std::shared_ptr< ssdp::SSDPServerImpl > _ssdp_server;
+    std::shared_ptr< http::WebServer > web_server;
 };
 }//namespace squawk
 #endif // SQUAWKSERVER_H

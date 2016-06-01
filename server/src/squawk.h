@@ -50,7 +50,7 @@
 #include "ssdp.h"
 #include "utils/xml.h"
 
-#include "log4cxx/logger.h"
+#include "easylogging++.h"
 
 #include "gtest/gtest_prod.h"
 
@@ -62,7 +62,7 @@
 #include "db/sqlite3connection.h"
 #include "db/sqlite3statement.h"
 
-#include "upnp2.h"
+#include "upnp.h"
 #include "didl.h"
 #include "didljsonwriter.h"
 #include "didlxmlwriter.h"

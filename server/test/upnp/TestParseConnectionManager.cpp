@@ -20,7 +20,7 @@
 #include <string>
 #include <map>
 #include "../squawk.h"
-#include "upnp2.h"
+#include "upnp.h"
 #include <gtest/gtest.h>
 
 TEST(ConnectionManagerTest, TestParseConnectionType) {

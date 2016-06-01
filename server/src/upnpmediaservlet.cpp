@@ -19,8 +19,6 @@
 
 namespace squawk {
 
-log4cxx::LoggerPtr UpnpMediaServlet::logger ( log4cxx::Logger::getLogger ( "squawk.UpnpMediaServlet" ) );
-
 inline std::string tmp_path() {
     std::stringstream ss;
     std::string tmp_directory_ = SquawkServer::instance()->config()->tmpDirectory();
@@ -30,8 +28,7 @@ inline std::string tmp_path() {
 
 void UpnpMediaServlet::do_get ( http::HttpRequest & request, http::HttpResponse & response ) {
 
-    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, request )
-        _process_file ( request, response );
+    _process_file ( request, response );
 
     //check if file exists
     boost::filesystem::path path_ ( request.uri() );
@@ -71,8 +68,8 @@ void UpnpMediaServlet::do_get ( http::HttpRequest & request, http::HttpResponse 
     }
 }
 void UpnpMediaServlet::do_head ( http::HttpRequest & request, http::HttpResponse & response ) {
-    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_TRACE ( logger, request )
-        _process_file ( request, response );
+
+    _process_file ( request, response );
 
     //check if file exists
     boost::filesystem::path path_ ( request.uri() );
@@ -121,7 +118,6 @@ void UpnpMediaServlet::_process_file ( http::HttpRequest & request, http::HttpRe
                     response.set_mime_type ( http::mime::mime_type ( stmt_resource->get_string ( 0 ) ) );
 
                 } else {
-                    if ( squawk::SUAWK_SERVER_DEBUG ) LOG4CXX_DEBUG ( logger, "404: song:" << filename_ )
                     throw http::http_status::NOT_FOUND;
                 }
 
@@ -131,7 +127,7 @@ void UpnpMediaServlet::_process_file ( http::HttpRequest & request, http::HttpRe
                 }
 
             } catch ( db::DbException & e ) {
-                LOG4CXX_FATAL ( logger, "can not get song path: " << e.code() << ":" << e.what() )
+                CLOG(ERROR, "upnp") << "Can not get resource from db: " << e.code() << ":" << e.what();
                 throw http::http_status::INTERNAL_SERVER_ERROR;
             }
 

@@ -21,29 +21,37 @@
 
 #include "httpserver.h"
 
+#include "easylogging++.h"
+
 namespace http {
+
+static el::Logger* http_logger = el::Loggers::getLogger( "http" );
 
 // TODO threads
 WebServer::WebServer ( std::string local_ip, int port /*, int threads */ )
     : local_ip ( local_ip ), port ( port ), httpServer_( std::unique_ptr< IHttpServer >( new HttpServer( local_ip, port/* , threads */, dynamic_cast< http::HttpRequestHandler * > ( this ) ) ) ) /*, threads(threads) */ {
-    std::cout << "==registered servlets:" << std::endl;
-    for( map_type::iterator it = http::ServletFactory::getMap()->begin(); it != http::ServletFactory::getMap()->end(); it++ ) {
-        std::string str = it->first;
-        std::cout << " -> " << str << std::endl;
-    }
-    std::cout << "<<<<" << std::endl;
 
+//TODO what to do with that
+//    std::cout << "==registered servlets:" << std::endl;
+//    for( map_type::iterator it = http::ServletFactory::getMap()->begin(); it != http::ServletFactory::getMap()->end(); it++ ) {
+//        std::string str = it->first;
+//        std::cout << " -> " << str << std::endl;
+//    }
+//    std::cout << "<<<<" << std::endl;
 }
 
 WebServer::~WebServer() {}
 
-void WebServer::register_servlet ( HttpServlet * servlet ) {
-	servlets.push_back ( servlet );
+void WebServer::register_servlet ( ptr_servlet_t servlet ) {
+    servlets.push_back ( std::move( servlet ) );
+}
+void WebServer::callback ( std::string & method, std::string & uri, std::function< http_callback_t > callback ) {
+    //TODO
 }
 
 void WebServer::handle_request ( HttpRequest & request, HttpResponse & response, std::function< void() > fptr ) {
 
-	for ( auto * servlet : servlets ) {
+    for ( auto & servlet : servlets ) {
 		if ( servlet->match ( request.uri() ) ) {
 			try {
 
@@ -83,9 +91,9 @@ void WebServer::handle_request ( HttpRequest & request, HttpResponse & response,
 			}
 
 			//log request
-			std::cout << request.remoteIp() << " user-identifier anonymous [" << "] \"" << request.method() << " " <<
+            CLOG(INFO, "http") << request.remoteIp() << " " << request.method() << " " <<
 					  request.uri() << " HTTP/" << request.httpVersionMajor() << "." << request.httpVersionMinor() << " " <<
-					  http::parse_status ( response.status() ) << " " << response.size() << std::endl;
+                      http::parse_status ( response.status() ) << " " << response.size();
 
             fptr(); // execute the calback method.
 			return;

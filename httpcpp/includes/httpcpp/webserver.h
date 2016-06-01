@@ -20,9 +20,11 @@
 #ifndef WEBSERVER
 #define WEBSERVER
 
+#include <memory>
 #include <vector>
 
 namespace http {
+
 
 /**
  * @brief The main Web Server Class.
@@ -48,7 +50,10 @@ public:
 	 * @brief Register servlets.
 	 * @param servlet The Servlet class.
 	 */
-	virtual void register_servlet ( HttpServlet * servlet );
+        virtual void register_servlet ( ptr_servlet_t servlet );
+
+        virtual void callback ( std::string & method, std::string & uri, std::function< http_callback_t > callback );
+
 	/**
 	 * @brief The handle request callback method.
 	 * @brief handle_request
@@ -57,7 +62,7 @@ public:
 	 */
 	virtual void handle_request ( HttpRequest & request, HttpResponse & response, std::function<void() > fptr );
 private:
-	std::vector<HttpServlet *> servlets;
+        std::vector< ptr_servlet_t > servlets;
 	std::string local_ip;
 	int port; //, threads;
         std::unique_ptr< IHttpServer > httpServer_;

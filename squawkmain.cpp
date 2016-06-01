@@ -1,11 +1,10 @@
 #include <signal.h>
 
-#include "log4cxx/basicconfigurator.h"
-#include "log4cxx/propertyconfigurator.h"
-#include "log4cxx/helpers/exception.h"
-
 #include "server/src/squawkconfig.h"
 #include "server/src/squawkserver.h"
+
+#include "easylogging++.h"
+INITIALIZE_EASYLOGGINGPP
 
 int main ( int ac, const char* av[] ) {
 
@@ -25,12 +24,32 @@ int main ( int ac, const char* av[] ) {
         squawk_config->save ( squawk_config->configFile() );
 
         //load the logger
+        el::Configurations default_conf_;
+        default_conf_.setGlobally( el::ConfigurationType::Enabled, "true" );
+        default_conf_.setGlobally( el::ConfigurationType::MillisecondsWidth, "6" );
+        default_conf_.setGlobally( el::ConfigurationType::Format, "%datetime [%logger] %msg" );
+        default_conf_.setGlobally( el::ConfigurationType::PerformanceTracking, "true" );
+        default_conf_.set(el::Level::Debug, el::ConfigurationType::Format, "%datetime %level [%logger] %func: %msg" );
+        default_conf_.set(el::Level::Error, el::ConfigurationType::Format, "%datetime %level [%logger] %func: %msg" );
+        default_conf_.set(el::Level::Fatal, el::ConfigurationType::Format, "%datetime %level [%logger] %func: %msg" );
+
         if ( squawk_config->logger() != "" ) {
-            log4cxx::PropertyConfigurator::configure ( squawk_config->logger() );
+            default_conf_.setGlobally( el::ConfigurationType::Filename, squawk_config->logger() );
+            default_conf_.setGlobally( el::ConfigurationType::MaxLogFileSize, "2097152" ); //2MB
+            default_conf_.setGlobally( el::ConfigurationType::LogFlushThreshold, "0" ); // Flush after every 100 logs
+            default_conf_.setGlobally( el::ConfigurationType::ToFile, "true" );
+            default_conf_.setGlobally( el::ConfigurationType::ToStandardOutput, "false" );
 
         } else {
-            log4cxx::BasicConfigurator::configure();
+            default_conf_.setGlobally( el::ConfigurationType::ToFile, "false" );
+            default_conf_.setGlobally( el::ConfigurationType::ToStandardOutput, "true" );
         }
+
+        el::Loggers::reconfigureAllLoggers(default_conf_);
+        el::Loggers::reconfigureLogger("upnp", default_conf_);
+        el::Configurations http_conf_;
+        http_conf_.set(el::Level::Info, el::ConfigurationType::Format, "%datetime %msg" );
+        el::Loggers::reconfigureLogger("http", http_conf_);
 
         //ensure the tmp directory exist
         if ( ! boost::filesystem::is_directory ( squawk_config->tmpDirectory() ) ) {
@@ -57,27 +76,11 @@ int main ( int ac, const char* av[] ) {
         pthread_sigmask ( SIG_BLOCK, &wait_mask, 0 );
         int sig = 0;
 
-        std::cout << "wait for signal" << std::endl;
-
         sigwait ( &wait_mask, &sig );
-
-        std::cout << "shutdown server" << std::endl;
 
         squawk::SquawkServer::instance()->stop();
 
         return 0;
-
-    } catch ( std::exception& e ) {
-        std::cerr << e.what() << std::endl;
-
-    } catch ( int & e ) {
-        std::cerr << "int:" << e << std::endl;
-
-    } catch ( char * e ) {
-        std::cerr << "char*:" << e << std::endl;
-
-    } catch ( std::string * e ) {
-        std::cerr << "std:" << e << std::endl;
 
     } catch ( ... ) {
         try {
@@ -88,10 +91,9 @@ int main ( int ac, const char* av[] ) {
             }
 
         } catch ( const std::exception& e ) {
-            std::cout << "Caught exception \"" << e.what() << "\"\n";
+            LOG(FATAL) << "Caught Exception: < " << e.what() << " >";
         }
     }
-
     return 1;
 }
 
