@@ -31,7 +31,6 @@ add_library(server ${UTILS} ${SQUAWK} ${DATABASE} ${UPNP})
 #target_link_libraries(aws ${LIBS})
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/squawk.xml DESTINATION etc/squawk )
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/logger.properties DESTINATION etc/squawk )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/docroot/ConnectionMgr.xml DESTINATION var/lib/squawk/www )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/docroot/ContentDir.xml DESTINATION var/lib/squawk/www )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/docroot/X_MS_MediaReceiverRegistrar.xml DESTINATION var/lib/squawk/www )
