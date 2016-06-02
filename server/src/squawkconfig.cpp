@@ -32,7 +32,7 @@ const std::string SquawkConfig::HELP_TEXT = "Options description: \n" \
 "\t-v [ --version ]         print version string\n" \
 "\t--help                   produce help message\n" \
 "\t-r [ --rescan ]          rescan database at startup.\n" \
-"\t-l [ --logger ] arg      logger properties file. \n" \
+"\t-l [ --logger ] arg      log file. standard out when not set or empty. \n" \
 "\t-c [ --config-file ] arg configuration properties file.\n" \
 "\t--server-name arg        server visible name\n" \
 "\t--media-directory arg    media paths. (comma seperated list)\n" \

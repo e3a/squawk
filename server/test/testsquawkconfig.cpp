@@ -175,8 +175,8 @@ TEST(SquawkParseOptions, TestMergedOptions) {
     EXPECT_EQ(std::string("/home/Pictures"), config.mediaDirectories().front() );
     EXPECT_EQ(8080, config.httpPort());
     EXPECT_EQ(std::string("/usr/local/var/lib/squawk/www"), config.docRoot() );
-    EXPECT_EQ(std::string("/usr/local/var/lib/squawk/squawk.db"), config.databaseFile() );
-    EXPECT_EQ(std::string("/var/tmp/squawk"), config.tmpDirectory() );
+    EXPECT_EQ(std::string("/var/cache/squawk/squawk.db"), config.databaseFile() );
+    EXPECT_EQ(std::string("/var/cache/squawk/"), config.tmpDirectory() );
     EXPECT_EQ(std::string("127.0.0.1"), config.localListenAddress() );
     EXPECT_EQ(std::string("239.255.255.250"), config.multicastAddress() );
     EXPECT_EQ(1900, config.multicastPort() );

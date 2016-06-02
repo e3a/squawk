@@ -6,7 +6,7 @@
     <cover-name>front</cover-name>
     <cover-name>folder</cover-name>
   </cover-names>
-  <database-file>/var/lib/squawk/squawk2.db</database-file>
+  <database-file>/var/cache/squawk/squawk.db</database-file>
   <http-bower>/home/e3a/build-squawk-Squawk-Default/</http-bower>
   <http-docroot>/home/e3a/squawk/server/docroot/</http-docroot>
   <http-ip>192.168.0.17</http-ip>
@@ -23,6 +23,6 @@
   <multicast-address>239.255.255.250</multicast-address>
   <multicast-port>1900</multicast-port>
   <server-name>[DEV] Squawk Media Server</server-name>
-  <tmp-directory>/var/tmp/squawk/2</tmp-directory>
+  <tmp-directory>/var/cache/squawk/</tmp-directory>
   <uuid>2b2645ef-0501-4c04-ad97-174e05bab162</uuid>
 </squawk>

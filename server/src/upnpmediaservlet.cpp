@@ -110,7 +110,9 @@ void UpnpMediaServlet::_process_file ( http::HttpRequest & request, http::HttpRe
 
         if ( type_ == "resource" ) {
             try {
-                db::db_statement_ptr stmt_resource = SquawkServer::instance()->db()->prepareStatement ( "select path, mime_type from tbl_cds_resource where ROWID = ?" );
+                db::db_statement_ptr stmt_resource = SquawkServer::instance()->db()->prepareStatement (
+                    "select path, mime_type from tbl_cds_resource where ROWID = ?" );
+
                 stmt_resource->bind_int ( 1, std::stoi ( filename_ ) );
 
                 if ( stmt_resource->step() ) {
@@ -143,7 +145,7 @@ void UpnpMediaServlet::_process_file ( http::HttpRequest & request, http::HttpRe
 }
 void UpnpMediaServlet::_dlna_headers ( http::HttpRequest & request, http::HttpResponse & response ) {
     if ( request.containsParameter ( "Getcontentfeatures.dlna.org" ) &&
-            request.parameter ( "Getcontentfeatures.dlna.org" ) == "1" ) {
+         request.parameter ( "Getcontentfeatures.dlna.org" ) == "1" ) {
         response.parameter ( "transferMode.dlna.org", "Streaming" );
         response.parameter ( "Accept-Ranges", "bytes" );
         response.parameter ( "contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=017000 00000000000000000000000000" );

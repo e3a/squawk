@@ -24,7 +24,7 @@ namespace squawk {
 TEST(UpnpContentDirectoryParserTest, ParseMultidiscName) {
 
     ASSERT_TRUE( UpnpContentDirectoryParser::_multidisc_name( "cd1" ) );
-    ASSERT_TRUE( UpnpContentDirectoryParser::_multidisc_name( "CD01" ) );
+    ASSERT_TRUE( UpnpContentDirectoryParser::_multidisc_name( "CD011" ) );
     ASSERT_TRUE( UpnpContentDirectoryParser::_multidisc_name( "Disk 01" ) );
     ASSERT_TRUE( UpnpContentDirectoryParser::_multidisc_name( "Disc 1of2" ) );
     ASSERT_FALSE( UpnpContentDirectoryParser::_multidisc_name( "Some Other CD Name" ) );
