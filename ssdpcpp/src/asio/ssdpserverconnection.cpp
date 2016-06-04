@@ -54,12 +54,12 @@ SSDPServerConnection::SSDPServerConnection ( const std::string & multicast_addre
 											std::placeholders::_2 ) ) );
 }
 
-void SSDPServerConnection::start() {
+void SSDPServerConnection::start() { //TODO
 	ssdp_runner = std::unique_ptr<std::thread> ( new std::thread (
 					  std::bind ( static_cast<size_t ( asio::io_service::* ) () > ( &asio::io_service::run ), &io_service ) ) );
 }
 
-void SSDPServerConnection::stop() {
+void SSDPServerConnection::stop() { //TODO
 	io_service.stop();
 	ssdp_runner->join();
 }

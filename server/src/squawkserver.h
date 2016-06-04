@@ -21,6 +21,7 @@
 #define SQUAWKSERVER_H
 
 #include "squawkconfig.h"
+#include "../../ssdpcpp/src/ssdpserverimpl.h"
 
 namespace squawk {
 //forward declaration of class - make it a friend in DidlObject.

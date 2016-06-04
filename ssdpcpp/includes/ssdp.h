@@ -82,75 +82,11 @@ ssdp_server->stop();
  */
 namespace ssdp {
 
-static const bool DEBUG = true;
-
-/** hot many times the SSDP M-SEARCH and NOTIFY messages are sent. */
-static const size_t NETWORK_COUNT = 3;
-/** hot many times the SSDP M-SEARCH and NOTIFY messages are sent. */
-static const size_t ANNOUNCE_INTERVAL = 1800;
-
-static const std::string USER_AGENT = "DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0";
-
 static const std::string NS_ROOT_DEVICE = "upnp:rootdevice";
 static const std::string NS_MEDIASERVER = "urn:schemas-upnp-org:device:MediaServer:1";
 static const std::string NS_CONTENT_DIRECTORY = "urn:schemas-upnp-org:service:ContentDirectory:1";
 static const std::string NS_CONNECTION_MANAGER = "urn:schemas-upnp-org:service:ConnectionManager:1";
 static const std::string NS_MEDIA_RECEIVER_REGISTRAR = "urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:1";
-
-static const std::string HEADER_DATE = "Date";
-
-/**  Specified by UPnP vendor. String. Field value MUST begin with the following “product tokens” (defined by
-     HTTP/1.1). The first product token identifes the operating system in the form OS name/OS version, the second token
-     represents the UPnP version and MUST be UPnP/1.1, and the third token identifes the product using the form
-     product name/product version. For example, “SERVER: unix/5.1 UPnP/1.1 MyProduct/1.0”. Control points MUST be
-     prepared to accept a higher minor version number of the UPnP version than the control point itself implements. For
-     example, control points implementing UDA version 1.0 will be able to interoperate with devices implementing
-     UDA version 1.1. */
-static const std::string UPNP_HEADER_SERVER = "Server";
-static const std::string UPNP_HEADER_DATE = "Date";
-static const std::string UPNP_HEADER_ST = "St";
-/**  Field value contains Notification Sub Type. MUST be ssdp:alive. Single URI. */
-static const std::string UPNP_HEADER_NTS = "Nts";
-/**  Field value contains Unique Service Name. */
-static const std::string UPNP_HEADER_USN = "Usn";
-/**  Field value contains a URL to the UPnP description of the root device. */
-static const std::string UPNP_HEADER_LOCATION = "Location";
-/**  Field value contains Notification Type. */
-static const std::string UPNP_HEADER_NT = "Nt";
-static const std::string UPNP_HEADER_MX = "Mx";
-static const std::string UPNP_HEADER_MAN = "Man";
-static const std::string UPNP_HEADER_EXT = "Ext";
-static const std::string UPNP_OPTION_MAX_AGE = "max-age=";
-
-static const std::string HTTP_REQUEST_LINE_OK = "HTTP/1.1 200 OK";
-
-static const std::string UPNP_STATUS_DISCOVER	= std::string ( "ssdp:discover" );
-static const std::string UPNP_STATUS_ALIVE	= std::string ( "ssdp:alive" );
-static const std::string UPNP_STATUS_BYE	= std::string ( "ssdp:byebye" );
-
-static const std::string UPNP_NS_ALL = "ssdp:all";
-
-static const std::string  REQUEST_METHOD_MSEARCH = "M-SEARCH";
-static const std::string  REQUEST_METHOD_NOTIFY = "NOTIFY";
-
-static const std::string SSDP_HEADER_REQUEST_LINE = "NOTIFY * HTTP/1.1";
-static const std::string SSDP_HEADER_SEARCH_REQUEST_LINE = "M-SEARCH * HTTP/1.1";
-
-inline bool check_timeout(const time_t & last_seen_, const double & cache_control_) {
-    double elapsed_time = difftime( std::time ( 0 ), last_seen_ );
-    return ( elapsed_time > cache_control_ );
-}
-inline time_t parse_keep_alive(const std::string & cache_control ) {
-    time_t time = 0;
-    std::string cache_control_clean = boost::erase_all_copy( cache_control, " " );
-    if( cache_control_clean.find( UPNP_OPTION_MAX_AGE ) == 0 ) {
-        time = boost::lexical_cast<time_t> ( cache_control_clean.substr ( UPNP_OPTION_MAX_AGE.size() ) );
-
-    } else if( ssdp::DEBUG ) {
-        std::cerr << "wrong cache control format: " << cache_control << std::endl;
-    }
-    return time;
-}
 
 /**
  * @brief SSDP event item.
@@ -290,7 +226,7 @@ private:
 /**
  * \brief Interface for the SSDP event listener
  */
-class SSDPEventListener {
+class SSDPEventListener { //TODO method
 public:
 	enum EVENT_TYPE { ANNOUNCE, BYE };
 
@@ -308,7 +244,7 @@ typedef std::function< void( SSDPEventListener::EVENT_TYPE type, std::string  cl
 /**
  * @brief The SSDP Response
  */
-struct Response {
+struct Response { //TODO why not from http?
 	/** Response types */
 	enum status_type {
 		ok = 200,
@@ -338,7 +274,7 @@ struct Response {
  * The callback method will be invoked when a multicast
  * message from the network is reeceived.
  */
-class SSDPCallback {
+class SSDPCallback { //TODO function
 public:
 	SSDPCallback() {}
 	virtual ~SSDPCallback() {}
@@ -354,6 +290,7 @@ public:
 	 */
 	virtual void handle_response ( ::http::HttpResponse & response ) = 0;
 };
+
 /**
  * The SSDP Connection..
  * \param headers the request headers
@@ -368,11 +305,11 @@ public:
 	/**
 	 * Start the server.
 	 */
-	virtual void start() = 0;
+        virtual void start() = 0; //TODO CTOR
 	/**
 	 * Stop the server.
 	 */
-	virtual void stop() = 0;
+        virtual void stop() = 0; //TODO DTOR
 	/**
 	 * Send a message to the network.
 	 * \param headers the messsage headers
@@ -389,88 +326,7 @@ public:
 	 */
 	virtual void set_handler ( SSDPCallback * handler ) = 0;
 };
-/**
- * SSDP Server.
- */
-class SSDPServerImpl : public SSDPCallback {
 
-public:
-	/**
-	 * Create a new SSDPServer.
-	 */
-        explicit SSDPServerImpl ( const std::string & uuid, const std::string & multicast_address, const int & multicast_port, const std::map< std::string, std::string > & namespaces );
-	virtual ~SSDPServerImpl() {}
-	/**
-	 * Announce the services in the network.
-	 */
-	void announce();
-	/**
-	 * Suppress the services in the network.
-	 */
-	void suppress();
-	/**
-	 * Search for services in the network. The call is asynchronous, the services are notified.
-	 * @brief Search Services
-	 * @param service the service, default ssdp:all
-	 */
-	void search ( const std::string & service = UPNP_NS_ALL );
-	/**
-	* Start the server.
-	*/
-	void start();
-	/**
-	* Stop the server.
-	*/
-	void stop();
-	/**
-	* Register an UPNP Service.
-	* \param ns the Service namespace
-	* \param location the service description URL
-	*/
-	void register_namespace ( std::string ns, std::string location ) {
-		namespaces[ns] = location;
-	}
-	/**
-	* Handle response callback method..
-	* \param headers the responset headers
-	*/
-	virtual void handle_response ( ::http::HttpResponse & response );
-	/**
-	* Handle receive callback method..
-	* \param headers the request headers
-	*/
-	virtual void handle_receive ( ::http::HttpRequest & request );
-        /**
-	 * \brief Subscribe for events.
-	 */
-        void subscribe ( event_callback_t listener ) {
-		listeners.push_back ( listener );
-	}
-
-private:
-	std::string uuid, local_listen_address, multicast_address;
-	int multicast_port;
-	std::unique_ptr<SSDPConnection> connection;
-
-        SsdpEvent parseRequest ( http::HttpRequest & request );
-
-        FRIEND_TEST( HeaderParseTest, Response );
-        SsdpEvent parseResponse ( http::HttpResponse & response );
-
-	void send_anounce ( const std::string & nt, const std::string & location );
-	void send_suppress ( const std::string & nt );
-	std::map< std::string, std::string > create_response ( const std::string & nt, const std::string & location );
-        std::map< std::string, std::string > namespaces; //the namespaces for this server
-//        std::map< std::string, SsdpEvent > upnp_devices;
-
-        std::vector< event_callback_t > listeners;
-        void fireEvent ( SSDPEventListener::EVENT_TYPE type, std::string client_ip, SsdpEvent device ) const;
-
-	bool announce_thread_run = true;
-	std::unique_ptr<std::thread> annouceThreadRunner;
-        std::chrono::high_resolution_clock::time_point _announce_time;
-	void annouceThread();
-};
 inline std::string create_header ( std::string request_line, std::map< std::string, std::string > headers ) {
 	std::ostringstream os;
 	os << request_line + std::string ( "\r\n" );

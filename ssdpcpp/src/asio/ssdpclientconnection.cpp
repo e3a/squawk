@@ -47,7 +47,6 @@ void SSDPClientConnection::handle_receive_from ( const asio::error_code & error,
 	if ( !error ) {
 		http::HttpResponse response;
 		response.remote_ip = sender_endpoint.address().to_string();
-        http::HttpResponseParser httpParser; //TODO make global
         httpParser.parse_http_response ( response, data, bytes_recvd );
 		handler->handle_response ( response );
 

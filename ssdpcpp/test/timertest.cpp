@@ -20,30 +20,19 @@
 #include <string>
 
 #include "ssdp.h"
+#include "../ssdpserverimpl.h"
 
 #include <gtest/gtest.h>
-
 
 namespace ssdp {
 TEST( TimerTest, ParseTimeTest ) {
 
-    auto time = parse_keep_alive( "max-age=1800" );
+    auto time = SSDPServerImpl::parse_keep_alive( "max-age=1800" );
     EXPECT_EQ( 1800, time );
 }
 TEST( TimerTest, ParseTimeSpacesTest ) {
 
-    auto time = parse_keep_alive( "max-age = 1800" );
+    auto time = SSDPServerImpl::parse_keep_alive( "max-age = 1800" );
     EXPECT_EQ( 1800, time );
-}
-TEST( TimerTest, TimeoutCheckTest ) {
-
-    auto last_seen = std::time ( 0 );
-
-    ASSERT_FALSE( check_timeout( last_seen, 1000) );
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
-    ASSERT_TRUE( check_timeout( last_seen, 1) );
-
 }
 }//namespace ssdp

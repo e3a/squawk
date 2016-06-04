@@ -21,6 +21,7 @@
 #include <string>
 
 #include "ssdp.h"
+#include "../src/ssdpserverimpl.h"
 
 #include <gtest/gtest.h>
 

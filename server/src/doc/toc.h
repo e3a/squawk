@@ -21,6 +21,13 @@ Squawk server and client is built using the following 3rd party software:
 
 Native libraries:
 
+@subsection Included Included Dependencies
+
+<ul>
+<li><a href="http://fmtlib.net/latest/index.html">{fmt}</a>&nbsp;fmt (formerly cppformat) is an open-source formatting library. It can be used as a safe alternative to printf or as a fast alternative to C++ IOStreams.</li>
+<li><a href="http://easylogging.muflihun.com">Easylogging++</a>&nbsp;Single header only, extremely light-weight high performance logging library for C++11 (or higher) applications.</li>
+</ul>
+
 @subsection Web Web dependencies
 
 Libraties for the web page:

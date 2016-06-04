@@ -27,20 +27,23 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "ssdp.h"
+#include "ssdpserverimpl.h"
 #include "ssdpserverconnection.h"
 #include "ssdpclientconnection.h"
 
+#include "fmt/format.h"
+#include "fmt/time.h"
+
 namespace ssdp {
 
-inline std::string uname() {
+inline std::string uname() { //TODO
   struct utsname uts;
   uname(&uts);
   std::ostringstream system;
   system << uts.sysname << "/" << uts.version;
   return system.str();
 };
-inline std::string time_string() {
+inline std::string time_string() { //TODO
   time_t rawtime;
   time (&rawtime);
   std::string str_time = std::string( std::ctime ( &rawtime ) );
@@ -48,14 +51,37 @@ inline std::string time_string() {
   return str_time;
 };
 
-SSDPServerImpl::SSDPServerImpl ( const std::string & uuid, const std::string & multicast_address, const int & multicast_port, const std::map< std::string, std::string > & namespaces ) :
+const std::string SSDPServerImpl::SSDP_HEADER_SERVER = "Server";
+const std::string SSDPServerImpl::SSDP_HEADER_DATE = "Date";
+const std::string SSDPServerImpl::SSDP_HEADER_ST = "St";
+const std::string SSDPServerImpl::SSDP_HEADER_NTS = "Nts";
+const std::string SSDPServerImpl::SSDP_HEADER_USN = "Usn";
+const std::string SSDPServerImpl::SSDP_HEADER_LOCATION = "Location";
+const std::string SSDPServerImpl::SSDP_HEADER_NT = "Nt";
+const std::string SSDPServerImpl::SSDP_HEADER_MX = "Mx";
+const std::string SSDPServerImpl::SSDP_HEADER_MAN = "Man";
+const std::string SSDPServerImpl::SSDP_HEADER_EXT = "Ext";
+const std::string SSDPServerImpl::SSDP_OPTION_MAX_AGE = "max-age=";
+const std::string SSDPServerImpl::SSDP_REQUEST_LINE_OK = "HTTP/1.1 200 OK";
+const std::string SSDPServerImpl::SSDP_STATUS_DISCOVER	= "ssdp:discover";
+const std::string SSDPServerImpl::SSDP_STATUS_ALIVE	= "ssdp:alive";
+const std::string SSDPServerImpl::SSDP_STATUS_BYE = "ssdp:byebye";
+const std::string SSDPServerImpl::SSDP_NS_ALL = "ssdp:all";
+const std::string SSDPServerImpl::SSDP_MSEARCH = "M-SEARCH";
+const std::string SSDPServerImpl::SSDP_NOTIFY = "NOTIFY";
+const std::string SSDPServerImpl::SSDP_HEADER_REQUEST_LINE = "NOTIFY * HTTP/1.1";
+const std::string SSDPServerImpl::SSDP_HEADER_SEARCH_REQUEST_LINE = "M-SEARCH * HTTP/1.1";
+
+SSDPServerImpl::SSDPServerImpl ( const std::string & uuid, const std::string & multicast_address, const int & multicast_port,
+                                 const std::map< std::string, std::string > & namespaces ) :
 	uuid ( uuid ), multicast_address ( multicast_address ), multicast_port ( multicast_port ) {
-    for( auto ns : namespaces ) {
+
+    for( auto & ns : namespaces ) {
         register_namespace( ns.first, ns.second );
     }
 }
 
-void SSDPServerImpl::start() {
+void SSDPServerImpl::start() { //TODO CTOR
 	//start the server
     connection = std::unique_ptr<SSDPServerConnection> (
                      new SSDPServerConnection ( multicast_address, multicast_port ) );
@@ -70,7 +96,7 @@ void SSDPServerImpl::start() {
 /**
  * Stop the server.
  */
-void SSDPServerImpl::stop() {
+void SSDPServerImpl::stop() { //TODO DTOR
 	//stop reannounce thread
 	suppress();
 	announce_thread_run = false;
@@ -81,61 +107,61 @@ void SSDPServerImpl::stop() {
 }
 void SSDPServerImpl::handle_response ( http::HttpResponse & response ) {
     if ( response.status() == http::http_status::OK ) {
-		if ( response.parameter ( UPNP_HEADER_USN ).find ( uuid ) == string::npos ) {
-//TODO			upnp_devices[response.parameter ( UPNP_HEADER_USN )] = parseResponse ( response );
+        if ( response.parameter ( SSDP_HEADER_USN ).find ( uuid ) == string::npos ) {
 			fireEvent ( SSDPEventListener::ANNOUNCE, response.remote_ip, parseResponse ( response ) );
         }//fi no self announcement
 	}
 }
 void SSDPServerImpl::handle_receive ( http::HttpRequest & request ) {
     // do not process own messages received over other interface
-    if ( request.parameter( UPNP_HEADER_USN ).find ( uuid ) == string::npos ) {
+    if ( request.parameter( SSDP_HEADER_USN ).find ( uuid ) == string::npos ) {
 
-        if ( request.method() == REQUEST_METHOD_MSEARCH ) {
-            if ( request.parameter( UPNP_HEADER_ST ) == NS_ROOT_DEVICE || request.parameter( UPNP_HEADER_ST ) == UPNP_NS_ALL ) {
+        if ( request.method() == SSDP_MSEARCH ) { //search request
+            //search all devices
+            if ( request.parameter( SSDP_HEADER_ST ) == NS_ROOT_DEVICE || request.parameter( SSDP_HEADER_ST ) == SSDP_NS_ALL ) {
                 for ( auto & iter : namespaces ) {
-                    Response response ( Response::ok, HTTP_REQUEST_LINE_OK, create_response ( iter.first, iter.second ) );
+                    Response response ( Response::ok, SSDP_REQUEST_LINE_OK, create_response ( iter.first, iter.second ) );
                     connection->send ( response );
                 }
 
-            } else if ( namespaces.find ( request.parameter( UPNP_HEADER_ST ) ) != namespaces.end() ) {
-                connection->send ( Response ( Response::ok, HTTP_REQUEST_LINE_OK,
-                                              create_response ( request.parameter( UPNP_HEADER_ST ),
-                                                      namespaces[request.parameter( UPNP_HEADER_ST ) ] ) ) );
+            //search specific devices
+            } else if ( namespaces.find ( request.parameter( SSDP_HEADER_ST ) ) != namespaces.end() ) {
+                connection->send ( Response ( Response::ok, SSDP_REQUEST_LINE_OK,
+                                              create_response ( request.parameter( SSDP_HEADER_ST ),
+                                                      namespaces[request.parameter( SSDP_HEADER_ST ) ] ) ) );
             }
 
-        } else if ( request.method() == REQUEST_METHOD_NOTIFY ) {
+        //notify status
+        } else if ( request.method() == SSDP_NOTIFY ) {
 
-            if ( request.parameter( UPNP_HEADER_NTS ) == UPNP_STATUS_ALIVE ) {
+            if ( request.parameter( SSDP_HEADER_NTS ) == SSDP_STATUS_ALIVE ) {
                 fireEvent ( SSDPEventListener::ANNOUNCE, request.remoteIp(), parseRequest ( request ) );
             } else {
                 fireEvent ( SSDPEventListener::BYE, request.remoteIp(), parseRequest ( request ) );
             }
-
-        } else {
-            std::cerr << "other response: " << request << std::endl;
-        }
-    }
+        } else assert( false ); //other response
+    }//fi no self announcement
 }
+
 SsdpEvent SSDPServerImpl::parseRequest ( http::HttpRequest & request ) {
 	time_t cache_control = 0;
     if ( request.containsParameter( http::header::CACHE_CONTROL ) ) {
         cache_control = parse_keep_alive( request.parameter( http::header::CACHE_CONTROL ) );
     }
-    return SsdpEvent ( request.parameter( http::header::HOST ), request.parameter( UPNP_HEADER_LOCATION ),
-                        request.parameter( UPNP_HEADER_NT ), request.parameter( UPNP_HEADER_NTS ),
-                        request.parameter( UPNP_HEADER_SERVER ), request.parameter( UPNP_HEADER_USN ),
+    return SsdpEvent ( request.parameter( http::header::HOST ), request.parameter( SSDP_HEADER_LOCATION ),
+                        request.parameter( SSDP_HEADER_NT ), request.parameter( SSDP_HEADER_NTS ),
+                        request.parameter( SSDP_HEADER_SERVER ), request.parameter( SSDP_HEADER_USN ),
 						std::time ( 0 ), cache_control );
 }
 SsdpEvent SSDPServerImpl::parseResponse ( http::HttpResponse & response ) {
 	time_t cache_control = 0;
     if ( response.containsParameter( http::header::CACHE_CONTROL ) ) {
         cache_control = parse_keep_alive( response.parameter( http::header::CACHE_CONTROL ) );
-    } else std::cerr << "no cache control in response:" << response << std::endl;
+    } else assert( false ); //no cache control in response
 
-    return SsdpEvent ( response.parameter ( http::header::HOST ), response.parameter ( UPNP_HEADER_LOCATION ),
-                        response.parameter ( UPNP_HEADER_ST ), response.parameter ( UPNP_HEADER_NTS ),
-						response.parameter ( UPNP_HEADER_SERVER ), response.parameter ( UPNP_HEADER_USN ),
+    return SsdpEvent ( response.parameter ( http::header::HOST ), response.parameter ( SSDP_HEADER_LOCATION ),
+                        response.parameter ( SSDP_HEADER_ST ), response.parameter ( SSDP_HEADER_NTS ),
+                        response.parameter ( SSDP_HEADER_SERVER ), response.parameter ( SSDP_HEADER_USN ),
 						std::time ( 0 ), cache_control );
 }
 void SSDPServerImpl::announce() {
@@ -158,11 +184,11 @@ void SSDPServerImpl::search ( const std::string & service ) {
 	std::async ( std::launch::async, [this, &service]() {
 
 		std::map< std::string, std::string > map;
-        map[http::header::HOST] = multicast_address + std::string ( ":" ) + std::to_string( multicast_port );
-        map[boost::to_upper_copy( UPNP_HEADER_ST )] = service;
-        map[boost::to_upper_copy( UPNP_HEADER_MX )] = "2";
-        map[boost::to_upper_copy( UPNP_HEADER_MAN )] = UPNP_STATUS_DISCOVER;
-        map[http::header::CONTENT_LENGTH] = std::string ( "0" );
+        map[http::header::HOST] = multicast_address + std::string ( ":" ) + std::to_string( multicast_port ); //TODO fmt
+        map[boost::to_upper_copy( SSDP_HEADER_ST )] = service;
+        map[boost::to_upper_copy( SSDP_HEADER_MX )] = "2";
+        map[boost::to_upper_copy( SSDP_HEADER_MAN )] = SSDP_STATUS_DISCOVER;
+        map[http::header::CONTENT_LENGTH] = "0";
 
 		SSDPClientConnection connection ( this, multicast_address, multicast_port );
 		connection.send ( SSDP_HEADER_SEARCH_REQUEST_LINE, map );
@@ -172,44 +198,44 @@ void SSDPServerImpl::search ( const std::string & service ) {
 std::map< std::string, std::string > SSDPServerImpl::create_response ( const std::string & nt, const std::string & location ) {
 
 	std::map< std::string, std::string > map;
-    map[http::header::CACHE_CONTROL] = UPNP_OPTION_MAX_AGE + std::to_string( ANNOUNCE_INTERVAL );
-	map[UPNP_HEADER_LOCATION] = location;
-    map[UPNP_HEADER_SERVER] = uname() + std::string ( " DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0" );
-    map[boost::to_upper_copy( UPNP_HEADER_ST )] = nt;
-    map[boost::to_upper_copy( UPNP_HEADER_USN )] = std::string ( "uuid:" ) + uuid + std::string ( "::" ) + nt;
-    map[boost::to_upper_copy( UPNP_HEADER_EXT )] = "";
+    map[http::header::CACHE_CONTROL] = SSDP_OPTION_MAX_AGE + std::to_string( ANNOUNCE_INTERVAL );
+    map[SSDP_HEADER_LOCATION] = location;
+    map[boost::to_upper_copy( SSDP_HEADER_SERVER )] = fmt::format("{} DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0", uname() );
+    map[boost::to_upper_copy( SSDP_HEADER_ST )] = nt;
+    map[boost::to_upper_copy( SSDP_HEADER_USN )] = fmt::format( "uuid:{}::{}", uuid, nt );
+    map[boost::to_upper_copy( SSDP_HEADER_EXT )] = "";
     map[http::header::DATE] = time_string();
-    map[http::header::CONTENT_LENGTH] = std::string ( "0" );
+    map[http::header::CONTENT_LENGTH] = "0";
 
 	return map;
 }
 void SSDPServerImpl::send_anounce ( const std::string & nt, const std::string & location ) {
 
 	std::map< std::string, std::string > map;
-    map[http::header::HOST] = multicast_address + std::string ( ":" ) + std::to_string( multicast_port );
-    map[http::header::CACHE_CONTROL] = UPNP_OPTION_MAX_AGE + std::to_string( ANNOUNCE_INTERVAL );
-    map[boost::to_upper_copy( UPNP_HEADER_LOCATION )] = location;
-    map[boost::to_upper_copy( UPNP_HEADER_SERVER )] = uname() + " " + USER_AGENT;
-    map[boost::to_upper_copy( UPNP_HEADER_NT )] = nt;
-    map[boost::to_upper_copy( UPNP_HEADER_USN )] = "uuid:" + uuid + "::" + nt;
-    map[boost::to_upper_copy( UPNP_HEADER_NTS )] = UPNP_STATUS_ALIVE;
-    map[boost::to_upper_copy( UPNP_HEADER_EXT )] = std::string ( "" );
-    map[boost::to_upper_copy( UPNP_HEADER_DATE )] = time_string();
-    map[http::header::CONTENT_LENGTH] = std::string ( "0" );
+    map[http::header::HOST] = fmt::format(  "{}:{}", multicast_address, multicast_port );
+    map[http::header::CACHE_CONTROL] = SSDP_OPTION_MAX_AGE + std::to_string( ANNOUNCE_INTERVAL ); //TODO
+    map[boost::to_upper_copy( SSDP_HEADER_LOCATION )] = location;
+    map[boost::to_upper_copy( SSDP_HEADER_SERVER )] = fmt::format("{} DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0", uname() );
+    map[boost::to_upper_copy( SSDP_HEADER_NT )] = nt;
+    map[boost::to_upper_copy( SSDP_HEADER_USN )] = fmt::format( "uuid:{}::{}", uuid, nt );
+    map[boost::to_upper_copy( SSDP_HEADER_NTS )] = SSDP_STATUS_ALIVE;
+    map[boost::to_upper_copy( SSDP_HEADER_EXT )] = "";
+    map[boost::to_upper_copy( SSDP_HEADER_DATE )] = time_string(); //TODO
+    map[http::header::CONTENT_LENGTH] = "0";
 
 	connection->send ( SSDP_HEADER_REQUEST_LINE, map );
 }
 void SSDPServerImpl::send_suppress ( const std::string & nt ) {
 
 	std::map< std::string, std::string > map;
-    map[http::header::HOST] = multicast_address + std::string ( ":" ) + std::to_string( multicast_port );
-    map[boost::to_upper_copy( UPNP_HEADER_NT )] = nt;
-    map[boost::to_upper_copy( UPNP_HEADER_USN )] = "uuid:" + uuid + "::" + nt;
-    map[boost::to_upper_copy( UPNP_HEADER_NTS )] = UPNP_STATUS_BYE;
-    map[boost::to_upper_copy( UPNP_HEADER_SERVER )] = uname() + " " + USER_AGENT;
-    map[boost::to_upper_copy( UPNP_HEADER_EXT )] = std::string ( "" );
-    map[boost::to_upper_copy( UPNP_HEADER_DATE )] = time_string();
-    map[http::header::CONTENT_LENGTH] = std::string ( "0" );
+    map[http::header::HOST] = fmt::format(  "{}:{}", multicast_address, multicast_port );
+    map[boost::to_upper_copy( SSDP_HEADER_NT )] = nt;
+    map[boost::to_upper_copy( SSDP_HEADER_USN )] = fmt::format( "uuid:{}::{}", uuid, nt );
+    map[boost::to_upper_copy( SSDP_HEADER_NTS )] = SSDP_STATUS_BYE;
+    map[boost::to_upper_copy( SSDP_HEADER_SERVER )] = fmt::format("{} DLNADOC/1.50 UPnP/1.0 SSDP/1.0.0", uname() );
+    map[boost::to_upper_copy( SSDP_HEADER_EXT )] = "";
+    map[boost::to_upper_copy( SSDP_HEADER_DATE )] = time_string(); //TODO
+    map[http::header::CONTENT_LENGTH] = "0";
 
 	connection->send ( SSDP_HEADER_REQUEST_LINE, map );
 }
@@ -231,7 +257,7 @@ void SSDPServerImpl::annouceThread() {
 			}
             _announce_time = std::chrono::high_resolution_clock::now();
 		}
-		std::this_thread::sleep_for ( std::chrono::milliseconds ( 5000 ) );
+        std::this_thread::sleep_for ( std::chrono::milliseconds ( 5000 ) ); //TODO static variable
 	}
 }
 void SSDPServerImpl::fireEvent ( SSDPEventListener::EVENT_TYPE type, std::string  client_ip, SsdpEvent device ) const {

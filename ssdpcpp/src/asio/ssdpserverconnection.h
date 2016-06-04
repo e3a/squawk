@@ -43,11 +43,11 @@ public:
 	/**
 	 * Start the server.
 	 */
-	virtual void start();
+    virtual void start(); //TODO CTOR
 	/**
 	 * Stop the server.
 	 */
-	virtual void stop();
+    virtual void stop(); //TODO DTOR
 	/**
 	 * Multicast a message to the network.
 	 */
@@ -59,7 +59,7 @@ public:
 	/**
 	 * Set the callback handler.
 	 */
-	virtual void set_handler ( SSDPCallback * handler );
+    virtual void set_handler ( SSDPCallback * handler ); //TODO function
 
 private:
 	/* constuctor parameters */

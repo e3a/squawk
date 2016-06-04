@@ -1,8 +1,4 @@
 /*
-    ASIO ssdp client connection implmementation.
-
-    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
-
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -31,9 +27,9 @@ inline namespace asio_impl {
 
 class SSDPClientConnection {
 public:
-	SSDPClientConnection ( SSDPCallback * handler, const std::string & multicast_address, const int & multicast_port )
-		: handler ( handler ), io_service_(), strand_ ( io_service_ ), socket ( io_service_ ), multicast_address ( multicast_address ), multicast_port ( multicast_port ) {
-	}
+    SSDPClientConnection ( SSDPCallback * handler, const std::string & multicast_address, const int & multicast_port ) :
+        handler ( handler ), io_service_(), strand_ ( io_service_ ), socket ( io_service_ ),
+        multicast_address ( multicast_address ), multicast_port ( multicast_port ) {}
 
 	~SSDPClientConnection() {
 		io_service_.stop();
@@ -57,6 +53,8 @@ private:
 
 	/* the runner thread */
 	std::unique_ptr<std::thread> ssdp_runner;
+
+    http::HttpResponseParser httpParser;
 };
 }//namespace asio_impl
 }//namespace ssdp

@@ -41,7 +41,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docroot/ DESTINATION var/lib/squaw
 
 if (build_tests)
     enable_testing()
-    include_directories(${ROOT} ${Boost_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIR} ${ID3_INCLUDE_DIR} ${FLAC++_INCLUDE_DIR} ${GTEST_INCLUDE_DIRS})
+    include_directories(${ROOT} ${SQUAWK_INCLUDES} ${GTEST_INCLUDE_DIRS})
     add_executable(testmain_server
         test/testmain.cpp
         test/testsquawkconfig.cpp
@@ -59,6 +59,7 @@ if (build_tests)
         test/upnpcontentdirectoryparsertest.cpp
         test/testupnpcontentdirectorydao.cpp)
     target_link_libraries(testmain_server
-        server ssdpcpp httpcpp fmt pthread ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} ${LIBS})
+        server ssdpcpp httpcpp pthread ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} ${LIBS})
+#    server ssdpcpp httpcpp fmt pthread ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} ${LIBS})
     add_test(server-tests testmain_server)
 endif()
