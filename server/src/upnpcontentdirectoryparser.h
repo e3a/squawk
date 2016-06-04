@@ -1,7 +1,7 @@
 #ifndef UPNPCONTENTDIRECTORYPARSER_H
 #define UPNPCONTENTDIRECTORYPARSER_H
 
-#include <regex>
+#include "re2/re2.h"
 
 #include "squawk.h"
 #include "squawkserver.h"
@@ -51,22 +51,12 @@ private:
 
     FRIEND_TEST( UpnpContentDirectoryParserTest, ParseSeries );
     static bool _parse_series( const std::string & filename, int * season, int * episode, std::string * name ) {
-        const std::regex _series_pattern( "(.*)S(\\d*)E(\\d*).*", std::regex::icase );
-        std::smatch match_;
-        if ( std::regex_match( filename, match_, _series_pattern ) && match_.size() > 0 ) {
-            *name = match_.str( 1 );
-            std::replace( name->begin(), name->end(), '.', ' ');
-            boost::trim(*name);
-            *season = std::stoi( match_.str( 2 ) );
-            *episode = std::stoi( match_.str( 3 ) );
-            return true;
-        } else return false;
+        return RE2::PartialMatch( filename, "(.*)S(\\d*)E(\\d*).*", name, season, episode );
     }
 
     FRIEND_TEST( UpnpContentDirectoryParserTest, ParseMultidiscName );
     static bool _multidisc_name( const std::string & path ) {
-        const std::regex _pattern( "cd\\d*|disc \\d*+of\\d*|disk \\d*", std::regex::icase );
-        return std::regex_match( path, _pattern );
+        return RE2::PartialMatch( path, "cd\\d*|disc \\d*+of\\d*|disk \\d*" );
     }
 
     static bool _cover( const std::string & path ) {

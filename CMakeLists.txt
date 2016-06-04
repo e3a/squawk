@@ -54,9 +54,10 @@ include(ExternalProject)
 
 ExternalProject_Add(
   fmt
-  GIT_REPOSITORY "https://github.com/fmtlib/fmt.git"
-  GIT_TAG "3.0.0"
+  URL "https://github.com/fmtlib/fmt/archive/3.0.0.zip"
   CMAKE_ARGS -DFMT_DOC=false -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
 )
 ExternalProject_Get_Property(fmt install_dir)
 set(fmt_LIB "${CMAKE_BINARY_DIR}/lib/libfmt.a" )
@@ -64,31 +65,34 @@ set(fmt_INCLUDES "${CMAKE_BINARY_DIR}/include/" )
 
 ExternalProject_Add(
   mstch
-  GIT_REPOSITORY "https://github.com/no1msd/mstch.git"
-  GIT_TAG "1.0.2"
+  URL "https://github.com/no1msd/mstch/archive/1.0.2.zip"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
 )
 set(mstch_LIB "${CMAKE_BINARY_DIR}/lib/libmstch.a" )
 set(mstch_INCLUDES "${CMAKE_BINARY_DIR}/include/" )
 
 ExternalProject_Add(
   easyloggingpp
-  GIT_REPOSITORY "https://github.com/easylogging/easyloggingpp.git"
-  GIT_TAG "v9.80"
+  URL "https://github.com/easylogging/easyloggingpp/archive/v9.80.zip"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
 )
 set(easyloggingpp_INCLUDES "${CMAKE_BINARY_DIR}/easyloggingpp-prefix/src/easyloggingpp/src/" )
 
 ExternalProject_Add(
   re2
-  GIT_REPOSITORY "https://github.com/google/re2.git"
-  GIT_TAG "master"
+  URL "https://github.com/google/re2/archive/master.zip"
   INSTALL_COMMAND ""
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
 )
 set(re2_LIB "${CMAKE_BINARY_DIR}/re2-prefix/src/re2-build/libre2.a" )
-set(re2_INCLUDES "${CMAKE_BINARY_DIR}/re2-prefix/src/re2/re2" )
+set(re2_INCLUDES "${CMAKE_BINARY_DIR}/re2-prefix/src/re2/" )
 
 # -------------------------------------------------------------------------
 # -----------------------   Find Dependencies       -----------------------

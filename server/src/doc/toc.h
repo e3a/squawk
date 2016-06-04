@@ -21,11 +21,13 @@ Squawk server and client is built using the following 3rd party software:
 
 Native libraries:
 
-@subsection Included Included Dependencies
+@subsection External External Dependencies
 
 <ul>
 <li><a href="http://fmtlib.net/latest/index.html">{fmt}</a>&nbsp;fmt (formerly cppformat) is an open-source formatting library. It can be used as a safe alternative to printf or as a fast alternative to C++ IOStreams.</li>
+<li><a href="https://github.com/no1msd/mstch">{{mustache}}</a>&nbsp;mstch is a complete implementation of {{mustache}} templates using modern C++. It's compliant with specifications v1.1.3, including the lambda module.</li>
 <li><a href="http://easylogging.muflihun.com">Easylogging++</a>&nbsp;Single header only, extremely light-weight high performance logging library for C++11 (or higher) applications.</li>
+<li><a href="https://github.com/google/re2">RE2</a>&nbsp;This is the source code repository for RE2, a regular expression library.</li>
 </ul>
 
 @subsection Web Web dependencies
