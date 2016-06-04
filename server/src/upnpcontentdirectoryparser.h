@@ -51,12 +51,18 @@ private:
 
     FRIEND_TEST( UpnpContentDirectoryParserTest, ParseSeries );
     static bool _parse_series( const std::string & filename, int * season, int * episode, std::string * name ) {
-        return RE2::PartialMatch( filename, "(.*)S(\\d*)E(\\d*).*", name, season, episode );
+        RE2 _parse_series_regex("(?i)(.*)S(\\d*)E(\\d*).*");
+        if( RE2::FullMatch( filename, _parse_series_regex, name, season, episode ) ) {
+            std::replace( name->begin(), name->end(), '.', ' ');
+            boost::trim(*name);
+            return true;
+        } else return false;
     }
 
     FRIEND_TEST( UpnpContentDirectoryParserTest, ParseMultidiscName );
-    static bool _multidisc_name( const std::string & path ) {
-        return RE2::PartialMatch( path, "cd\\d*|disc \\d*+of\\d*|disk \\d*" );
+    static bool _parse_multidisc( const std::string & path ) {
+        RE2 _parse_multidisc_regex("(?i)cd\\d*|disc \\d*of\\d*|disk \\d*");
+        return RE2::FullMatch( path, _parse_multidisc_regex );
     }
 
     static bool _cover( const std::string & path ) {

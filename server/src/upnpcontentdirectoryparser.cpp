@@ -353,7 +353,7 @@ UpnpContentDirectoryParser::DIDL_PARSE_TYPES UpnpContentDirectoryParser::_parse 
                     //parse and save audiofile
                     didl::DidlMusicTrack track_ = _import_track ( item_ );
 
-                    if ( ! UpnpContentDirectoryParser::_multidisc_name ( container_stem_ ) ) {
+                    if ( ! UpnpContentDirectoryParser::_parse_multidisc ( container_stem_ ) ) {
                         parent_changed_ = true;
                         container_type_ = DIDL_PARSE_TYPES::music_album;
                         album_ = didl::DidlContainerAlbum (
