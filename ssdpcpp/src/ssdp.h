@@ -20,6 +20,7 @@
 #define SSDPCONNECTION_H
 
 #include <chrono>
+#include <functional>
 #include <string>
 #include <map>
 #include <memory>
@@ -223,28 +224,14 @@ private:
     double cache_control_;
 };
 
-/**
- * \brief Interface for the SSDP event listener
- */
-class SSDPEventListener { //TODO method
-public:
-	enum EVENT_TYPE { ANNOUNCE, BYE };
+enum class SSDP_EVENT_TYPE { ANNOUNCE, BYE };
 
-	SSDPEventListener() {}
-	virtual ~SSDPEventListener() {}
-
-	/**
-	 * \brief event method
-	 */
-        virtual void ssdpEvent ( SSDPEventListener::EVENT_TYPE type, std::string  client_ip, SsdpEvent device ) = 0;
-};
-
-typedef std::function< void( SSDPEventListener::EVENT_TYPE type, std::string  client_ip, SsdpEvent device ) > event_callback_t;
+typedef std::function< void( SSDP_EVENT_TYPE type, std::string  client_ip, SsdpEvent device ) > event_callback_t;
 
 /**
  * @brief The SSDP Response
  */
-struct Response { //TODO why not from http?
+struct Response {
 	/** Response types */
 	enum status_type {
 		ok = 200,
@@ -264,67 +251,12 @@ struct Response { //TODO why not from http?
 		bad_gateway = 502,
 		service_unavailable = 503
 	} status;
-	Response ( status_type status, std::string request_line, std::map< std::string, std::string > headers ) : status ( status ), request_line ( request_line ), headers ( headers ) {}
+
+    Response ( status_type status, std::string request_line, std::map< std::string, std::string > headers ) :
+        status ( status ), request_line ( request_line ), headers ( headers ) {}
+
 	std::string request_line;
 	std::map< std::string, std::string > headers;
-};
-
-/**
- * @brief The SSDP Callback definition.
- * The callback method will be invoked when a multicast
- * message from the network is reeceived.
- */
-class SSDPCallback { //TODO function
-public:
-	SSDPCallback() {}
-	virtual ~SSDPCallback() {}
-
-	/**
-	 * The SSDP Callback method.
-	 * \param headers the http request
-	 */
-	virtual void handle_receive ( ::http::HttpRequest & request ) = 0;
-	/**
-	 * The SSDP Callback method.
-	 * \param headers the http response
-	 */
-	virtual void handle_response ( ::http::HttpResponse & response ) = 0;
-};
-
-/**
- * The SSDP Connection..
- * \param headers the request headers
- * \returns the response headers
- */
-class SSDPConnection {
-public:
-
-	SSDPConnection() {}
-	virtual ~SSDPConnection() {}
-
-	/**
-	 * Start the server.
-	 */
-        virtual void start() = 0; //TODO CTOR
-	/**
-	 * Stop the server.
-	 */
-        virtual void stop() = 0; //TODO DTOR
-	/**
-	 * Send a message to the network.
-	 * \param headers the messsage headers
-	 */
-	virtual void send ( std::string request_line, std::map< std::string, std::string > headers ) = 0;
-	/**
-	 * Send a reponse to the sender.
-	 * \param response the response object
-	 */
-	virtual void send ( Response response ) = 0;
-	/**
-	 * Set the SSDP Handlers.
-	 * \param handler the handler implementation
-	 */
-	virtual void set_handler ( SSDPCallback * handler ) = 0;
 };
 
 inline std::string create_header ( std::string request_line, std::map< std::string, std::string > headers ) {

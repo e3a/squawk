@@ -29,6 +29,7 @@ int main ( int ac, const char* av[] ) {
         default_conf_.setGlobally( el::ConfigurationType::MillisecondsWidth, "6" );
         default_conf_.setGlobally( el::ConfigurationType::Format, "%datetime [%logger] %msg" );
         default_conf_.setGlobally( el::ConfigurationType::PerformanceTracking, "true" );
+        default_conf_.set(el::Level::Trace, el::ConfigurationType::Format, "%datetime %level [%logger] %func: %msg" );
         default_conf_.set(el::Level::Debug, el::ConfigurationType::Format, "%datetime %level [%logger] %func: %msg" );
         default_conf_.set(el::Level::Error, el::ConfigurationType::Format, "%datetime %level [%logger] %func: %msg" );
         default_conf_.set(el::Level::Fatal, el::ConfigurationType::Format, "%datetime %level [%logger] %func: %msg" );

@@ -119,7 +119,7 @@ set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
 set(LIBS ${LIBS} -luuid -lpthread -lm) #needed for ubuntu
 
 SET( SQUAWK_INCLUDES
-     ${CMAKE_SOURCE_DIR}/httpcpp/includes ${CMAKE_SOURCE_DIR}/ssdpcpp/includes
+     ${CMAKE_SOURCE_DIR}/httpcpp/includes ${CMAKE_SOURCE_DIR}/ssdpcpp/src
      ${Boost_INCLUDE_DIRS} ${LIBXML2_INCLUDE_DIR} ${IMLIB2_INCLUDE_DIR}
      ${AVCODEC_INCLUDES} ${CURLPP_INCLUDE_DIRS} ${OPENSSL_INCLUDES}
 )

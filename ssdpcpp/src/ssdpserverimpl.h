@@ -1,3 +1,18 @@
+/*
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+*/
 #ifndef SSDPSERVERIMPL_H
 #define SSDPSERVERIMPL_H
 
@@ -6,13 +21,15 @@
 #include "gtest/gtest_prod.h"
 
 #include "ssdp.h"
+#include "asio/ssdpserverconnection.h"
+#include "asio/ssdpclientconnection.h"
 
 namespace ssdp {
 
 /**
  * SSDP Server.
  */
-class SSDPServerImpl : public SSDPCallback {
+class SSDPServerImpl {
 public:
         /**
          * Create a new SSDPServer.
@@ -21,7 +38,8 @@ public:
             const std::string & uuid, const std::string & multicast_address, const int & multicast_port,
             const std::map< std::string, std::string > & namespaces );
 
-        virtual ~SSDPServerImpl() {}
+        ~SSDPServerImpl();
+
         /**
          * Announce the services in the network.
          */
@@ -37,14 +55,6 @@ public:
          */
         void search ( const std::string & service = SSDP_NS_ALL );
         /**
-        * Start the server.
-        */
-        void start(); //TODO
-        /**
-        * Stop the server.
-        */
-        void stop(); //TODO
-        /**
         * Register an UPNP Service.
         * \param ns the Service namespace
         * \param location the service description URL
@@ -56,12 +66,12 @@ public:
         * Handle response callback method..
         * \param headers the responset headers
         */
-        virtual void handle_response ( ::http::HttpResponse & response );
+        void handle_response ( http::HttpResponse & response );
         /**
         * Handle receive callback method..
         * \param headers the request headers
         */
-        virtual void handle_receive ( ::http::HttpRequest & request );
+        void handle_receive ( http::HttpRequest & request );
         /**
          * \brief Subscribe for events.
          */
@@ -70,10 +80,12 @@ public:
         }
 
 private:
+        /** thread sleep time. */
+        static const size_t SSDP_THREAD_SLEEP;
         /** hot many times the SSDP M-SEARCH and NOTIFY messages are sent. */
-        static const size_t NETWORK_COUNT = 3;
+        static const size_t NETWORK_COUNT;
         /** hot many times the SSDP M-SEARCH and NOTIFY messages are sent. */
-        static const size_t ANNOUNCE_INTERVAL = 1800;
+        static const size_t ANNOUNCE_INTERVAL;
         static const std::string SSDP_HEADER_SERVER, SSDP_HEADER_DATE, SSDP_HEADER_ST,
             SSDP_HEADER_NTS, SSDP_HEADER_USN, SSDP_HEADER_LOCATION, SSDP_HEADER_NT, SSDP_HEADER_MX,
             SSDP_HEADER_MAN, SSDP_HEADER_EXT, SSDP_OPTION_MAX_AGE, SSDP_REQUEST_LINE_OK,
@@ -82,7 +94,7 @@ private:
 
         std::string uuid, local_listen_address, multicast_address;
         int multicast_port;
-        std::unique_ptr<SSDPConnection> connection;
+        std::unique_ptr<SSDPServerConnection> connection;
         std::map< std::string, std::string > namespaces; //the namespaces for this server
         std::vector< event_callback_t > listeners;
 
@@ -93,7 +105,7 @@ private:
 
         std::map< std::string, std::string > create_response ( const std::string & nt, const std::string & location );
 
-        void fireEvent ( SSDPEventListener::EVENT_TYPE type, std::string client_ip, SsdpEvent device ) const;
+        void fireEvent ( SSDP_EVENT_TYPE type, std::string client_ip, SsdpEvent device ) const;
 
         bool announce_thread_run = true;
         std::unique_ptr<std::thread> annouceThreadRunner;

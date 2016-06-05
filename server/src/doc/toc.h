@@ -19,7 +19,15 @@ Squawk server and client is built using the following 3rd party software:
 
 @subsection Native dependencies
 
-Native libraries:
+The deveopment build of these libraries have to be installed on the build system:
+
+<ul>
+<li><a href="http://www.boost.org">Boost</a>&nbsp;Boost provides free peer-reviewed portable C++ source libraries.</li>
+<li><a href="http://think-async.com">Boost Asio</a>&nbsp;Asio is a cross-platform C++ library for network and low-level I/O programming that provides developers with a consistent asynchronous model using a modern C++ approach.</li>
+<li><a href=""></a>&nbsp;</li>
+<li><a href=""></a>&nbsp;</li>
+<li><a href=""></a>&nbsp;</li>
+</ul>
 
 @subsection External External Dependencies
 

@@ -20,16 +20,18 @@
 
 #include <asio.hpp>
 
-#include "ssdp.h"
+#include "../ssdp.h"
 
 namespace ssdp {
 inline namespace asio_impl {
 
 class SSDPClientConnection {
 public:
-    SSDPClientConnection ( SSDPCallback * handler, const std::string & multicast_address, const int & multicast_port ) :
-        handler ( handler ), io_service_(), strand_ ( io_service_ ), socket ( io_service_ ),
-        multicast_address ( multicast_address ), multicast_port ( multicast_port ) {}
+    SSDPClientConnection ( const std::string & multicast_address, const int & multicast_port,
+                           std::function< void ( http::HttpResponse& ) > handler ) :
+        io_service_(), strand_ ( io_service_ ), socket ( io_service_ ),
+        multicast_address ( multicast_address ), multicast_port ( multicast_port ),
+        _handler ( handler ) {}
 
 	~SSDPClientConnection() {
 		io_service_.stop();
@@ -40,7 +42,6 @@ public:
 	void handle_receive_from ( const asio::error_code&, size_t bytes_recvd );
 
 private:
-	SSDPCallback * handler;
 	asio::io_service io_service_;
 	asio::io_service::strand strand_;
 	asio::ip::udp::socket socket;
@@ -48,12 +49,13 @@ private:
 	int multicast_port;
 	asio::ip::udp::endpoint sender_endpoint;
 
+    std::function< void ( http::HttpResponse& ) > _handler;
+
     enum { max_length = http::BUFFER_SIZE };
 	std::array< char, max_length > data;
 
-	/* the runner thread */
+    /* the runner thread */
 	std::unique_ptr<std::thread> ssdp_runner;
-
     http::HttpResponseParser httpParser;
 };
 }//namespace asio_impl

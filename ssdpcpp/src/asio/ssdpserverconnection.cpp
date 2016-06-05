@@ -1,8 +1,4 @@
 /*
-    ASIO ssdp connection implmementation.
-
-    Copyright (C) 2015  <etienne> <e.knecht@netwings.ch>
-
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -27,12 +23,10 @@
 namespace ssdp {
 inline namespace asio_impl {
 
-void SSDPServerConnection::set_handler ( SSDPCallback * _handler ) {
-	handler = _handler;
-}
-
-SSDPServerConnection::SSDPServerConnection ( const std::string & multicast_address, const int & multicast_port )
-	: io_service(), strand_ ( io_service ), socket ( io_service ), multicast_address ( multicast_address ), multicast_port ( multicast_port ) {
+SSDPServerConnection::SSDPServerConnection ( const std::string & multicast_address,
+        const int & multicast_port, std::function< void ( http::HttpRequest& ) > handler ) :
+    io_service(), strand_ ( io_service ), socket ( io_service ), multicast_address ( multicast_address ),
+    multicast_port ( multicast_port ), _handler ( handler ) {
 
 	asio::ip::address _multicast_address = asio::ip::address::from_string ( multicast_address );
 	asio::ip::address _listen_address = asio::ip::address::from_string ( "0.0.0.0" );
@@ -47,19 +41,15 @@ SSDPServerConnection::SSDPServerConnection ( const std::string & multicast_addre
 	socket.set_option (
 		asio::ip::multicast::join_group ( _multicast_address ) );
 
-	socket.async_receive_from ( asio::buffer ( data, max_length ), sender_endpoint,
-								strand_.wrap (
-									std::bind ( &SSDPServerConnection::handle_receive_from, this,
-											std::placeholders::_1,
-											std::placeholders::_2 ) ) );
+    using namespace std::placeholders;
+    socket.async_receive_from ( asio::buffer ( data, max_length ), sender_endpoint,
+                                strand_.wrap ( std::bind ( &SSDPServerConnection::handle_receive_from, this, _1,_2 ) ) );
+
+    ssdp_runner = std::unique_ptr<std::thread> ( new std::thread (
+        std::bind ( static_cast<size_t ( asio::io_service::* ) () > ( &asio::io_service::run ), &io_service ) ) );
 }
 
-void SSDPServerConnection::start() { //TODO
-	ssdp_runner = std::unique_ptr<std::thread> ( new std::thread (
-					  std::bind ( static_cast<size_t ( asio::io_service::* ) () > ( &asio::io_service::run ), &io_service ) ) );
-}
-
-void SSDPServerConnection::stop() { //TODO
+SSDPServerConnection::~SSDPServerConnection() {
 	io_service.stop();
 	ssdp_runner->join();
 }
@@ -86,14 +76,12 @@ void SSDPServerConnection::handle_receive_from ( const asio::error_code & error,
 		http::HttpRequest request;
         request.remoteIp ( sender_endpoint.address().to_string() );
         http_parser.parse_http_request ( &request, data, bytes_recvd );
-		handler->handle_receive ( request );
+        _handler ( request );
         http_parser.reset();
 
-		socket.async_receive_from ( asio::buffer ( data, max_length ), sender_endpoint,
-									strand_.wrap (
-										std::bind ( &SSDPServerConnection::handle_receive_from, this,
-												std::placeholders::_1,
-												std::placeholders::_2 ) ) );
+        using namespace std::placeholders;
+        socket.async_receive_from ( asio::buffer ( data, max_length ), sender_endpoint,
+            strand_.wrap ( std::bind ( &SSDPServerConnection::handle_receive_from, this, _1, _2 ) ) );
 
     } else { http_parser.reset(); } //on error
 }

@@ -69,7 +69,7 @@ class SquawkServer {
     SquawkServer() {}
 
     void cleanup_upnp_devices();
-    void ssdp_event( ssdp::SSDPEventListener::EVENT_TYPE type, std::string, ssdp::SsdpEvent device );
+    void ssdp_event( ssdp::SSDP_EVENT_TYPE, std::string, ssdp::SsdpEvent device );
 
     std::map< std::string, upnp::UpnpDevice > _ssdp_devices;
     std::mutex _ssdp_devices_mutex;

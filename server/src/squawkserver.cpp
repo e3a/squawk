@@ -84,9 +84,8 @@ void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
 
     web_server->start();
 
-
     /** Setup and start the SSDP Server **/
-    std::string device_uri_ = fmt::format( "http://{}:{}/rootDesc.xml", squawk_config->httpAddress(), squawk_config->httpPort() );
+    const std::string device_uri_ = fmt::format( "http://{}:{}/rootDesc.xml", squawk_config->httpAddress(), squawk_config->httpPort() );
     _ssdp_server = std::shared_ptr< ssdp::SSDPServerImpl >( new ssdp::SSDPServerImpl(
         squawk_config->uuid(),
         squawk_config->multicastAddress(),
@@ -98,14 +97,11 @@ void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
             { ssdp::NS_CONTENT_DIRECTORY, device_uri_ }
         } )
     ) );
-
     //add the event listener
     using namespace std::placeholders;
     _ssdp_server->subscribe(std::bind( &SquawkServer::ssdp_event, this, _1, _2, _3 ) );
-
     //clean the devices
     _ssdp_devices_thread = std::unique_ptr<std::thread> ( new std::thread( &SquawkServer::cleanup_upnp_devices, this ) );
-    _ssdp_server->start();
 
 
     /** Rescan the Media Directory **/
@@ -119,7 +115,7 @@ void SquawkServer::start( squawk::SquawkConfig * squawk_config ) {
 void SquawkServer::stop() {
     _ssdp_devices_thread_run = false;
     _ssdp_devices_thread->join();
-    _ssdp_server->stop();
+    //TODO _ssdp_server->stop();
      web_server->stop();
 }
 
@@ -149,7 +145,7 @@ void SquawkServer::cleanup_upnp_devices() {
     }//while forever
 }
 
-void SquawkServer::ssdp_event( ssdp::SSDPEventListener::EVENT_TYPE type, std::string, ssdp::SsdpEvent device ) {
+void SquawkServer::ssdp_event( ssdp::SSDP_EVENT_TYPE type, std::string, ssdp::SsdpEvent device ) {
 
     //nt            device type
     //nts           event type
@@ -168,16 +164,16 @@ void SquawkServer::ssdp_event( ssdp::SSDPEventListener::EVENT_TYPE type, std::st
     }
 
     if( device.nt() == ssdp::NS_ROOT_DEVICE ) {
-        if( type == ssdp::SSDPEventListener::BYE ) {
+        if( type == ssdp::SSDP_EVENT_TYPE::BYE ) {
             if( _ssdp_devices.find( _rootdevice_usn ) != _ssdp_devices.end() ) {
-                CLOG(INFO, "upnp") << "(remove rootdevice) : " << _ssdp_devices[ _rootdevice_usn ].friendlyName();
+                CLOG(INFO, "upnp") << "rootdevice (bye) " << _ssdp_devices[ _rootdevice_usn ].friendlyName();
                 std::lock_guard<std::mutex> _ssdp_devices_guard( _ssdp_devices_mutex );
                 _ssdp_devices.erase( _ssdp_devices.find( _rootdevice_usn ) );
             }
         } else if( _ssdp_devices.find( _rootdevice_usn ) != _ssdp_devices.end() ) {
             //update timestamp
             if( squawk::SUAWK_SERVER_DEBUG ) {
-                CLOG(DEBUG, "upnp") << "(existing rootdevice) : " << _ssdp_devices[ _rootdevice_usn ].friendlyName();
+                CLOG(DEBUG, "upnp") << "rootdevice (reanc) " << _ssdp_devices[ _rootdevice_usn ].friendlyName();
             }
             _ssdp_devices[ _rootdevice_usn ].touch();
 
@@ -188,7 +184,7 @@ void SquawkServer::ssdp_event( ssdp::SSDPEventListener::EVENT_TYPE type, std::st
                 device_.touch();
                 device_.timeout( device.cacheControl() );
 
-                CLOG(INFO, "upnp") << "(new rootdevice) : " << device_.friendlyName();
+                CLOG(INFO, "upnp") << "rootdevice (anc) " << device_.friendlyName();
 
                 std::lock_guard<std::mutex> _ssdp_devices_guard( _ssdp_devices_mutex );
                 _ssdp_devices[ _rootdevice_usn ] = device_;

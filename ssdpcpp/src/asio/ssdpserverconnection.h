@@ -17,6 +17,7 @@
 #define SSDPASIOCONNECTION_H
 
 #include <array>
+#include <functional>
 #include <memory>
 #include <thread>
 
@@ -24,7 +25,7 @@
 
 #include "http.h"
 
-#include "ssdp.h"
+#include "../ssdp.h"
 
 namespace ssdp {
 inline namespace asio_impl {
@@ -32,34 +33,23 @@ inline namespace asio_impl {
 /**
  * ASIO implmentation of the SSDPConnection.
  */
-class SSDPServerConnection : public SSDPConnection {
+class SSDPServerConnection {
 public:
 	/**
 	 * Create a new SSDPAsioConnection.
 	 */
-	SSDPServerConnection ( const std::string & multicast_address, const int & port );
-	virtual ~SSDPServerConnection() {}
+    SSDPServerConnection ( const std::string & multicast_address, const int & port,
+                           std::function< void ( http::HttpRequest& ) > handler );
+    virtual ~SSDPServerConnection();
 
-	/**
-	 * Start the server.
-	 */
-    virtual void start(); //TODO CTOR
-	/**
-	 * Stop the server.
-	 */
-    virtual void stop(); //TODO DTOR
 	/**
 	 * Multicast a message to the network.
 	 */
-	virtual void send ( std::string request_line, std::map< std::string, std::string > headers );
+    void send ( std::string request_line, std::map< std::string, std::string > headers );
 	/**
 	 * Send a response to the request host.
 	 */
-	virtual void send ( Response response );
-	/**
-	 * Set the callback handler.
-	 */
-    virtual void set_handler ( SSDPCallback * handler ); //TODO function
+    void send ( Response response );
 
 private:
 	/* constuctor parameters */
@@ -73,7 +63,8 @@ private:
     http::HttpRequestParser http_parser;
 
 	/* local variables */
-	SSDPCallback * handler;
+    std::function< void ( http::HttpRequest& ) > _handler;
+
     enum { max_length = http::BUFFER_SIZE };
 	std::array< char, max_length > data;
 
