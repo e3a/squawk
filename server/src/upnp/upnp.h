@@ -506,7 +506,7 @@ public:
         auto f_secs = std::chrono::duration_cast<std::chrono::duration<unsigned int>> ( dur );
         return( f_secs.count() >= timeout_ );
     }
-    void timeout(unsigned short timeout ) {
+    void timeout(time_t timeout ) {
         timeout_ = timeout;
     }
 
@@ -518,7 +518,7 @@ private:
     std::vector< Service > services_;
     std::vector< UpnpDevice > devices_;
     std::chrono::high_resolution_clock::time_point timestamp_;
-    unsigned short timeout_ = 1800;
+    time_t timeout_ = 1800;
 };
 
 
@@ -614,7 +614,7 @@ inline upnp::UpnpDevice deviceDescription( const ssdp::SsdpEvent & event ) {
         //TODO not use curl
         curlpp::Cleanup myCleanup;
         curlpp::Easy myRequest;
-        myRequest.setOpt<curlpp::options::Url>( event.location() );
+        myRequest.setOpt<curlpp::options::Url>( event.location );
         myRequest.setOpt(curlpp::options::ConnectTimeout(2L));
 
         std::stringstream sstream;

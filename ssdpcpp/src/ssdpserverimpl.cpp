@@ -112,20 +112,18 @@ void SSDPServerImpl::handle_receive ( http::HttpRequest & request ) {
             //search all devices
             if ( request.parameter ( SSDP_HEADER_ST ) == NS_ROOT_DEVICE || request.parameter ( SSDP_HEADER_ST ) == SSDP_NS_ALL ) {
                 for ( auto & iter : namespaces ) {
-                    Response response ( Response::ok, SSDP_REQUEST_LINE_OK, create_response ( iter.first, iter.second ) );
+                    Response response ( http::http_status::OK, SSDP_REQUEST_LINE_OK, create_response ( iter.first, iter.second ) );
                     connection->send ( response );
                 }
 
-                //search specific devices
-
+            //search specific devices
             } else if ( namespaces.find ( request.parameter ( SSDP_HEADER_ST ) ) != namespaces.end() ) {
-                connection->send ( Response ( Response::ok, SSDP_REQUEST_LINE_OK,
+                connection->send ( Response ( http::http_status::OK, SSDP_REQUEST_LINE_OK,
                                               create_response ( request.parameter ( SSDP_HEADER_ST ),
                                                       namespaces[request.parameter ( SSDP_HEADER_ST ) ] ) ) );
             }
 
-            //notify status
-
+        //notify status
         } else if ( request.method() == SSDP_NOTIFY ) {
 
             if ( request.parameter ( SSDP_HEADER_NTS ) == SSDP_STATUS_ALIVE ) {
@@ -146,10 +144,10 @@ SsdpEvent SSDPServerImpl::parseRequest ( http::HttpRequest & request ) {
         cache_control = parse_keep_alive ( request.parameter ( http::header::CACHE_CONTROL ) );
     }
 
-    return SsdpEvent ( request.parameter ( http::header::HOST ), request.parameter ( SSDP_HEADER_LOCATION ),
+    return SsdpEvent { request.parameter ( http::header::HOST ), request.parameter ( SSDP_HEADER_LOCATION ),
                        request.parameter ( SSDP_HEADER_NT ), request.parameter ( SSDP_HEADER_NTS ),
                        request.parameter ( SSDP_HEADER_SERVER ), request.parameter ( SSDP_HEADER_USN ),
-                       std::time ( 0 ), cache_control );
+                       std::time ( 0 ), cache_control };
 }
 SsdpEvent SSDPServerImpl::parseResponse ( http::HttpResponse & response ) {
 	time_t cache_control = 0;
@@ -159,10 +157,10 @@ SsdpEvent SSDPServerImpl::parseResponse ( http::HttpResponse & response ) {
 
     } else { assert ( false ); } //no cache control in response
 
-    return SsdpEvent ( response.parameter ( http::header::HOST ), response.parameter ( SSDP_HEADER_LOCATION ),
+    return SsdpEvent { response.parameter ( http::header::HOST ), response.parameter ( SSDP_HEADER_LOCATION ),
                        response.parameter ( SSDP_HEADER_ST ), response.parameter ( SSDP_HEADER_NTS ),
                        response.parameter ( SSDP_HEADER_SERVER ), response.parameter ( SSDP_HEADER_USN ),
-                       std::time ( 0 ), cache_control );
+                       std::time ( 0 ), cache_control };
 }
 void SSDPServerImpl::announce() {
 	suppress();

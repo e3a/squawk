@@ -152,18 +152,18 @@ void SquawkServer::ssdp_event( ssdp::SSDP_EVENT_TYPE type, std::string, ssdp::Ss
     //usn           device endpoint uuid
     //cache_control cache timer
     std::string _rootdevice_usn;
-    size_t uuid_position_end_ = device.usn().find( "::" );
+    size_t uuid_position_end_ = device.usn.find( "::" );
     if( uuid_position_end_ != std::string::npos ) {
-        _rootdevice_usn = device.usn().substr(0, uuid_position_end_ );
-    } else if( device.nt() == ssdp::NS_ROOT_DEVICE ) {
-        _rootdevice_usn = device.usn();
-    } else if( device.nt() == device.usn() ) {
-        _rootdevice_usn = device.usn();
+        _rootdevice_usn = device.usn.substr(0, uuid_position_end_ );
+    } else if( device.nt == ssdp::NS_ROOT_DEVICE ) {
+        _rootdevice_usn = device.usn;
+    } else if( device.nt == device.usn ) {
+        _rootdevice_usn = device.usn;
     } else if( squawk::SUAWK_SERVER_DEBUG ) {
-        CLOG(ERROR, "upnp") << "can not parse usn: " << device.nt() << "=" << device.usn();
+        CLOG(ERROR, "upnp") << "can not parse usn: " << device.nt << "=" << device.usn;
     }
 
-    if( device.nt() == ssdp::NS_ROOT_DEVICE ) {
+    if( device.nt == ssdp::NS_ROOT_DEVICE ) {
         if( type == ssdp::SSDP_EVENT_TYPE::BYE ) {
             if( _ssdp_devices.find( _rootdevice_usn ) != _ssdp_devices.end() ) {
                 CLOG(INFO, "upnp") << "rootdevice (bye) " << _ssdp_devices[ _rootdevice_usn ].friendlyName();
@@ -182,7 +182,7 @@ void SquawkServer::ssdp_event( ssdp::SSDP_EVENT_TYPE type, std::string, ssdp::Ss
             try {
                 upnp::UpnpDevice device_ = upnp::deviceDescription( device );
                 device_.touch();
-                device_.timeout( device.cacheControl() );
+                device_.timeout( device.cache_control );
 
                 CLOG(INFO, "upnp") << "rootdevice (anc) " << device_.friendlyName();
 
